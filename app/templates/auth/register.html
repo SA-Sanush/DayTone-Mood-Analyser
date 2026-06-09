@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Register - DayTone{% endblock %}
+{% block content %}
+<form method="post" class="panel form-panel elevated-panel">
+  {{ form.hidden_tag() }}
+  <div class="form-heading">
+    <span class="eyebrow">Start your baseline</span>
+    <h1>Create your DayTone account</h1>
+  </div>
+  <div class="row g-3">
+    <div class="col-md-6">
+      <label class="form-label">{{ form.name.label }}</label>
+      {{ form.name(class="form-control") }}
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">{{ form.email.label }}</label>
+      {{ form.email(class="form-control") }}
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">{{ form.password.label }}</label>
+      {{ form.password(class="form-control") }}
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">{{ form.confirm_password.label }}</label>
+      {{ form.confirm_password(class="form-control") }}
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">{{ form.age.label }}</label>
+      {{ form.age(class="form-control") }}
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">{{ form.gender.label }}</label>
+      {{ form.gender(class="form-select") }}
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">{{ form.occupation.label }}</label>
+      {{ form.occupation(class="form-control") }}
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">{{ form.preferred_activity.label }}</label>
+      {{ form.preferred_activity(class="form-select") }}
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">{{ form.admin_code.label }}</label>
+      {{ form.admin_code(class="form-control", placeholder="Optional") }}
+    </div>
+  </div>
+  <button class="btn btn-primary mt-4" type="submit"><i data-lucide="sparkles"></i>Create account</button>
+</form>
+{% endblock %}

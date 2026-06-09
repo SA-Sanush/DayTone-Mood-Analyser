@@ -1,0 +1,113 @@
+from datetime import date
+
+import pytest
+
+from app import create_app
+from app.extensions import db
+from app.models import BurnoutHistory, MoodLog, Suggestion, User
+from config import TestConfig
+from app.ml.generate_data import generate
+from app.ml.predictor import FEATURE_NAMES, predict_burnout
+
+
+@pytest.fixture()
+def app():
+    app = create_app(TestConfig)
+    with app.app_context():
+        db.create_all()
+        yield app
+        db.session.remove()
+        db.drop_all()
+
+
+@pytest.fixture()
+def client(app):
+    return app.test_client()
+
+
+def register(client, email="user@example.com", admin=False):
+    return client.post(
+        "/register",
+        data={
+            "name": "Test User",
+            "email": email,
+            "password": "secret12",
+            "confirm_password": "secret12",
+            "age": 22,
+            "gender": "other",
+            "occupation": "Student",
+            "preferred_activity": "Walk",
+            "admin_code": "test-admin" if admin else "",
+        },
+        follow_redirects=True,
+    )
+
+
+def login(client, email="user@example.com"):
+    return client.post(
+        "/login",
+        data={"email": email, "password": "secret12"},
+        follow_redirects=True,
+    )
+
+
+def test_auth_register_login_logout(client, app):
+    response = register(client)
+    assert b"sign in" in response.data.lower()
+    response = login(client)
+    assert b"Dashboard" in response.data
+    response = client.get("/logout", follow_redirects=True)
+    assert b"Sign in" in response.data
+    with app.app_context():
+        assert User.query.filter_by(email="user@example.com").first() is not None
+
+
+def test_mood_log_prediction_suggestion_and_exports(client, app):
+    register(client)
+    login(client)
+    response = client.post(
+        "/log",
+        data={
+            "log_date": date.today().isoformat(),
+            "mood_score": 2,
+            "sleep_hours": 4.5,
+            "stress_level": 5,
+            "activity_done": "",
+            "social_interaction": 1,
+            "notes": "I feel exhausted and overwhelmed.",
+        },
+        follow_redirects=True,
+    )
+    assert b"Latest Risk" in response.data
+    with app.app_context():
+        log = MoodLog.query.first()
+        assert log is not None
+        assert log.sentiment_score <= 0
+        assert BurnoutHistory.query.count() == 1
+        assert Suggestion.query.count() >= 1
+
+    assert client.get("/history").status_code == 200
+    assert client.get("/heatmap").status_code == 200
+    assert client.get("/api/heatmap").json
+    assert client.get("/export/csv").status_code == 200
+    assert client.get("/report/pdf").status_code == 200
+
+
+def test_admin_access_control(client):
+    register(client)
+    login(client)
+    assert client.get("/admin/dashboard").status_code == 403
+    client.get("/logout")
+    register(client, email="admin@example.com", admin=True)
+    login(client, email="admin@example.com")
+    assert client.get("/admin/dashboard").status_code == 200
+
+
+def test_trained_model_artifact_loads_and_predicts(app):
+    row = generate(rows=1).iloc[0].to_dict()
+    features = {name: row[name] for name in FEATURE_NAMES}
+    with app.app_context():
+        result = predict_burnout(features)
+    assert result["prediction"] in {"Low", "Medium", "High"}
+    assert 0 <= result["confidence"] <= 1
+    assert result["algorithm"] in {"DecisionTree", "LogisticRegression", "RandomForest", "Rules"}

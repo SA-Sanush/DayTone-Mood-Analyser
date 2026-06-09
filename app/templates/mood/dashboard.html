@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - DayTone{% endblock %}
+{% block content %}
+<div class="page-head dashboard-hero">
+  <div>
+    <span class="eyebrow">Your wellness cockpit</span>
+    <h1>Dashboard</h1>
+    <p class="text-secondary">Your latest DayTone trends and burnout prediction.</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('mood.log_mood') }}"><i data-lucide="plus"></i>New log</a>
+</div>
+{% if data.latest %}
+<div class="stats-grid">
+  <div class="stat featured-stat"><span>Latest Risk</span><strong class="risk-{{ data.latest.burnout_risk|lower }}">{{ data.latest.burnout_risk }}</strong><small>Burnout forecast</small></div>
+  <div class="stat"><span>Average Mood</span><strong>{{ data.avg_mood }}</strong><small>Last 30 logs</small></div>
+  <div class="stat"><span>Average Sleep</span><strong>{{ data.avg_sleep }}</strong><small>Hours per night</small></div>
+  <div class="stat"><span>Average Stress</span><strong>{{ data.avg_stress }}</strong><small>Lower is calmer</small></div>
+</div>
+<div class="dashboard-grid mt-4">
+  <div class="panel chart-panel span-2"><div class="panel-title"><i data-lucide="activity"></i><h2>Mood Score</h2></div><canvas id="moodChart"></canvas></div>
+  <div class="panel chart-panel"><div class="panel-title"><i data-lucide="moon"></i><h2>Sleep Hours</h2></div><canvas id="sleepChart"></canvas></div>
+  <div class="panel chart-panel"><div class="panel-title"><i data-lucide="zap"></i><h2>Stress Trend</h2></div><canvas id="stressChart"></canvas></div>
+  <div class="panel chart-panel"><div class="panel-title"><i data-lucide="pie-chart"></i><h2>Burnout Distribution</h2></div><canvas id="burnoutChart"></canvas></div>
+  <div class="panel chart-panel"><div class="panel-title"><i data-lucide="scatter-chart"></i><h2>Sleep vs Mood</h2></div><canvas id="scatterChart"></canvas></div>
+  <div class="panel suggestions-panel">
+    <div class="panel-title"><i data-lucide="badge-check"></i><h2>Suggestions</h2></div>
+    <ul class="suggestions">
+      {% for suggestion in data.suggestions %}
+      <li>{{ suggestion }}</li>
+      {% endfor %}
+    </ul>
+    <div class="d-flex gap-2 flex-wrap">
+      <a class="btn btn-outline-primary" href="{{ url_for('mood.report_pdf') }}"><i data-lucide="file-down"></i>PDF report</a>
+      <a class="btn btn-outline-secondary" href="{{ url_for('mood.export_csv') }}"><i data-lucide="download"></i>CSV export</a>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="empty-state">
+  <i data-lucide="line-chart"></i>
+  <h2>No logs yet</h2>
+  <p class="text-secondary">Create your first daily check-in to unlock charts and burnout insights.</p>
+  <a class="btn btn-primary" href="{{ url_for('mood.log_mood') }}"><i data-lucide="plus"></i>Log today</a>
+</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+{% if data.latest %}
+<script>
+window.DAYTONE_CHARTS = {{ chart_data|tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+{% endif %}
+{% endblock %}

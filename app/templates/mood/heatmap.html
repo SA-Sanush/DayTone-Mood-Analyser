@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Heatmap - DayTone{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <span class="eyebrow">Mood calendar</span>
+    <h1>Mood heatmap</h1>
+    <p class="text-secondary">A year-long view of your daily mood scores.</p>
+  </div>
+</div>
+<div class="panel elevated-panel heatmap-panel">
+  <div id="heatmap"></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/heatmap.js') }}"></script>
+{% endblock %}

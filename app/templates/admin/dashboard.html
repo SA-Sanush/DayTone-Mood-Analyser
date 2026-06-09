@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Admin - DayTone{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <span class="eyebrow">Platform view</span>
+    <h1>Admin analytics</h1>
+  </div>
+  <a class="btn btn-outline-primary" href="{{ url_for('admin.users') }}"><i data-lucide="users"></i>Users</a>
+</div>
+<div class="stats-grid">
+  <div class="stat"><span>Total Users</span><strong>{{ stats.total_users }}</strong></div>
+  <div class="stat"><span>Active Users</span><strong>{{ stats.active_users }}</strong></div>
+  <div class="stat"><span>High Risk</span><strong>{{ stats.high_risk_users }}</strong></div>
+  <div class="stat"><span>Average Mood</span><strong>{{ stats.avg_mood }}</strong></div>
+  <div class="stat"><span>Average Sleep</span><strong>{{ stats.avg_sleep }}</strong></div>
+</div>
+<div class="panel chart-panel mt-4">
+  <div class="panel-title"><i data-lucide="pie-chart"></i><h2>Platform Burnout Distribution</h2></div>
+  <canvas id="adminBurnoutChart"></canvas>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+window.DAYTONE_ADMIN = {{ stats|tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,12 @@
+.env
+*.pyc
+__pycache__/
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+instance/*.db
+app/ml/model.pkl
+app/ml/training_data.csv
+app/ml/model_metrics.json
