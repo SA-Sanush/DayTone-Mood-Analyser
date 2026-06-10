@@ -1,15 +1,14 @@
 /*
   Slushy "liquid blob" mood orb renderer.
-  - Uses a 3D simplex-noise GLSL deformation to prevent sharp spikes.
-  - Smoothly interpolates color when switching moods (1..5).
-
-  Integration expectations (matches dashboard.html):
-  - <canvas id="moodOrb"></canvas>
-  - window.DAYTONE_DASHBOARD contains dashboard.orb.mood and/or primary/secondary.
-  - mood pill buttons already exist; we hook into their click events.
+  - Uses a custom vertex shader with a 3D simplex noise to warp a high-density sphere smoothly over time.
+  - Smooth color interpolation system for moods (1..5).
+  - Single-color representation per mood (representing exact mood color with organic lighting).
 */
 
 (function () {
+  if (window.__DAYTONE_MOOD_ORB_INITIALIZED__) return;
+  window.__DAYTONE_MOOD_ORB_INITIALIZED__ = true;
+
   const canvas = document.getElementById("moodOrb");
   const dashboard = window.DAYTONE_DASHBOARD;
   if (!canvas || !dashboard || !window.THREE) return;
@@ -52,7 +51,7 @@
       float n_ = 0.142857142857;
       vec3 ns = n_ * D.wyz - D.xzx;
 
-      vec4 j = p - 49.0 * floor(p * ns.z);
+      vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
 
       vec4 x_ = floor(j * ns.z);
       vec4 y_ = floor(j - 7.0 * x_ );
@@ -89,25 +88,23 @@
     constructor(canvasEl) {
       this.canvas = canvasEl;
 
-      // Mood color configuration (as requested)
       this.moodColors = {
-        1: new THREE.Color("#ff3b30"), // Raw
-        2: new THREE.Color("#ff9500"), // Uneasy
-        3: new THREE.Color("#ffcc00"), // Balanced
-        4: new THREE.Color("#34c759"), // Lifted
-        5: new THREE.Color("#00a86b"), // Radiant
+        1: new THREE.Color("#ff3b30"), // Raw (Red)
+        2: new THREE.Color("#ff9500"), // Uneasy (Orange)
+        3: new THREE.Color("#ffcc00"), // Balanced (Yellow)
+        4: new THREE.Color("#34c759"), // Lifted (Green)
+        5: new THREE.Color("#00a86b"), // Radiant (Dark Green)
       };
 
-      this.targetColor = this.moodColors[1].clone();
-      this.currentColor = this.moodColors[1].clone();
-      this.targetColorIndex = 1;
+      const initialMood = Number(dashboard.orb?.mood || 3);
+      this.targetColor = this.moodColors[initialMood].clone();
+      this.currentColor = this.targetColor.clone();
+      this.targetColorIndex = initialMood;
 
       this.init();
     }
 
     init() {
-      const container = this.canvas.parentElement || document.body;
-
       this.scene = new THREE.Scene();
       this.camera = new THREE.PerspectiveCamera(
         45,
@@ -124,11 +121,8 @@
       });
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
-      this.resize();
-      window.addEventListener("resize", () => this.resize());
-
-      // Slushy deformed orb
-      const geometry = new THREE.IcosahedronGeometry(1.6, 64);
+      // Safe, high-density SphereGeometry for smooth, liquid-like surface
+      const geometry = new THREE.SphereGeometry(1.6, 64, 64);
 
       this.material = new THREE.ShaderMaterial({
         uniforms: {
@@ -144,25 +138,37 @@
           uniform float uNoiseFrequency;
           uniform float uNoiseAmplitude;
           varying vec3 vNormal;
+          varying vec3 vPosition;
 
           void main() {
             vNormal = normalize(normalMatrix * normal);
-            float n = snoise(vec3(position * uNoiseFrequency + uTime * 0.6));
-            vec3 displaced = position + normal * n * uNoiseAmplitude;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(displaced, 1.0);
+            
+            // Generate organic, liquid-like displacement mapping
+            float noise = snoise(position * uNoiseFrequency + vec3(uTime * 0.6));
+            vec3 newPosition = position + normal * noise * uNoiseAmplitude;
+            
+            vPosition = newPosition;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
           }
         `,
         fragmentShader: `
+          precision highp float;
           uniform vec3 uColor;
           varying vec3 vNormal;
+          varying vec3 vPosition;
 
           void main() {
+            // Fake studio lighting configuration for 3D depth
             vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
             vec3 viewDir = normalize(vec3(0.0, 0.0, 1.0));
-
-            float diffuse = max(dot(vNormal, lightDir), 0.0);
-            float rim = pow(1.0 - max(dot(vNormal, viewDir), 0.0), 3.0);
-
+            
+            // Diffuse shading component
+            vec3 normal = normalize(vNormal);
+            float diffuse = max(dot(normal, lightDir), 0.0);
+            
+            // Smooth rim/fresnel lighting to give it that soft velvet/slush look
+            float rim = pow(1.0 - max(dot(normal, viewDir), 0.0), 3.0);
+            
             vec3 finalColor = uColor * (diffuse * 0.7 + 0.4) + (vec3(1.0) * rim * 0.3);
             gl_FragColor = vec4(finalColor, 1.0);
           }
@@ -174,20 +180,13 @@
 
       this.createParticles();
 
-      // Init mood from server state
-      const initialMood = Number(dashboard.orb?.mood || 3);
-      this.setMood(initialMood);
+      // Set initial mood and trigger cockpit styling
+      this.setMood(this.targetColorIndex);
 
-      // Hook into pill clicks
       this.hookMoodButtons();
 
       this.clock = new THREE.Clock();
       this.animate();
-
-      // Optional subtle background color
-      if (container && container.style) {
-        // no-op; dashboard CSS already styles
-      }
     }
 
     createParticles() {
@@ -226,22 +225,15 @@
       });
     }
 
-    resize() {
-      const w = this.canvas.clientWidth;
-      const h = this.canvas.clientHeight;
-      this.renderer.setSize(w, h, false);
-      this.camera.aspect = w / Math.max(h, 1);
-      this.camera.updateProjectionMatrix();
-    }
-
     setMood(moodId) {
       if (!this.moodColors[moodId]) return;
       this.targetColor.copy(this.moodColors[moodId]);
       this.targetColorIndex = moodId;
 
-      // Keep existing UI labels/score in sync (dashboard already does, but this keeps it robust)
       const label = document.getElementById("orbLabel");
       const score = document.getElementById("orbScore");
+      const cockpit = document.querySelector(".orb-cockpit");
+      const pills = Array.from(document.querySelectorAll(".mood-pill"));
 
       const labels = {
         1: "Raw",
@@ -251,12 +243,31 @@
         5: "Radiant",
       };
 
+      const colorHex = "#" + this.targetColor.getHexString();
+      if (cockpit) {
+        cockpit.style.setProperty("--orb-primary", colorHex);
+        cockpit.style.setProperty("--orb-secondary", colorHex);
+      }
+
+      pills.forEach((pill) => {
+        pill.classList.toggle("active", Number(pill.dataset.mood) === moodId);
+      });
+
       if (label && labels[moodId]) label.textContent = labels[moodId];
       if (score) score.textContent = `${moodId}/5`;
     }
 
     animate() {
       requestAnimationFrame(() => this.animate());
+
+      // Robust dynamic resize check to handle initial layout and container size changes
+      const w = this.canvas.clientWidth;
+      const h = this.canvas.clientHeight;
+      if (w > 0 && h > 0 && (this.canvas.width !== w || this.canvas.height !== h)) {
+        this.renderer.setSize(w, h, false);
+        this.camera.aspect = w / h;
+        this.camera.updateProjectionMatrix();
+      }
 
       const elapsedTime = this.clock.getElapsedTime();
       this.material.uniforms.uTime.value = prefersReducedMotion
@@ -279,6 +290,5 @@
     }
   }
 
-  // Instantiate on runtime (matches dashboard.html canvas id)
   new SlushyMoodOrb(canvas);
 })();

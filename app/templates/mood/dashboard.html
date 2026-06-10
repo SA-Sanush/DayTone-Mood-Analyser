@@ -203,6 +203,5 @@ block content %} {% if data.latest %}
   window.DAYTONE_DASHBOARD = {{ dashboard_state|tojson }};
 </script>
 <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
-<script src="{{ url_for('static', filename='js/mood-orb.js') }}"></script>
-<script src="{{ url_for('static', filename='js/mood-orb-three-shader.js') }}"></script>
+<script src="{{ url_for('static', filename='js/mood-orb-three-shader.js') }}?v=1.0.4"></script>
 {% endif %} {% endblock %}

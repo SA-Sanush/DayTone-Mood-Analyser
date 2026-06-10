@@ -1,4 +1,6 @@
 (function () {
+  // Disabled to prevent conflicts with the slushy three-shader orb
+  return;
   const canvas = document.getElementById('moodOrb');
   const dashboard = window.DAYTONE_DASHBOARD;
   if (!canvas || !dashboard || !dashboard.orb || !window.THREE) return;
