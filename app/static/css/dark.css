@@ -79,3 +79,31 @@ html[data-theme="dark"] .auth-visual {
     linear-gradient(145deg, rgba(8, 18, 33, 0.96), rgba(11, 85, 96, 0.66)),
     #0b1220;
 }
+
+html[data-theme="dark"] body {
+  background:
+    radial-gradient(circle at 7% 2%, rgba(106, 164, 255, 0.13), transparent 24rem),
+    radial-gradient(circle at 92% 8%, rgba(255, 155, 84, 0.1), transparent 22rem),
+    linear-gradient(135deg, #0c1321 0%, #10221f 52%, #0e1624 100%);
+}
+
+html[data-theme="dark"] .app-nav-inner {
+  background: rgba(18, 28, 43, 0.82);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22);
+}
+
+html[data-theme="dark"] .nav-pills-soft .nav-link.active {
+  background: rgba(106, 164, 255, 0.13);
+  color: var(--dt-primary);
+}
+
+html[data-theme="dark"] .orb-stage-wrap::before {
+  background-image:
+    linear-gradient(rgba(238, 244, 251, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(238, 244, 251, 0.035) 1px, transparent 1px);
+}
+
+html[data-theme="dark"] .orb-copy p,
+html[data-theme="dark"] .insight-panel p {
+  color: var(--dt-muted);
+}

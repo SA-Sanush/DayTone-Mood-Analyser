@@ -934,3 +934,280 @@ canvas {
     transition: none;
   }
 }
+
+/* Dashboard polish */
+body {
+  background:
+    radial-gradient(circle at 7% 2%, rgba(37, 99, 235, 0.12), transparent 24rem),
+    radial-gradient(circle at 92% 8%, rgba(249, 115, 22, 0.1), transparent 22rem),
+    linear-gradient(135deg, #f6f8fb 0%, #eef7f4 52%, #f8fbfb 100%);
+}
+
+.app-main,
+.app-nav-inner {
+  max-width: 1220px;
+}
+
+.app-main {
+  padding-top: 2rem;
+}
+
+.app-nav {
+  z-index: 1020;
+  padding: 0 0.75rem;
+}
+
+.app-nav-inner {
+  min-height: 64px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 18px 48px rgba(24, 36, 56, 0.1);
+}
+
+.nav-pills-soft .nav-link.active {
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--dt-primary);
+}
+
+.alert {
+  border-radius: 8px;
+  border-color: color-mix(in srgb, currentColor 18%, var(--dt-border));
+  box-shadow: var(--dt-soft-shadow);
+}
+
+.dashboard-shell {
+  display: grid;
+  gap: 1rem;
+}
+
+.orb-cockpit {
+  grid-template-columns: minmax(260px, 0.78fr) minmax(430px, 1.34fr) minmax(184px, 0.42fr);
+  gap: 1.1rem;
+  min-height: 408px;
+  padding: 1rem;
+  background:
+    radial-gradient(circle at 64% 47%, color-mix(in srgb, var(--orb-primary) 28%, transparent), transparent 17rem),
+    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.92), transparent 15rem),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(237, 247, 244, 0.74));
+}
+
+.orb-copy {
+  padding: clamp(0.4rem, 2vw, 1rem);
+}
+
+.orb-copy p,
+.insight-panel p {
+  color: var(--dt-muted);
+  font-size: 0.98rem;
+  line-height: 1.55;
+}
+
+.orb-copy h1 {
+  max-width: 11ch;
+}
+
+.mood-pill-row {
+  gap: 0.45rem;
+}
+
+.mood-pill {
+  width: 42px;
+  height: 42px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.42);
+}
+
+.orb-stage-wrap {
+  min-height: 376px;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(255, 255, 255, 0.68), transparent 12rem),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.42), rgba(15, 23, 42, 0.05));
+}
+
+.orb-stage-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(23, 32, 42, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(23, 32, 42, 0.03) 1px, transparent 1px);
+  background-size: 36px 36px;
+  opacity: 0.42;
+  z-index: -1;
+}
+
+#moodOrb {
+  min-height: 376px;
+}
+
+.orb-side {
+  justify-content: center;
+}
+
+.orb-metric {
+  min-height: 76px;
+}
+
+.motion-grid {
+  gap: 0.85rem;
+  margin-top: 0;
+}
+
+.motion-card {
+  min-height: 118px;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.motion-card:hover {
+  transform: translateY(-2px);
+}
+
+.dashboard-grid {
+  grid-template-columns: minmax(320px, 0.96fr) minmax(420px, 1.04fr);
+  gap: 1rem;
+}
+
+.insight-panel,
+.badge-panel {
+  min-height: 254px;
+}
+
+.insight-panel h3 {
+  font-size: clamp(1.3rem, 2vw, 1.85rem);
+}
+
+.badge-grid {
+  grid-template-columns: repeat(5, minmax(96px, 1fr));
+}
+
+.badge-card {
+  min-height: 136px;
+  padding: 0.85rem;
+}
+
+.badge-card span {
+  overflow-wrap: anywhere;
+}
+
+.analytics-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 390px);
+  gap: 1rem;
+  align-items: start;
+}
+
+.analytics-main {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.analytics-side {
+  display: grid;
+  gap: 1rem;
+}
+
+.chart-panel {
+  min-height: 328px;
+  overflow: hidden;
+}
+
+.chart-panel-large {
+  grid-column: 1 / -1;
+  min-height: 376px;
+}
+
+.donut-panel {
+  min-height: 354px;
+}
+
+.chart-panel canvas {
+  display: block;
+  height: 258px !important;
+  min-height: 0;
+  max-height: none;
+}
+
+.chart-panel-large canvas {
+  height: 300px !important;
+}
+
+.donut-panel canvas {
+  height: 278px !important;
+}
+
+.suggestions {
+  min-height: 0;
+}
+
+.suggestions li {
+  line-height: 1.45;
+}
+
+@media (max-width: 1120px) {
+  .orb-cockpit,
+  .dashboard-grid,
+  .analytics-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .orb-side {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .app-main {
+    padding-top: 1rem;
+  }
+
+  .orb-cockpit {
+    padding: 0.9rem;
+  }
+
+  .orb-copy h1 {
+    max-width: 100%;
+  }
+
+  .analytics-main {
+    grid-template-columns: 1fr;
+  }
+
+  .motion-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .badge-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .app-main {
+    padding-left: 0.85rem;
+    padding-right: 0.85rem;
+  }
+
+  .orb-side,
+  .motion-grid,
+  .badge-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .orb-stage-wrap,
+  #moodOrb {
+    min-height: 300px;
+  }
+
+  .chart-panel,
+  .chart-panel-large,
+  .donut-panel {
+    min-height: 300px;
+  }
+
+  .chart-panel canvas,
+  .chart-panel-large canvas,
+  .donut-panel canvas {
+    height: 230px !important;
+  }
+}

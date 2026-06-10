@@ -25,12 +25,12 @@
       <div class="collapse navbar-collapse" id="navMenu">
         <ul class="navbar-nav nav-pills-soft me-auto">
           {% if current_user.is_authenticated %}
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('mood.log_mood') }}"><i data-lucide="plus-circle"></i>Log</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('mood.dashboard') }}"><i data-lucide="layout-dashboard"></i>Dashboard</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('mood.history') }}"><i data-lucide="history"></i>History</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('mood.heatmap') }}"><i data-lucide="calendar-days"></i>Heatmap</a></li>
+          <li class="nav-item"><a class="nav-link{% if request.endpoint == 'mood.log_mood' %} active{% endif %}" href="{{ url_for('mood.log_mood') }}"><i data-lucide="plus-circle"></i>Log</a></li>
+          <li class="nav-item"><a class="nav-link{% if request.endpoint == 'mood.dashboard' %} active{% endif %}" href="{{ url_for('mood.dashboard') }}"><i data-lucide="layout-dashboard"></i>Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link{% if request.endpoint == 'mood.history' %} active{% endif %}" href="{{ url_for('mood.history') }}"><i data-lucide="history"></i>History</a></li>
+          <li class="nav-item"><a class="nav-link{% if request.endpoint == 'mood.heatmap' %} active{% endif %}" href="{{ url_for('mood.heatmap') }}"><i data-lucide="calendar-days"></i>Heatmap</a></li>
           {% if current_user.is_admin %}
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.dashboard') }}"><i data-lucide="shield-check"></i>Admin</a></li>
+          <li class="nav-item"><a class="nav-link{% if request.endpoint and request.endpoint.startswith('admin.') %} active{% endif %}" href="{{ url_for('admin.dashboard') }}"><i data-lucide="shield-check"></i>Admin</a></li>
           {% endif %}
           {% endif %}
         </ul>
