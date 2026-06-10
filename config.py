@@ -16,7 +16,8 @@ def _bool_env(name, default=False):
 
 
 class Config:
-    SECRET_KEY = os.getenv("SECRET_KEY", "dev-daytone-secret")
+    ENV = os.getenv("FLASK_ENV", "development")
+    SECRET_KEY = os.getenv("SECRET_KEY") or ("dev-daytone-secret" if ENV != "production" else None)
     SQLALCHEMY_DATABASE_URI = os.getenv(
         "DATABASE_URL", f"sqlite:///{BASE_DIR / 'instance' / 'daytone.db'}"
     )
@@ -40,6 +41,7 @@ class Config:
 
 class TestConfig(Config):
     TESTING = True
+    SECRET_KEY = "test-daytone-secret"
     WTF_CSRF_ENABLED = False
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
     RATELIMIT_ENABLED = False

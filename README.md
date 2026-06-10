@@ -15,6 +15,8 @@ python run.py
 
 Open `http://localhost:5000`.
 
+For production, set `FLASK_ENV=production`, provide a private `SECRET_KEY`, and use shared rate-limit storage such as Redis via `RATELIMIT_STORAGE_URI`. The included `Procfile` runs the app with gunicorn.
+
 ## Features
 
 - User registration, login, CSRF-protected forms, and login rate limiting.

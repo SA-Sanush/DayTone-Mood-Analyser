@@ -95,7 +95,15 @@ def dashboard():
         "burnout_distribution": data["burnout_distribution"],
         "scatter": data["scatter"],
     }
-    return render_template("mood/dashboard.html", data=data, chart_data=chart_data)
+    dashboard_state = {
+        "orb": data["latest_orb_state"],
+        "streak_count": data["streak_count"],
+        "challenge_progress": data["challenge_progress"],
+        "badges": data["badges"],
+        "trend_summary": data["trend_summary"],
+        "insight_bars": data["insight_bars"],
+    }
+    return render_template("mood/dashboard.html", data=data, chart_data=chart_data, dashboard_state=dashboard_state)
 
 
 @mood_bp.route("/history")

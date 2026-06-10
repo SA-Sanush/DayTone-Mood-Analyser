@@ -1,11 +1,13 @@
-from datetime import date
+from datetime import date, timedelta
+from types import SimpleNamespace
 
 import pytest
 
 from app import create_app
 from app.extensions import db
 from app.models import BurnoutHistory, MoodLog, Suggestion, User
-from config import TestConfig
+from app.utils.analytics import badge_states, current_streak, dashboard_data, orb_state, trend_summary
+from config import Config, TestConfig
 from app.ml.generate_data import generate
 from app.ml.predictor import FEATURE_NAMES, predict_burnout
 
@@ -62,6 +64,17 @@ def test_auth_register_login_logout(client, app):
         assert User.query.filter_by(email="user@example.com").first() is not None
 
 
+def test_login_rejects_external_next_redirect(client):
+    register(client)
+    response = client.post(
+        "/login?next=https://evil.example/phish",
+        data={"email": "user@example.com", "password": "secret12"},
+    )
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/dashboard")
+    assert "evil.example" not in response.headers["Location"]
+
+
 def test_mood_log_prediction_suggestion_and_exports(client, app):
     register(client)
     login(client)
@@ -78,19 +91,63 @@ def test_mood_log_prediction_suggestion_and_exports(client, app):
         },
         follow_redirects=True,
     )
-    assert b"Latest Risk" in response.data
+    assert b"moodOrb" in response.data
+    assert b"DAYTONE_DASHBOARD" in response.data
+    assert b"Day streak" in response.data
     with app.app_context():
         log = MoodLog.query.first()
         assert log is not None
         assert log.sentiment_score <= 0
         assert BurnoutHistory.query.count() == 1
         assert Suggestion.query.count() >= 1
+        data = dashboard_data(log.user_id)
+        assert data["burnout_risk_trend"] == [log.burnout_risk]
 
     assert client.get("/history").status_code == 200
     assert client.get("/heatmap").status_code == 200
     assert client.get("/api/heatmap").json
     assert client.get("/export/csv").status_code == 200
     assert client.get("/report/pdf").status_code == 200
+
+
+def test_dashboard_derived_state_helpers():
+    today = date(2026, 6, 10)
+    logs = [
+        SimpleNamespace(log_date=today - timedelta(days=2), mood_score=3, sleep_hours=6.5, stress_level=2, activity_done=True, burnout_risk="Low"),
+        SimpleNamespace(log_date=today - timedelta(days=1), mood_score=4, sleep_hours=7.0, stress_level=2, activity_done=True, burnout_risk="Low"),
+        SimpleNamespace(log_date=today, mood_score=5, sleep_hours=8.0, stress_level=1, activity_done=True, burnout_risk="Low"),
+    ]
+
+    streak = current_streak(logs, today=today)
+    badges = badge_states(logs, streak, avg_mood=4)
+    state = orb_state(logs[-1])
+    trend = trend_summary(logs)
+
+    assert streak == 3
+    assert state["mood"] == 5
+    assert state["label"] == "Radiant"
+    assert trend["direction"] == "up"
+    assert any(badge["name"] == "Bright Average" and badge["unlocked"] for badge in badges)
+    assert any(badge["name"] == "Calm Pocket" and badge["unlocked"] for badge in badges)
+
+
+def test_production_config_requires_secret_and_shared_rate_limit_store():
+    class BadProductionConfig(Config):
+        TESTING = False
+        ENV = "production"
+        SECRET_KEY = None
+        RATELIMIT_STORAGE_URI = "redis://localhost:6379/0"
+        SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+
+    with pytest.raises(RuntimeError, match="SECRET_KEY"):
+        create_app(BadProductionConfig)
+
+    class BadRateLimitConfig(BadProductionConfig):
+        SECRET_KEY = "private-production-secret"
+        RATELIMIT_STORAGE_URI = "memory://"
+
+    with pytest.raises(RuntimeError, match="RATELIMIT_STORAGE_URI"):
+        create_app(BadRateLimitConfig)
 
 
 def test_admin_access_control(client):

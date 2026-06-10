@@ -41,9 +41,9 @@ def build_pdf_report(user):
     story.extend([risk_table, Spacer(1, 18), Paragraph("Recent Mood Trend", styles["Heading2"])])
 
     rows = [["Date", "Mood", "Sleep", "Stress", "Risk"]]
-    logs = list(zip(data["labels"], data["mood"], data["sleep"], data["stress"]))
-    for label, mood, sleep, stress in logs[-10:]:
-        rows.append([label, mood, sleep, stress, ""])
+    logs = list(zip(data["labels"], data["mood"], data["sleep"], data["stress"], data["burnout_risk_trend"]))
+    for label, mood, sleep, stress, risk in logs[-10:]:
+        rows.append([label, mood, sleep, stress, risk])
     trend = Table(rows)
     trend.setStyle(TableStyle([("GRID", (0, 0), (-1, -1), 0.5, colors.grey), ("BACKGROUND", (0, 0), (-1, 0), colors.whitesmoke)]))
     story.append(trend)

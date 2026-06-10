@@ -29,10 +29,31 @@ html[data-theme="dark"] .app-shell-bg {
 
 html[data-theme="dark"] .app-nav-inner,
 html[data-theme="dark"] .dashboard-hero,
+html[data-theme="dark"] .orb-cockpit,
 html[data-theme="dark"] .user-chip,
 html[data-theme="dark"] .btn-glass,
 html[data-theme="dark"] .suggestions li {
   background: rgba(18, 28, 43, 0.74);
+}
+
+html[data-theme="dark"] .orb-cockpit {
+  background:
+    radial-gradient(circle at 52% 45%, color-mix(in srgb, var(--orb-primary) 24%, transparent), transparent 18rem),
+    linear-gradient(135deg, rgba(18, 28, 43, 0.9), rgba(13, 37, 43, 0.74)),
+    var(--dt-surface);
+}
+
+html[data-theme="dark"] .orb-stage-wrap {
+  background:
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.1), transparent 13rem),
+    linear-gradient(180deg, rgba(2, 6, 23, 0.46), rgba(2, 6, 23, 0.18));
+}
+
+html[data-theme="dark"] .orb-metric,
+html[data-theme="dark"] .mood-pill,
+html[data-theme="dark"] .badge-card,
+html[data-theme="dark"] .challenge-ring {
+  background-color: rgba(11, 18, 32, 0.62);
 }
 
 html[data-theme="dark"] .form-control,

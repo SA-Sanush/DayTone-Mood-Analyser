@@ -1,5 +1,6 @@
 import pickle
 from datetime import timedelta
+from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
@@ -25,6 +26,15 @@ FEATURE_NAMES = [
 ]
 
 MODEL_PATH = Path(__file__).resolve().parent / "model.pkl"
+
+
+@lru_cache(maxsize=1)
+def _model_payload():
+    if not MODEL_PATH.exists():
+        return None
+
+    with MODEL_PATH.open("rb") as model_file:
+        return pickle.load(model_file)
 
 
 def _recent_logs(user_id, log_date):
@@ -87,12 +97,10 @@ def _rule_prediction(features):
 
 
 def predict_burnout(features):
-    if not MODEL_PATH.exists():
+    payload = _model_payload()
+    if payload is None:
         prediction, confidence = _rule_prediction(features)
         return {"prediction": prediction, "confidence": confidence, "algorithm": "Rules"}
-
-    with MODEL_PATH.open("rb") as model_file:
-        payload = pickle.load(model_file)
 
     model = payload["model"]
     values = pd.DataFrame([[features[name] for name in FEATURE_NAMES]], columns=FEATURE_NAMES)

@@ -1,29 +1,86 @@
 {% extends "base.html" %}
 {% block title %}Dashboard - DayTone{% endblock %}
 {% block content %}
-<div class="page-head dashboard-hero">
-  <div>
-    <span class="eyebrow">Your wellness cockpit</span>
-    <h1>Dashboard</h1>
-    <p class="text-secondary">Your latest DayTone trends and burnout prediction.</p>
-  </div>
-  <a class="btn btn-primary" href="{{ url_for('mood.log_mood') }}"><i data-lucide="plus"></i>New log</a>
-</div>
 {% if data.latest %}
-<div class="stats-grid">
-  <div class="stat featured-stat"><span>Latest Risk</span><strong class="risk-{{ data.latest.burnout_risk|lower }}">{{ data.latest.burnout_risk }}</strong><small>Burnout forecast</small></div>
-  <div class="stat"><span>Average Mood</span><strong>{{ data.avg_mood }}</strong><small>Last 30 logs</small></div>
-  <div class="stat"><span>Average Sleep</span><strong>{{ data.avg_sleep }}</strong><small>Hours per night</small></div>
-  <div class="stat"><span>Average Stress</span><strong>{{ data.avg_stress }}</strong><small>Lower is calmer</small></div>
-</div>
-<div class="dashboard-grid mt-4">
+<section class="orb-cockpit" style="--orb-primary: {{ data.latest_orb_state.primary }}; --orb-secondary: {{ data.latest_orb_state.secondary }};">
+  <div class="orb-copy">
+    <span class="eyebrow">Your wellness cockpit</span>
+    <h1>Today feels {{ data.latest_orb_state.label|lower }}</h1>
+    <p class="text-secondary">{{ data.trend_summary.body }}</p>
+    <div class="mood-pill-row" role="group" aria-label="Preview orb mood">
+      {% for score in range(1, 6) %}
+      <button class="mood-pill{% if score == data.latest_orb_state.mood %} active{% endif %}" type="button" data-mood="{{ score }}">
+        <span>{{ score }}</span>
+      </button>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="orb-stage-wrap">
+    <canvas id="moodOrb" aria-label="Interactive mood orb"></canvas>
+    <div class="orb-readout">
+      <span id="orbLabel">{{ data.latest_orb_state.label }}</span>
+      <strong id="orbScore">{{ data.latest_orb_state.mood }}/5</strong>
+    </div>
+  </div>
+  <div class="orb-side">
+    <a class="btn btn-primary" href="{{ url_for('mood.log_mood') }}"><i data-lucide="plus"></i>New log</a>
+    <div class="orb-metric"><span>Burnout risk</span><strong class="risk-{{ data.latest.burnout_risk|lower }}">{{ data.latest.burnout_risk }}</strong></div>
+    <div class="orb-metric"><span>Logged</span><strong>{{ data.latest.log_date.strftime("%b %d") }}</strong></div>
+  </div>
+</section>
+
+<section class="motion-grid">
+  <div class="panel motion-card breath-card">
+    <div class="breath-orb" aria-hidden="true"><i data-lucide="wind"></i></div>
+    <span>Breathing room</span>
+    <strong>60 sec</strong>
+  </div>
+  <div class="panel motion-card">
+    <i data-lucide="flame"></i>
+    <span>Day streak</span>
+    <strong>{{ data.streak_count }}</strong>
+  </div>
+  <div class="panel motion-card challenge-card" style="--challenge: {{ data.challenge_progress }}%;">
+    <div class="challenge-ring"><strong>{{ data.challenge_progress }}%</strong></div>
+    <span>Daily challenge</span>
+  </div>
+  <div class="panel motion-card">
+    <i data-lucide="trophy"></i>
+    <span>Badges unlocked</span>
+    <strong>{{ data.badges|selectattr("unlocked")|list|length }}/{{ data.badges|length }}</strong>
+  </div>
+</section>
+
+<section class="dashboard-grid mt-4">
+  <div class="panel insight-panel">
+    <div class="panel-title"><i data-lucide="sparkles"></i><h2>Coach signal</h2></div>
+    <h3>{{ data.trend_summary.title }}</h3>
+    <p class="text-secondary">{{ data.trend_summary.body }}</p>
+    <div class="insight-bars">
+      <div><span>Mood</span><i style="--value: {{ data.insight_bars.mood }}%;"></i><strong>{{ data.avg_mood }}/5</strong></div>
+      <div><span>Sleep</span><i style="--value: {{ data.insight_bars.sleep }}%;"></i><strong>{{ data.avg_sleep }}h</strong></div>
+      <div><span>Calm</span><i style="--value: {{ data.insight_bars.stress }}%;"></i><strong>{{ data.avg_stress }}/5 stress</strong></div>
+    </div>
+  </div>
+  <div class="panel badge-panel">
+    <div class="panel-title"><i data-lucide="badge-check"></i><h2>Achievement badges</h2></div>
+    <div class="badge-grid">
+      {% for badge in data.badges %}
+      <div class="badge-card{% if badge.unlocked %} unlocked{% endif %}">
+        <i data-lucide="{{ badge.icon }}"></i>
+        <span>{{ badge.name }}</span>
+        <small>{{ badge.detail }}</small>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
   <div class="panel chart-panel span-2"><div class="panel-title"><i data-lucide="activity"></i><h2>Mood Score</h2></div><canvas id="moodChart"></canvas></div>
   <div class="panel chart-panel"><div class="panel-title"><i data-lucide="moon"></i><h2>Sleep Hours</h2></div><canvas id="sleepChart"></canvas></div>
   <div class="panel chart-panel"><div class="panel-title"><i data-lucide="zap"></i><h2>Stress Trend</h2></div><canvas id="stressChart"></canvas></div>
   <div class="panel chart-panel"><div class="panel-title"><i data-lucide="pie-chart"></i><h2>Burnout Distribution</h2></div><canvas id="burnoutChart"></canvas></div>
   <div class="panel chart-panel"><div class="panel-title"><i data-lucide="scatter-chart"></i><h2>Sleep vs Mood</h2></div><canvas id="scatterChart"></canvas></div>
   <div class="panel suggestions-panel">
-    <div class="panel-title"><i data-lucide="badge-check"></i><h2>Suggestions</h2></div>
+    <div class="panel-title"><i data-lucide="message-circle-heart"></i><h2>Suggestions</h2></div>
     <ul class="suggestions">
       {% for suggestion in data.suggestions %}
       <li>{{ suggestion }}</li>
@@ -34,12 +91,12 @@
       <a class="btn btn-outline-secondary" href="{{ url_for('mood.export_csv') }}"><i data-lucide="download"></i>CSV export</a>
     </div>
   </div>
-</div>
+</section>
 {% else %}
 <div class="empty-state">
   <i data-lucide="line-chart"></i>
   <h2>No logs yet</h2>
-  <p class="text-secondary">Create your first daily check-in to unlock charts and burnout insights.</p>
+  <p class="text-secondary">Create your first daily check-in to unlock the mood orb, streaks, badges, and burnout insights.</p>
   <a class="btn btn-primary" href="{{ url_for('mood.log_mood') }}"><i data-lucide="plus"></i>Log today</a>
 </div>
 {% endif %}
@@ -48,7 +105,9 @@
 {% if data.latest %}
 <script>
 window.DAYTONE_CHARTS = {{ chart_data|tojson }};
+window.DAYTONE_DASHBOARD = {{ dashboard_state|tojson }};
 </script>
 <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script src="{{ url_for('static', filename='js/mood-orb.js') }}"></script>
 {% endif %}
 {% endblock %}

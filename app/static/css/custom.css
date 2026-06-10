@@ -369,6 +369,304 @@ h2 {
   box-shadow: var(--dt-soft-shadow);
 }
 
+.orb-cockpit {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.9fr) minmax(360px, 1.2fr) minmax(190px, 0.5fr);
+  gap: 1rem;
+  align-items: stretch;
+  min-height: 430px;
+  border: 1px solid var(--dt-border);
+  border-radius: 8px;
+  padding: 1.25rem;
+  background:
+    radial-gradient(circle at 52% 45%, color-mix(in srgb, var(--orb-primary) 28%, transparent), transparent 18rem),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(235, 245, 247, 0.72)),
+    var(--dt-surface);
+  box-shadow: var(--dt-shadow);
+  overflow: hidden;
+}
+
+.orb-copy,
+.orb-side {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+
+.orb-copy p {
+  max-width: 460px;
+  margin: 0.9rem 0 1.2rem;
+}
+
+.mood-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.mood-pill {
+  width: 46px;
+  height: 46px;
+  border: 1px solid var(--dt-border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.68);
+  color: var(--dt-muted);
+  font-weight: 800;
+  transition: transform 160ms ease, color 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.mood-pill:hover,
+.mood-pill.active {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--orb-primary) 62%, var(--dt-border));
+  background: linear-gradient(135deg, var(--orb-primary), var(--orb-secondary));
+  color: white;
+}
+
+.orb-stage-wrap {
+  position: relative;
+  min-height: 380px;
+  border-radius: 8px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.58), transparent 13rem),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.08), rgba(15, 23, 42, 0.02));
+}
+
+#moodOrb {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 380px;
+  max-height: none;
+}
+
+.orb-readout {
+  position: absolute;
+  left: 1rem;
+  bottom: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  background: rgba(15, 23, 42, 0.62);
+  color: white;
+  backdrop-filter: blur(16px);
+}
+
+.orb-readout span {
+  color: rgba(255, 255, 255, 0.76);
+  font-weight: 750;
+}
+
+.orb-readout strong {
+  font-size: 1.15rem;
+}
+
+.orb-side {
+  gap: 0.8rem;
+}
+
+.orb-side .btn {
+  justify-content: center;
+  width: 100%;
+}
+
+.orb-metric {
+  border: 1px solid var(--dt-border);
+  border-radius: 8px;
+  padding: 0.9rem;
+  background: rgba(255, 255, 255, 0.54);
+}
+
+.orb-metric span {
+  display: block;
+  color: var(--dt-muted);
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.orb-metric strong {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 1.35rem;
+  line-height: 1.1;
+}
+
+.motion-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.motion-card {
+  display: flex;
+  min-height: 128px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  text-align: center;
+}
+
+.motion-card > svg {
+  width: 38px;
+  height: 38px;
+  color: var(--dt-accent);
+  stroke-width: 1.8;
+}
+
+.motion-card span {
+  color: var(--dt-muted);
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.motion-card strong {
+  font-size: 1.85rem;
+  line-height: 1;
+}
+
+.breath-orb {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--dt-primary-2), var(--dt-good));
+  color: white;
+  animation: breathPulse 4.8s ease-in-out infinite;
+}
+
+.breath-orb svg {
+  width: 34px;
+  height: 34px;
+}
+
+.challenge-ring {
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, var(--dt-surface-solid) 55%, transparent 57%),
+    conic-gradient(var(--dt-accent) var(--challenge), rgba(100, 116, 139, 0.18) 0);
+}
+
+.challenge-ring strong {
+  font-size: 0.92rem;
+}
+
+.insight-panel h3 {
+  font-size: 1.45rem;
+  font-weight: 800;
+  margin: 0 0 0.45rem;
+}
+
+.insight-bars {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1.15rem;
+}
+
+.insight-bars div {
+  display: grid;
+  grid-template-columns: 58px minmax(80px, 1fr) minmax(84px, auto);
+  gap: 0.7rem;
+  align-items: center;
+}
+
+.insight-bars span,
+.insight-bars strong {
+  color: var(--dt-muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.insight-bars i {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(100, 116, 139, 0.17);
+}
+
+.insight-bars i::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--value);
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--dt-primary), var(--dt-primary-2));
+}
+
+.badge-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.badge-card {
+  min-height: 118px;
+  border: 1px solid var(--dt-border);
+  border-radius: 8px;
+  padding: 0.8rem;
+  background: rgba(100, 116, 139, 0.07);
+  color: var(--dt-muted);
+  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+}
+
+.badge-card.unlocked {
+  border-color: color-mix(in srgb, var(--dt-primary-2) 42%, var(--dt-border));
+  background: linear-gradient(145deg, rgba(15, 159, 143, 0.14), rgba(37, 99, 235, 0.08));
+  color: var(--dt-text);
+}
+
+.badge-card:hover {
+  transform: translateY(-2px);
+}
+
+.badge-card svg {
+  width: 24px;
+  height: 24px;
+  margin-bottom: 0.5rem;
+  color: var(--dt-primary-2);
+}
+
+.badge-card span,
+.badge-card small {
+  display: block;
+}
+
+.badge-card span {
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.badge-card small {
+  margin-top: 0.35rem;
+  color: var(--dt-muted);
+  font-weight: 650;
+}
+
+@keyframes breathPulse {
+  0%,
+  100% {
+    transform: scale(0.88);
+    box-shadow: 0 0 0 0 rgba(15, 159, 143, 0.22);
+  }
+
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 18px rgba(15, 159, 143, 0.08);
+  }
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -542,6 +840,23 @@ canvas {
     grid-template-columns: 1fr;
   }
 
+  .orb-cockpit {
+    grid-template-columns: 1fr;
+  }
+
+  .orb-side {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .motion-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .badge-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .auth-visual {
     min-height: 420px;
   }
@@ -574,6 +889,30 @@ canvas {
     grid-template-columns: 1fr;
   }
 
+  .orb-cockpit {
+    padding: 1rem;
+    min-height: 0;
+  }
+
+  .orb-stage-wrap,
+  #moodOrb {
+    min-height: 320px;
+  }
+
+  .orb-side,
+  .motion-grid,
+  .badge-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .insight-bars div {
+    grid-template-columns: 50px minmax(70px, 1fr);
+  }
+
+  .insight-bars strong {
+    grid-column: 2;
+  }
+
   .hero-copy {
     inset: auto 1rem 1rem 1rem;
   }
@@ -581,5 +920,17 @@ canvas {
   .hero-metrics span {
     min-width: 0;
     flex: 1 1 120px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .breath-orb,
+  .mood-pill,
+  .badge-card,
+  .stat,
+  .nav-pills-soft .nav-link,
+  .btn-primary {
+    animation: none;
+    transition: none;
   }
 }

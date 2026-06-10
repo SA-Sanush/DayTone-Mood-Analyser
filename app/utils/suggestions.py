@@ -23,7 +23,8 @@ def get_suggestions(
         tips.append(f"No activity today. A 10-minute {preferred_activity} can help lift your mood.")
 
     if burnout_risk == "High":
-        tips.append("High burnout risk detected. Speak to a trusted person or counsellor today.")
+        tips.append("High burnout risk detected. DayTone is not medical advice; speak to a trusted person or counsellor today.")
+        tips.append("If you feel unsafe or may harm yourself, contact local emergency services or a crisis helpline now.")
         tips.append("Avoid heavy workload tomorrow. Rest is productive.")
     elif burnout_risk == "Medium":
         tips.append("You are showing medium burnout signs. Take short breaks every 45 minutes.")

@@ -1,3 +1,5 @@
+from urllib.parse import urlparse
+
 from flask import current_app, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_user, logout_user
 
@@ -6,6 +8,16 @@ from app.models import User, UserProfile
 
 from . import auth_bp
 from .forms import LoginForm, RegistrationForm
+
+
+def safe_next_url(next_url):
+    if not next_url:
+        return None
+
+    parsed = urlparse(next_url)
+    if parsed.scheme or parsed.netloc or not next_url.startswith("/"):
+        return None
+    return next_url
 
 
 @auth_bp.route("/")
@@ -62,7 +74,7 @@ def login():
             login_user(user)
             flash("Signed in successfully.", "success")
             next_url = request.args.get("next")
-            return redirect(next_url or url_for("mood.dashboard"))
+            return redirect(safe_next_url(next_url) or url_for("mood.dashboard"))
         flash("Invalid email or password.", "danger")
 
     return render_template("auth/login.html", form=form)
