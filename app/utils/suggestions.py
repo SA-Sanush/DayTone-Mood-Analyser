@@ -1,3 +1,23 @@
+from flask import current_app, has_app_context
+
+from app.constants import BurnoutRisk
+
+
+CRISIS_RESOURCES = {
+    "US": "Call or text 988 for the Suicide & Crisis Lifeline.",
+    "IN": "Visit https://findahelpline.com/in for crisis support options in India.",
+    "UK": "Call Samaritans at 116 123 or visit https://www.samaritans.org.",
+    "GLOBAL": "Visit https://findahelpline.com to find crisis support near you.",
+}
+
+
+def crisis_resource_text():
+    country = "GLOBAL"
+    if has_app_context():
+        country = current_app.config.get("COUNTRY", "GLOBAL")
+    return CRISIS_RESOURCES.get(str(country).upper(), CRISIS_RESOURCES["GLOBAL"])
+
+
 def get_suggestions(
     burnout_risk,
     sleep_hours,
@@ -22,11 +42,11 @@ def get_suggestions(
     if not activity_done:
         tips.append(f"No activity today. A 10-minute {preferred_activity} can help lift your mood.")
 
-    if burnout_risk == "High":
+    if burnout_risk == BurnoutRisk.HIGH:
         tips.append("High burnout risk detected. DayTone is not medical advice; speak to a trusted person or counsellor today.")
-        tips.append("If you feel unsafe or may harm yourself, contact local emergency services or a crisis helpline now.")
+        tips.append(f"If you feel unsafe or may harm yourself, contact local emergency services now. {crisis_resource_text()}")
         tips.append("Avoid heavy workload tomorrow. Rest is productive.")
-    elif burnout_risk == "Medium":
+    elif burnout_risk == BurnoutRisk.MEDIUM:
         tips.append("You are showing medium burnout signs. Take short breaks every 45 minutes.")
 
     return tips or ["Great day. Keep maintaining your healthy habits."]

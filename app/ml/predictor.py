@@ -1,4 +1,5 @@
 import pickle
+from flask import current_app, has_app_context
 from datetime import timedelta
 from functools import lru_cache
 from pathlib import Path
@@ -8,6 +9,7 @@ import pandas as pd
 from sqlalchemy import func
 
 from app.models import MoodLog
+from app.constants import BurnoutRisk
 
 
 FEATURE_NAMES = [
@@ -24,6 +26,7 @@ FEATURE_NAMES = [
     "mood_variability",
     "is_weekend",
 ]
+BAD_DAY_WINDOW = 7
 
 MODEL_PATH = Path(__file__).resolve().parent / "model.pkl"
 
@@ -38,7 +41,7 @@ def _model_payload():
 
 
 def _recent_logs(user_id, log_date):
-    start_date = log_date - timedelta(days=6)
+    start_date = log_date - timedelta(days=BAD_DAY_WINDOW - 1)
     return (
         MoodLog.query.filter(MoodLog.user_id == user_id, MoodLog.log_date >= start_date, MoodLog.log_date <= log_date)
         .order_by(MoodLog.log_date.asc())
@@ -47,6 +50,7 @@ def _recent_logs(user_id, log_date):
 
 
 def _consecutive_bad_days(logs, current_mood):
+    """Count bad moods in the 7-day window ending with the current entry."""
     moods = [log.mood_score for log in logs] + [current_mood]
     count = 0
     for mood in reversed(moods):
@@ -63,7 +67,7 @@ def build_features(user_id, log_date, mood_score, sleep_hours, stress_level, act
     stresses = [log.stress_level for log in logs] + [stress_level]
     sleeps = [log.sleep_hours for log in logs] + [sleep_hours]
 
-    return {
+    features = {
         "mood_score": mood_score,
         "sleep_hours": sleep_hours,
         "stress_level": stress_level,
@@ -77,6 +81,9 @@ def build_features(user_id, log_date, mood_score, sleep_hours, stress_level, act
         "mood_variability": float(np.std(moods)) if len(moods) > 1 else 0.0,
         "is_weekend": 1 if log_date.weekday() >= 5 else 0,
     }
+    if set(features) != set(FEATURE_NAMES):
+        raise RuntimeError("Feature mismatch between training and inference.")
+    return features
 
 
 def _rule_prediction(features):
@@ -90,26 +97,44 @@ def _rule_prediction(features):
     score += 1 if features["consecutive_bad_days"] >= 3 else 0
 
     if score >= 5:
-        return "High", 0.78
+        return BurnoutRisk.HIGH, 0.78
     if score >= 3:
-        return "Medium", 0.66
-    return "Low", 0.72
+        return BurnoutRisk.MEDIUM, 0.66
+    return BurnoutRisk.LOW, 0.72
+
+
+def _log_prediction_fallback(exc):
+    if has_app_context():
+        current_app.logger.warning("ML predict failed (%s), using rule fallback", exc)
 
 
 def predict_burnout(features):
-    payload = _model_payload()
+    try:
+        payload = _model_payload()
+    except Exception as exc:
+        _log_prediction_fallback(exc)
+        payload = None
+
     if payload is None:
         prediction, confidence = _rule_prediction(features)
         return {"prediction": prediction, "confidence": confidence, "algorithm": "Rules"}
 
-    model = payload["model"]
-    values = pd.DataFrame([[features[name] for name in FEATURE_NAMES]], columns=FEATURE_NAMES)
-    prediction = model.predict(values)[0]
-    confidence = 0.0
-    if hasattr(model, "predict_proba"):
-        probabilities = model.predict_proba(values)[0]
-        confidence = float(max(probabilities))
-    return {"prediction": prediction, "confidence": confidence, "algorithm": payload.get("name", "ML")}
+    try:
+        artifact_features = payload.get("features")
+        if artifact_features and list(artifact_features) != FEATURE_NAMES:
+            raise RuntimeError("Model feature list does not match inference features.")
+        model = payload["model"]
+        values = pd.DataFrame([[features[name] for name in FEATURE_NAMES]], columns=FEATURE_NAMES)
+        prediction = model.predict(values)[0]
+        confidence = None
+        if hasattr(model, "predict_proba"):
+            probabilities = model.predict_proba(values)[0]
+            confidence = float(max(probabilities))
+        return {"prediction": prediction, "confidence": confidence, "algorithm": payload.get("name", "ML")}
+    except Exception as exc:
+        _log_prediction_fallback(exc)
+        prediction, confidence = _rule_prediction(features)
+        return {"prediction": prediction, "confidence": confidence, "algorithm": "Rules"}
 
 
 def latest_burnout_subquery():

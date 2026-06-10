@@ -1,0 +1,14 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+pythonpath = ["."]
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["app/ml/generate_data.py"]
+
+[tool.black]
+line-length = 88
+
+[tool.isort]
+profile = "black"

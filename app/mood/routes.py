@@ -1,9 +1,10 @@
 import csv
 from io import StringIO
 
-from flask import Response, flash, jsonify, redirect, render_template, send_file, url_for
+from flask import Response, current_app, flash, jsonify, redirect, render_template, request, send_file, url_for
 from flask_login import current_user, login_required
 
+from app.constants import BurnoutRisk
 from app.extensions import db
 from app.ml.predictor import build_features, predict_burnout
 from app.models import BurnoutHistory, MoodLog, Suggestion
@@ -17,6 +18,45 @@ from . import mood_bp
 from .forms import MoodLogForm
 
 
+def _apply_analysis(log, form):
+    sentiment = get_sentiment_score(form.notes.data)
+    features = build_features(
+        current_user.id,
+        form.log_date.data,
+        form.mood_score.data,
+        form.sleep_hours.data,
+        form.stress_level.data,
+        form.activity_done.data,
+        form.social_interaction.data,
+        sentiment,
+    )
+    prediction = predict_burnout(features)
+    log.log_date = form.log_date.data
+    log.mood_score = form.mood_score.data
+    log.sleep_hours = form.sleep_hours.data
+    log.stress_level = form.stress_level.data
+    log.activity_done = form.activity_done.data
+    log.social_interaction = form.social_interaction.data
+    log.notes = form.notes.data
+    log.sentiment_score = sentiment
+    log.burnout_risk = prediction["prediction"]
+    return prediction
+
+
+def _replace_suggestions(log):
+    Suggestion.query.filter_by(log_id=log.id).delete()
+    preferred = current_user.profile.preferred_activity if current_user.profile else "Walk"
+    for text in get_suggestions(
+        log.burnout_risk,
+        log.sleep_hours,
+        log.stress_level,
+        log.social_interaction,
+        log.activity_done,
+        preferred,
+    ):
+        db.session.add(Suggestion(user_id=current_user.id, log_id=log.id, suggestion_text=text))
+
+
 @mood_bp.route("/log", methods=["GET", "POST"])
 @login_required
 def log_mood():
@@ -27,18 +67,6 @@ def log_mood():
             flash("You already have a log for that date. Edit support can be added later; for now choose another date.", "warning")
             return render_template("mood/log.html", form=form)
 
-        sentiment = get_sentiment_score(form.notes.data)
-        features = build_features(
-            current_user.id,
-            form.log_date.data,
-            form.mood_score.data,
-            form.sleep_hours.data,
-            form.stress_level.data,
-            form.activity_done.data,
-            form.social_interaction.data,
-            sentiment,
-        )
-        prediction = predict_burnout(features)
         log = MoodLog(
             user_id=current_user.id,
             log_date=form.log_date.data,
@@ -47,10 +75,8 @@ def log_mood():
             stress_level=form.stress_level.data,
             activity_done=form.activity_done.data,
             social_interaction=form.social_interaction.data,
-            notes=form.notes.data,
-            sentiment_score=sentiment,
-            burnout_risk=prediction["prediction"],
         )
+        prediction = _apply_analysis(log, form)
         db.session.add(log)
         db.session.flush()
 
@@ -63,24 +89,53 @@ def log_mood():
         )
         db.session.add(history)
 
-        preferred = current_user.profile.preferred_activity if current_user.profile else "Walk"
-        for text in get_suggestions(
-            log.burnout_risk,
-            log.sleep_hours,
-            log.stress_level,
-            log.social_interaction,
-            log.activity_done,
-            preferred,
-        ):
-            db.session.add(Suggestion(user_id=current_user.id, log_id=log.id, suggestion_text=text))
+        _replace_suggestions(log)
 
         db.session.commit()
-        if log.burnout_risk == "High":
+        if log.burnout_risk == BurnoutRisk.HIGH:
+            current_app.logger.info("High-risk alert queued user_id=%s log_id=%s", current_user.id, log.id)
             send_high_risk_alert(current_user, log)
         flash("Mood log saved with DayTone burnout analysis.", "success")
         return redirect(url_for("mood.dashboard"))
 
     return render_template("mood/log.html", form=form)
+
+
+@mood_bp.route("/log/<int:log_id>/edit", methods=["GET", "POST"])
+@login_required
+def edit_log(log_id):
+    log = MoodLog.query.filter_by(id=log_id, user_id=current_user.id).first_or_404()
+    form = MoodLogForm(obj=log)
+    if form.validate_on_submit():
+        existing = (
+            MoodLog.query.filter_by(user_id=current_user.id, log_date=form.log_date.data)
+            .filter(MoodLog.id != log.id)
+            .first()
+        )
+        if existing:
+            flash("You already have another log for that date.", "warning")
+            return render_template("mood/log.html", form=form, editing=True, log=log)
+
+        prediction = _apply_analysis(log, form)
+        BurnoutHistory.query.filter_by(log_id=log.id).delete()
+        db.session.add(
+            BurnoutHistory(
+                user_id=current_user.id,
+                log_id=log.id,
+                prediction=prediction["prediction"],
+                confidence=prediction["confidence"],
+                algorithm_used=prediction["algorithm"],
+            )
+        )
+        _replace_suggestions(log)
+        db.session.commit()
+        if log.burnout_risk == BurnoutRisk.HIGH:
+            current_app.logger.info("High-risk alert queued user_id=%s log_id=%s", current_user.id, log.id)
+            send_high_risk_alert(current_user, log)
+        flash("Mood log updated with fresh DayTone analysis.", "success")
+        return redirect(url_for("mood.history"))
+
+    return render_template("mood/log.html", form=form, editing=True, log=log)
 
 
 @mood_bp.route("/dashboard")
@@ -135,12 +190,37 @@ def report_pdf():
 @mood_bp.route("/export/csv")
 @login_required
 def export_csv():
+    include_notes = request.args.get("include_notes") == "1"
     output = StringIO()
     writer = csv.writer(output)
-    writer.writerow(["date", "mood_score", "sleep_hours", "stress_level", "activity_done", "social_interaction", "sentiment_score", "burnout_risk", "notes"])
+    headers = [
+        "date",
+        "mood_score",
+        "sleep_hours",
+        "stress_level",
+        "activity_done",
+        "social_interaction",
+        "sentiment_score",
+        "burnout_risk",
+    ]
+    if include_notes:
+        headers.append("notes")
+    writer.writerow(headers)
     logs = MoodLog.query.filter_by(user_id=current_user.id).order_by(MoodLog.log_date.asc()).all()
     for log in logs:
-        writer.writerow([log.log_date, log.mood_score, log.sleep_hours, log.stress_level, log.activity_done, log.social_interaction, log.sentiment_score, log.burnout_risk, log.notes or ""])
+        row = [
+            log.log_date,
+            log.mood_score,
+            log.sleep_hours,
+            log.stress_level,
+            log.activity_done,
+            log.social_interaction,
+            log.sentiment_score,
+            log.burnout_risk,
+        ]
+        if include_notes:
+            row.append(log.notes or "")
+        writer.writerow(row)
     return Response(
         output.getvalue(),
         mimetype="text/csv",

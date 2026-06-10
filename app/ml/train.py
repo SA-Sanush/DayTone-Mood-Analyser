@@ -1,5 +1,6 @@
 import json
 import pickle
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
@@ -35,6 +36,7 @@ BASE = Path(__file__).resolve().parent
 DATA_PATH = BASE / "training_data.csv"
 MODEL_PATH = BASE / "model.pkl"
 METRICS_PATH = BASE / "model_metrics.json"
+META_PATH = BASE / "model_meta.json"
 
 
 def load_training_data():
@@ -77,6 +79,18 @@ def train():
     with MODEL_PATH.open("wb") as model_file:
         pickle.dump({"model": best_model, "name": best_name, "features": FEATURE_NAMES}, model_file)
     METRICS_PATH.write_text(json.dumps({"best": best_name, "accuracy": best_acc, "models": results}, indent=2))
+    META_PATH.write_text(
+        json.dumps(
+            {
+                "trained_at": datetime.now(timezone.utc).isoformat(),
+                "algorithm": best_name,
+                "accuracy": best_acc,
+                "n_samples": len(x_train) + len(x_test),
+                "features": FEATURE_NAMES,
+            },
+            indent=2,
+        )
+    )
     print(f"Best model: {best_name} ({best_acc:.2%})")
     print(f"Saved model to {MODEL_PATH}")
     return best_name, best_acc

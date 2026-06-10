@@ -1,7 +1,9 @@
+import hashlib
 from urllib.parse import urlparse
 
 from flask import current_app, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_user, logout_user
+from flask_limiter.util import get_remote_address
 
 from app.extensions import db, limiter
 from app.models import User, UserProfile
@@ -62,7 +64,7 @@ def register():
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])
-@limiter.limit("5 per minute")
+@limiter.limit("5 per minute", key_func=lambda: f"{request.form.get('email', '').lower().strip()}:{get_remote_address()}")
 def login():
     if current_user.is_authenticated:
         return redirect(url_for("mood.dashboard"))
@@ -75,6 +77,8 @@ def login():
             flash("Signed in successfully.", "success")
             next_url = request.args.get("next")
             return redirect(safe_next_url(next_url) or url_for("mood.dashboard"))
+        email_hash = hashlib.sha256(form.email.data.lower().strip().encode("utf-8")).hexdigest()[:12]
+        current_app.logger.info("Failed login attempt email_hash=%s", email_hash)
         flash("Invalid email or password.", "danger")
 
     return render_template("auth/login.html", form=form)

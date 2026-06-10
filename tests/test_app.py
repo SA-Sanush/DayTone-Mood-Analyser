@@ -5,6 +5,7 @@ import pytest
 
 from app import create_app
 from app.extensions import db
+from app.constants import BurnoutRisk
 from app.models import BurnoutHistory, MoodLog, Suggestion, User
 from app.utils.analytics import badge_states, current_streak, dashboard_data, orb_state, trend_summary
 from config import Config, TestConfig
@@ -39,7 +40,7 @@ def register(client, email="user@example.com", admin=False):
             "gender": "other",
             "occupation": "Student",
             "preferred_activity": "Walk",
-            "admin_code": "test-admin" if admin else "",
+            "admin_code": TestConfig.ADMIN_REGISTRATION_CODE if admin else "",
         },
         follow_redirects=True,
     )
@@ -106,16 +107,76 @@ def test_mood_log_prediction_suggestion_and_exports(client, app):
     assert client.get("/history").status_code == 200
     assert client.get("/heatmap").status_code == 200
     assert client.get("/api/heatmap").json
-    assert client.get("/export/csv").status_code == 200
+    export = client.get("/export/csv")
+    assert export.status_code == 200
+    assert b"notes" not in export.data.splitlines()[0]
+    private_export = client.get("/export/csv?include_notes=1")
+    assert b"notes" in private_export.data.splitlines()[0]
     assert client.get("/report/pdf").status_code == 200
+
+
+def test_duplicate_log_date_warns_without_creating_second_log(client, app):
+    register(client)
+    login(client)
+    payload = {
+        "log_date": date.today().isoformat(),
+        "mood_score": 3,
+        "sleep_hours": 7,
+        "stress_level": 2,
+        "activity_done": "y",
+        "social_interaction": 2,
+        "notes": "",
+    }
+    client.post("/log", data=payload, follow_redirects=True)
+    response = client.post("/log", data=payload, follow_redirects=True)
+    assert b"already have a log" in response.data
+    with app.app_context():
+        assert MoodLog.query.count() == 1
+
+
+def test_edit_log_recomputes_prediction(client, app):
+    register(client)
+    login(client)
+    client.post(
+        "/log",
+        data={
+            "log_date": date.today().isoformat(),
+            "mood_score": 5,
+            "sleep_hours": 8,
+            "stress_level": 1,
+            "activity_done": "y",
+            "social_interaction": 3,
+            "notes": "A steady day.",
+        },
+    )
+    with app.app_context():
+        log_id = MoodLog.query.first().id
+    response = client.post(
+        f"/log/{log_id}/edit",
+        data={
+            "log_date": date.today().isoformat(),
+            "mood_score": 1,
+            "sleep_hours": 3,
+            "stress_level": 5,
+            "activity_done": "",
+            "social_interaction": 1,
+            "notes": "Exhausted and overwhelmed.",
+        },
+        follow_redirects=True,
+    )
+    assert b"updated" in response.data.lower()
+    with app.app_context():
+        log = db.session.get(MoodLog, log_id)
+        assert log.burnout_risk == BurnoutRisk.HIGH
+        assert BurnoutHistory.query.filter_by(log_id=log_id).count() == 1
 
 
 def test_dashboard_derived_state_helpers():
     today = date(2026, 6, 10)
     logs = [
-        SimpleNamespace(log_date=today - timedelta(days=2), mood_score=3, sleep_hours=6.5, stress_level=2, activity_done=True, burnout_risk="Low"),
-        SimpleNamespace(log_date=today - timedelta(days=1), mood_score=4, sleep_hours=7.0, stress_level=2, activity_done=True, burnout_risk="Low"),
-        SimpleNamespace(log_date=today, mood_score=5, sleep_hours=8.0, stress_level=1, activity_done=True, burnout_risk="Low"),
+        SimpleNamespace(log_date=today - timedelta(days=2), mood_score=3, sleep_hours=6.5, stress_level=2, activity_done=True, burnout_risk=BurnoutRisk.LOW),
+        SimpleNamespace(log_date=today - timedelta(days=1), mood_score=4, sleep_hours=7.0, stress_level=2, activity_done=True, burnout_risk=BurnoutRisk.LOW),
+        SimpleNamespace(log_date=today, mood_score=5, sleep_hours=8.0, stress_level=1, activity_done=True, burnout_risk=BurnoutRisk.LOW),
     ]
 
     streak = current_streak(logs, today=today)
@@ -160,11 +221,57 @@ def test_admin_access_control(client):
     assert client.get("/admin/dashboard").status_code == 200
 
 
+def test_invalid_admin_registration_code_does_not_grant_admin(client, app):
+    response = client.post(
+        "/register",
+        data={
+            "name": "Admin Nope",
+            "email": "not-admin@example.com",
+            "password": "secret12",
+            "confirm_password": "secret12",
+            "age": 22,
+            "gender": "other",
+            "occupation": "Student",
+            "preferred_activity": "Walk",
+            "admin_code": "wrong-code",
+        },
+        follow_redirects=True,
+    )
+    assert b"sign in" in response.data.lower()
+    with app.app_context():
+        assert User.query.filter_by(email="not-admin@example.com").first().role == "user"
+
+
 def test_trained_model_artifact_loads_and_predicts(app):
     row = generate(rows=1).iloc[0].to_dict()
     features = {name: row[name] for name in FEATURE_NAMES}
     with app.app_context():
         result = predict_burnout(features)
-    assert result["prediction"] in {"Low", "Medium", "High"}
+    assert result["prediction"] in BurnoutRisk.ALL
     assert 0 <= result["confidence"] <= 1
     assert result["algorithm"] in {"DecisionTree", "LogisticRegression", "RandomForest", "Rules"}
+
+
+def test_missing_model_artifact_uses_rule_fallback(monkeypatch, app):
+    from app.ml import predictor
+
+    monkeypatch.setattr(predictor, "MODEL_PATH", predictor.MODEL_PATH.with_name("missing-model.pkl"))
+    predictor._model_payload.cache_clear()
+    features = {
+        "mood_score": 1,
+        "sleep_hours": 4,
+        "stress_level": 5,
+        "activity_done": 0,
+        "social_interaction": 1,
+        "sentiment_score": -0.5,
+        "avg_mood_7d": 2,
+        "avg_stress_7d": 5,
+        "avg_sleep_7d": 4,
+        "consecutive_bad_days": 3,
+        "mood_variability": 0.5,
+        "is_weekend": 0,
+    }
+    with app.app_context():
+        result = predictor.predict_burnout(features)
+    assert result == {"prediction": BurnoutRisk.HIGH, "confidence": 0.78, "algorithm": "Rules"}
+    predictor._model_payload.cache_clear()

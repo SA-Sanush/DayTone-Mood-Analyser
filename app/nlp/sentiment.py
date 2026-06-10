@@ -1,7 +1,7 @@
 try:
     import nltk
     from nltk.sentiment.vader import SentimentIntensityAnalyzer
-except Exception:  # pragma: no cover
+except (ImportError, LookupError, OSError):  # pragma: no cover
     nltk = None
     SentimentIntensityAnalyzer = None
 

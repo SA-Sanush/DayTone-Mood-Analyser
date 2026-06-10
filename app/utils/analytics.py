@@ -1,15 +1,28 @@
-from collections import Counter
 from datetime import date, timedelta
 
 from sqlalchemy import and_, func
+from sqlalchemy.orm import joinedload
 
+from app.constants import BurnoutRisk
 from app.models import MoodLog, User
 
 
 def user_logs(user_id, limit=None):
     query = MoodLog.query.filter_by(user_id=user_id).order_by(MoodLog.log_date.asc())
     if limit:
-        return query.order_by(MoodLog.log_date.desc()).limit(limit).all()[::-1]
+        rows = (
+            MoodLog.query.filter_by(user_id=user_id)
+            .options(joinedload(MoodLog.suggestions))
+            .order_by(MoodLog.log_date.desc())
+            .limit(limit)
+            .subquery()
+        )
+        return (
+            MoodLog.query.options(joinedload(MoodLog.suggestions))
+            .join(rows, MoodLog.id == rows.c.id)
+            .order_by(MoodLog.log_date.asc())
+            .all()
+        )
     return query.all()
 
 
@@ -151,7 +164,7 @@ def challenge_progress(latest, streak_count):
 def dashboard_data(user_id):
     logs = user_logs(user_id, limit=30)
     latest = logs[-1] if logs else None
-    distribution = Counter(log.burnout_risk for log in logs)
+    distribution = {risk: count for risk, count in db_risk_distribution(user_id=user_id, limit=30)}
     avg_mood = round(sum(log.mood_score for log in logs) / len(logs), 2) if logs else 0
     avg_sleep = round(sum(log.sleep_hours for log in logs) / len(logs), 2) if logs else 0
     avg_stress = round(sum(log.stress_level for log in logs) / len(logs), 2) if logs else 0
@@ -159,16 +172,16 @@ def dashboard_data(user_id):
 
     return {
         "latest": latest,
-        "suggestions": [s.suggestion_text for s in latest.suggestions] if latest else [],
+        "suggestions": recent_suggestions(user_id),
         "labels": [log.log_date.isoformat() for log in logs],
         "mood": [log.mood_score for log in logs],
         "sleep": [log.sleep_hours for log in logs],
         "stress": [log.stress_level for log in logs],
         "burnout_risk_trend": [log.burnout_risk for log in logs],
         "burnout_distribution": {
-            "Low": distribution.get("Low", 0),
-            "Medium": distribution.get("Medium", 0),
-            "High": distribution.get("High", 0),
+            BurnoutRisk.LOW: distribution.get(BurnoutRisk.LOW, 0),
+            BurnoutRisk.MEDIUM: distribution.get(BurnoutRisk.MEDIUM, 0),
+            BurnoutRisk.HIGH: distribution.get(BurnoutRisk.HIGH, 0),
         },
         "scatter": [{"x": log.sleep_hours, "y": log.mood_score} for log in logs],
         "avg_mood": avg_mood,
@@ -192,11 +205,47 @@ def heatmap_data(user_id, year=None):
     start = date(year, 1, 1)
     end = date(year, 12, 31)
     logs = (
-        MoodLog.query.filter(MoodLog.user_id == user_id, MoodLog.log_date >= start, MoodLog.log_date <= end)
+        MoodLog.query.with_entities(MoodLog.log_date, MoodLog.mood_score, MoodLog.burnout_risk)
+        .filter(MoodLog.user_id == user_id, MoodLog.log_date >= start, MoodLog.log_date <= end)
         .order_by(MoodLog.log_date.asc())
         .all()
     )
     return [{"date": log.log_date.isoformat(), "mood": log.mood_score, "risk": log.burnout_risk} for log in logs]
+
+
+def recent_suggestions(user_id, log_limit=3):
+    recent_logs = (
+        MoodLog.query.filter_by(user_id=user_id)
+        .options(joinedload(MoodLog.suggestions))
+        .order_by(MoodLog.log_date.desc())
+        .limit(log_limit)
+        .all()
+    )
+    for log in recent_logs:
+        suggestions = [suggestion.suggestion_text for suggestion in log.suggestions]
+        if suggestions:
+            return suggestions
+    return []
+
+
+def db_risk_distribution(user_id=None, limit=None):
+    query = MoodLog.query
+    if user_id is not None:
+        query = query.filter(MoodLog.user_id == user_id)
+    if limit:
+        latest_ids = (
+            MoodLog.query.with_entities(MoodLog.id)
+            .filter(MoodLog.user_id == user_id)
+            .order_by(MoodLog.log_date.desc())
+            .limit(limit)
+            .subquery()
+        )
+        query = MoodLog.query.join(latest_ids, MoodLog.id == latest_ids.c.id)
+    return (
+        query.with_entities(MoodLog.burnout_risk, func.count(MoodLog.id).label("count"))
+        .group_by(MoodLog.burnout_risk)
+        .all()
+    )
 
 
 def platform_stats():
@@ -211,28 +260,26 @@ def platform_stats():
         .group_by(MoodLog.user_id)
         .subquery()
     )
-    distribution = Counter(
-        {
-            risk: count
-            for risk, count in MoodLog.query.with_entities(MoodLog.burnout_risk, func.count(MoodLog.id))
-            .join(
-                latest,
-                and_(MoodLog.user_id == latest.c.user_id, MoodLog.log_date == latest.c.latest_date),
-            )
-            .group_by(MoodLog.burnout_risk)
-            .all()
-        }
-    )
+    distribution = {
+        risk: count
+        for risk, count in MoodLog.query.with_entities(MoodLog.burnout_risk, func.count(MoodLog.id))
+        .join(
+            latest,
+            and_(MoodLog.user_id == latest.c.user_id, MoodLog.log_date == latest.c.latest_date),
+        )
+        .group_by(MoodLog.burnout_risk)
+        .all()
+    }
 
     return {
         "total_users": total_users,
         "active_users": active_users,
-        "high_risk_users": distribution.get("High", 0),
+        "high_risk_users": distribution.get(BurnoutRisk.HIGH, 0),
         "avg_mood": round(avg_mood, 2),
         "avg_sleep": round(avg_sleep, 2),
         "burnout_distribution": {
-            "Low": distribution.get("Low", 0),
-            "Medium": distribution.get("Medium", 0),
-            "High": distribution.get("High", 0),
+            BurnoutRisk.LOW: distribution.get(BurnoutRisk.LOW, 0),
+            BurnoutRisk.MEDIUM: distribution.get(BurnoutRisk.MEDIUM, 0),
+            BurnoutRisk.HIGH: distribution.get(BurnoutRisk.HIGH, 0),
         },
     }

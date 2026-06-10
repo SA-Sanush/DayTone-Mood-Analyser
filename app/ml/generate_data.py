@@ -3,6 +3,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from app.constants import BurnoutRisk
+
 
 OUTPUT = Path(__file__).resolve().parent / "training_data.csv"
 
@@ -17,10 +19,10 @@ def label_row(row):
     score += 1 if row["sentiment_score"] < -0.2 else 0
     score += 1 if row["consecutive_bad_days"] >= 3 else 0
     if score >= 5:
-        return "High"
+        return BurnoutRisk.HIGH
     if score >= 3:
-        return "Medium"
-    return "Low"
+        return BurnoutRisk.MEDIUM
+    return BurnoutRisk.LOW
 
 
 def generate(rows=300):
