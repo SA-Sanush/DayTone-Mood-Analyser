@@ -11,18 +11,87 @@
     <a class="btn btn-outline-secondary" href="{{ url_for('mood.export_csv', include_notes=1) }}"><i data-lucide="file-text"></i>Export with notes</a>
   </div>
 </div>
+
+<!-- Search and Filters Section -->
+<div class="filter-header-row d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 p-3 rounded panel" style="background: rgba(255, 255, 255, 0.45); border: 1px solid var(--dt-border); backdrop-filter: blur(10px);">
+  <div class="search-wrap position-relative flex-grow-1" style="max-width: 380px;">
+    <input type="text" id="historySearchInput" class="form-control ps-5" placeholder="Search date, notes, or tags..." aria-label="Search logs">
+    <i data-lucide="search" class="position-absolute text-secondary" style="width: 18px; height: 18px; left: 16px; top: 50%; transform: translateY(-50%);"></i>
+  </div>
+  
+  <div class="d-flex gap-3 flex-wrap align-items-center">
+    <div class="filter-select-wrap d-flex align-items-center gap-2">
+      <label for="moodFilter" class="small fw-bold text-secondary mb-0">Mood:</label>
+      <select id="moodFilter" class="form-select form-select-sm" style="min-width: 130px; height: 38px; padding-top: 4px; padding-bottom: 4px;">
+        <option value="all">All Moods</option>
+        <option value="happy">Happy</option>
+        <option value="calm">Calm</option>
+        <option value="anxious">Anxious</option>
+        <option value="sad">Sad</option>
+        <option value="sick">Sick</option>
+      </select>
+    </div>
+    
+    <div class="filter-select-wrap d-flex align-items-center gap-2">
+      <label for="riskFilter" class="small fw-bold text-secondary mb-0">Risk:</label>
+      <select id="riskFilter" class="form-select form-select-sm" style="min-width: 130px; height: 38px; padding-top: 4px; padding-bottom: 4px;">
+        <option value="all">All Risks</option>
+        <option value="low">Low</option>
+        <option value="medium">Medium</option>
+        <option value="high">High</option>
+      </select>
+    </div>
+  </div>
+</div>
+
 <div class="panel table-responsive elevated-panel">
-  <table class="table align-middle">
-    <thead><tr><th>Date</th><th>Mood</th><th>Sleep</th><th>Stress</th><th>Social</th><th>Sentiment</th><th>Risk</th><th></th></tr></thead>
+  <table class="table align-middle" style="border-collapse: separate; border-spacing: 0;">
+    <thead>
+      <tr>
+        <th style="width: 40px;"></th>
+        <th>Date</th>
+        <th>Mood</th>
+        <th>Sleep</th>
+        <th>Stress</th>
+        <th>Social</th>
+        <th>Sentiment</th>
+        <th>Risk</th>
+        <th class="text-end" style="width: 100px;">Actions</th>
+      </tr>
+    </thead>
     <tbody>
       {% for log in logs %}
-      <tr>
-        <td>{{ log.log_date }}</td>
-        <td>{{ log.mood_emoji }} {{ log.mood_label }}</td>
-        <td>{{ log.sleep_hours }}</td>
-        <td>{{ log.stress_level }}</td>
-        <td>{{ log.social_interaction }}</td>
-        <td>{{ "%.2f"|format(log.sentiment_score) }}</td>
+      <tr class="log-row cursor-pointer" data-id="{{ log.id }}" data-mood="{{ log.mood_label|lower }}" data-risk="{{ log.burnout_risk|lower }}" data-notes="{{ log.notes|lower if log.notes else '' }}">
+        <td class="toggle-cell text-center" style="width: 40px; padding-left: 0.75rem;">
+          <i data-lucide="chevron-right" class="expand-chevron" style="width: 16px; height: 16px; transition: transform 0.25s ease;"></i>
+        </td>
+        <td class="fw-bold">{{ log.log_date }}</td>
+        <td>
+          <span class="mood-badge mood-badge-{{ log.mood_score }}">
+            {{ log.mood_emoji }} {{ log.mood_label }}
+          </span>
+        </td>
+        <td class="fw-bold" style="font-size: 0.9rem; color: var(--dt-text);">{{ log.sleep_hours }} hrs</td>
+        <td>
+          <span class="stress-dot-wrap">
+            <span class="stress-dot stress-{{ log.stress_level }}"></span>
+            {{ log.stress_level }}/5
+          </span>
+        </td>
+        <td>
+          {% if log.social_interaction == 1 %}
+            👤 Alone
+          {% elif log.social_interaction == 2 %}
+            👥 Group
+          {% else %}
+            🗣️ Social
+          {% endif %}
+        </td>
+        <td>
+          <span class="sentiment-score-pill {% if log.sentiment_score > 0.1 %}pos{% elif log.sentiment_score < -0.1 %}neg{% else %}neu{% endif %}">
+            {{ "%.2f"|format(log.sentiment_score) }}
+          </span>
+        </td>
         <td>
           <span class="badge risk-bg-{{ log.burnout_risk|lower }}">
             {% if log.burnout_risk == 'Low' %}
@@ -34,10 +103,92 @@
             {% endif %}
           </span>
         </td>
-        <td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="{{ url_for('mood.edit_log', log_id=log.id) }}"><i data-lucide="pencil"></i>Edit</a></td>
+        <td class="text-end" style="width: 100px; padding-right: 0.75rem;">
+          <a class="btn btn-sm btn-outline-secondary py-1 edit-btn" href="{{ url_for('mood.edit_log', log_id=log.id) }}">
+            <i data-lucide="pencil" style="width: 13px; height: 13px;"></i>Edit
+          </a>
+        </td>
+      </tr>
+      
+      <!-- Expandable Detail Sub-row -->
+      <tr class="detail-row" id="detail-{{ log.id }}" style="display: none; background: rgba(100, 116, 139, 0.02);">
+        <td colspan="9" class="p-0" style="border: 0;">
+          <div class="detail-content-wrapper" style="max-height: 0; overflow: hidden; transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1), padding 0.3s ease;">
+            <div class="row g-3">
+              <!-- Journal Notes segment -->
+              <div class="col-md-7">
+                <div class="detail-section-card h-100 p-3 rounded" style="background: rgba(255, 255, 255, 0.72); border: 1px solid var(--dt-border);">
+                  <h6 class="small-title d-flex align-items-center gap-1 mb-2" style="font-size: 0.82rem; font-weight: 850; color: var(--dt-muted); text-transform: uppercase; letter-spacing: 0.5px;">
+                    <i data-lucide="book-open" class="text-primary" style="width: 14px; height: 14px;"></i>
+                    <span>Journal Notes</span>
+                  </h6>
+                  {% if log.notes %}
+                  <blockquote class="note-blockquote ps-3 py-1 mb-0 {% if log.sentiment_score > 0.15 %}sentiment-pos{% elif log.sentiment_score < -0.15 %}sentiment-neg{% else %}sentiment-neu{% endif %}" style="border-left: 3px solid var(--dt-border); font-style: italic; font-size: 0.9rem; color: var(--dt-text);">
+                    "{{ log.notes }}"
+                  </blockquote>
+                  {% else %}
+                  <p class="text-secondary small mb-0">No journal notes recorded for this log.</p>
+                  {% endif %}
+                </div>
+              </div>
+              
+              <!-- AI Suggestions segment -->
+              <div class="col-md-5">
+                <div class="detail-section-card h-100 p-3 rounded" style="background: rgba(255, 255, 255, 0.72); border: 1px solid var(--dt-border);">
+                  <h6 class="small-title d-flex align-items-center gap-1 mb-2" style="font-size: 0.82rem; font-weight: 850; color: var(--dt-muted); text-transform: uppercase; letter-spacing: 0.5px;">
+                    <i data-lucide="sparkles" class="text-primary" style="width: 14px; height: 14px;"></i>
+                    <span>Coach Recommendations</span>
+                  </h6>
+                  {% if log.suggestions %}
+                  <div class="d-flex flex-column gap-2">
+                    {% for sugg in log.suggestions %}
+                    {% set is_do = sugg.suggestion_text.startswith("DO: ") %}
+                    {% set is_dont = sugg.suggestion_text.startswith("DON'T: ") %}
+                    {% set clean_sugg = sugg.suggestion_text[4:] if is_do else (sugg.suggestion_text[7:] if is_dont else sugg.suggestion_text) %}
+                    <div class="history-suggestion-item">
+                      <div class="d-flex flex-column flex-grow-1">
+                        <span class="badge {% if is_dont %}bg-danger-subtle text-danger{% else %}bg-success-subtle text-success{% endif %} mb-1" style="font-size: 0.65rem; font-weight: 800; width: fit-content; text-transform: uppercase; padding: 0.2rem 0.45rem; border-radius: 4px;">
+                          {% if is_dont %}Avoid{% else %}Action{% endif %}
+                        </span>
+                        <span style="font-weight: 650; font-size: 0.82rem; color: var(--dt-text); line-height: 1.4;">
+                          {{ clean_sugg }}
+                        </span>
+                      </div>
+                    </div>
+                    {% endfor %}
+                  </div>
+                  {% else %}
+                  <p class="text-secondary small mb-0">No suggestions generated for this log.</p>
+                  {% endif %}
+                </div>
+              </div>
+              
+              <!-- Additional metrics tag row -->
+              <div class="col-12 d-flex gap-2 flex-wrap pt-2">
+                <span class="tag-badge">
+                  <i data-lucide="{% if log.activity_done %}check-circle{% else %}x-circle{% endif %}" style="width: 13px; height: 13px; color: {% if log.activity_done %}var(--dt-good){% else %}var(--dt-muted){% endif %};"></i>
+                  <span>Activity: {% if log.activity_done %}Completed{% else %}Rest Day{% endif %}</span>
+                </span>
+                
+                <span class="tag-badge log-time-badge" data-utc-time="{{ log.created_at.isoformat() if log.created_at else '' }}">
+                  <i data-lucide="clock" style="width: 13px; height: 13px;"></i>
+                  <span class="time-text">Logged: {{ log.created_at.strftime("%I:%M %p") if log.created_at else "N/A" }}</span>
+                </span>
+
+                {% if log.burnout_history %}
+                {% set hist = log.burnout_history[0] %}
+                <span class="tag-badge">
+                  <i data-lucide="cpu" style="width: 13px; height: 13px;"></i>
+                  <span>Analysis Model: {{ hist.algorithm_used }} ({{ "%.0f"|format(hist.confidence * 100) }}% confidence)</span>
+                </span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </td>
       </tr>
       {% else %}
-      <tr><td colspan="8" class="text-center text-secondary py-4">No logs yet.</td></tr>
+      <tr><td colspan="9" class="text-center text-secondary py-4">No logs yet.</td></tr>
       {% endfor %}
     </tbody>
   </table>
@@ -71,4 +222,132 @@
   </nav>
   {% endif %}
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Lucide helper to update newly added icons
+  if (window.lucide) {
+    window.lucide.createIcons();
+  }
+
+  // --- Expand / Collapse Row Handler ---
+  const logRows = document.querySelectorAll('.log-row');
+  logRows.forEach(row => {
+    row.addEventListener('click', (event) => {
+      // Don't expand if clicking the "Edit" button
+      if (event.target.closest('.edit-btn')) return;
+      
+      const logId = row.dataset.id;
+      const detailRow = document.getElementById(`detail-${logId}`);
+      if (!detailRow) return;
+      
+      const isExpanded = row.classList.contains('expanded');
+      const wrapper = detailRow.querySelector('.detail-content-wrapper');
+      
+      if (isExpanded) {
+        // Collapse
+        row.classList.remove('expanded');
+        if (wrapper) {
+          wrapper.style.maxHeight = '0';
+          wrapper.style.padding = '0';
+        }
+        setTimeout(() => {
+          detailRow.style.display = 'none';
+        }, 300);
+      } else {
+        // Expand
+        detailRow.style.display = 'table-row';
+        row.classList.add('expanded');
+        // Let display register then animate max-height
+        requestAnimationFrame(() => {
+          if (wrapper) {
+            wrapper.style.padding = '1.25rem';
+            wrapper.style.maxHeight = '350px'; // Safe maximum height for detail content
+          }
+        });
+      }
+    });
+  });
+
+  // --- Search and Live Filter Logic ---
+  const searchInput = document.getElementById('historySearchInput');
+  const moodFilter = document.getElementById('moodFilter');
+  const riskFilter = document.getElementById('riskFilter');
+
+  function filterTable() {
+    const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    const selectedMood = moodFilter ? moodFilter.value : 'all';
+    const selectedRisk = riskFilter ? riskFilter.value : 'all';
+
+    logRows.forEach(row => {
+      const logId = row.dataset.id;
+      const detailRow = document.getElementById(`detail-${logId}`);
+      
+      // Extract data attributes for filtering
+      const rowMood = row.dataset.mood;
+      const rowRisk = row.dataset.risk;
+      const rowNotes = row.dataset.notes;
+      const rowDate = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+      
+      // Perform checks
+      const matchesSearch = rowDate.includes(query) || rowNotes.includes(query) || rowMood.includes(query) || rowRisk.includes(query);
+      const matchesMood = (selectedMood === 'all') || (rowMood === selectedMood);
+      const matchesRisk = (selectedRisk === 'all') || (rowRisk === selectedRisk);
+      
+      if (matchesSearch && matchesMood && matchesRisk) {
+        row.style.display = 'table-row';
+        // Keep detail row hidden unless expanded
+        if (row.classList.contains('expanded')) {
+          detailRow.style.display = 'table-row';
+        }
+      } else {
+        row.style.display = 'none';
+        detailRow.style.display = 'none';
+      }
+    });
+    
+    // Check if table is empty after filtering
+    const visibleRows = Array.from(logRows).filter(row => row.style.display !== 'none');
+    let noResultsRow = document.getElementById('noResultsRow');
+    
+    if (visibleRows.length === 0) {
+      if (!noResultsRow) {
+        const tbody = document.querySelector('table.table tbody');
+        noResultsRow = document.createElement('tr');
+        noResultsRow.id = 'noResultsRow';
+        noResultsRow.innerHTML = `<td colspan="9" class="text-center text-secondary py-4">No matching logs found.</td>`;
+        tbody.appendChild(noResultsRow);
+      } else {
+        noResultsRow.style.display = 'table-row';
+      }
+    } else if (noResultsRow) {
+      noResultsRow.style.display = 'none';
+    }
+  }
+
+  if (searchInput) searchInput.addEventListener('input', filterTable);
+  if (moodFilter) moodFilter.addEventListener('change', filterTable);
+  if (riskFilter) riskFilter.addEventListener('change', filterTable);
+
+  // --- Convert Logged Time to Local Timezone ---
+  const timeBadges = document.querySelectorAll('.log-time-badge');
+  timeBadges.forEach(badge => {
+    const utcStr = badge.dataset.utcTime;
+    if (!utcStr) return;
+    
+    const dateObj = new Date(utcStr);
+    if (isNaN(dateObj.getTime())) return;
+    
+    // Format in user's local time: e.g. "11:14 AM"
+    const localTimeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    const textSpan = badge.querySelector('.time-text');
+    if (textSpan) {
+      textSpan.textContent = `Logged: ${localTimeStr}`;
+    }
+  });
+});
+</script>
 {% endblock %}

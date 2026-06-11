@@ -1,62 +1,128 @@
 {% extends "base.html" %}
 {% block title %}Login - DayTone{% endblock %}
 {% block content %}
+
+<!-- Animated mesh gradient background blobs -->
+<div class="login-bg" aria-hidden="true">
+  <div class="login-blob lb-1"></div>
+  <div class="login-blob lb-2"></div>
+  <div class="login-blob lb-3"></div>
+  <div class="login-blob lb-4"></div>
+</div>
+
 <section class="auth-shell immersive">
-  <div class="auth-visual">
+  <!-- ── Left visual ── -->
+  <div class="auth-visual" id="authVisual">
     <canvas id="toneField" data-scene="auth"></canvas>
+
+    <div class="auth-glow-orb orb-1" aria-hidden="true"></div>
+    <div class="auth-glow-orb orb-2" aria-hidden="true"></div>
+    <div class="auth-glow-orb orb-3" aria-hidden="true"></div>
+
+    <!-- Orbital ring decoration -->
+    <div class="orbital-ring ring-a" aria-hidden="true"></div>
+    <div class="orbital-ring ring-b" aria-hidden="true"></div>
+
     <div class="hero-copy">
       <span class="eyebrow animate-fade-in-up">AI wellness monitor</span>
-      <h1 class="animate-fade-in-up delay-1">DayTone</h1>
+
+      <!-- Gradient text headline -->
+      <h1 class="hero-gradient-title animate-fade-in-up delay-1">DayTone</h1>
+
       <p class="animate-fade-in-up delay-2">Track mood, sleep, stress, and burnout signals with one calm daily check-in.</p>
+
       <div class="hero-metrics animate-fade-in-up delay-3">
-        <span><strong>5</strong> insight charts</span>
-        <span><strong>12</strong> ML features</span>
-        <span><strong>PDF</strong> reports</span>
+        <span class="hero-stat" data-target="5">
+          <strong class="hero-stat-num">0</strong>
+          <small>insight charts</small>
+        </span>
+        <span class="hero-stat" data-target="12">
+          <strong class="hero-stat-num">0</strong>
+          <small>ML features</small>
+        </span>
+        <span class="hero-stat" data-target-text="PDF">
+          <strong class="hero-stat-num">—</strong>
+          <small>reports</small>
+        </span>
+      </div>
+
+      <div class="hero-tagline animate-fade-in-up delay-4" aria-live="polite">
+        <span id="heroTypeText" class="hero-type-text"></span><span class="hero-cursor">|</span>
       </div>
     </div>
   </div>
-  <form method="post" class="panel auth-panel elevated-panel">
+
+  <!-- ── Glass form panel ── -->
+  <form method="post" class="glass-auth-panel auth-tilt-panel" id="authPanel">
     {{ form.hidden_tag() }}
-    <div class="animate-fade-in-up">
-      <span class="eyebrow">Welcome back</span>
-      <h2>Sign in</h2>
-    </div>
-    
-    <div class="animate-fade-in-up delay-1">
-      <label class="form-label mt-2">{{ form.email.label }}</label>
-      {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
-      {% for error in form.email.errors %}
-        <span class="invalid-feedback d-block mb-3" role="alert">{{ error }}</span>
-      {% endfor %}
-      {% if not form.email.errors %}<div class="mb-3"></div>{% endif %}
+
+    <!-- Logo mark inside panel -->
+    <div class="glass-panel-brand animate-fade-in-up">
+      <span class="brand-mark-lg">DT</span>
+      <div>
+        <span class="eyebrow" style="color:var(--dt-primary);">Welcome back</span>
+        <h2 class="glass-panel-title">Sign in</h2>
+      </div>
     </div>
 
-    <div class="animate-fade-in-up delay-2">
-      <label class="form-label">{{ form.password.label }}</label>
-      <div class="password-field-container position-relative">
-        {{ form.password(class="form-control pe-5" + (" is-invalid" if form.password.errors else "")) }}
-        <button type="button" class="btn password-toggle-btn position-absolute end-0 top-0 h-100" id="togglePassword" aria-label="Toggle password visibility">
+    <!-- Email -->
+    <div class="animate-fade-in-up delay-1 mb-4">
+      <div class="float-label-wrap {{ 'has-error' if form.email.errors else '' }}">
+        {{ form.email(class="float-input" + (" is-invalid" if form.email.errors else ""), id="email", autocomplete="email", placeholder=" ") }}
+        <label class="float-label" for="email"><i data-lucide="mail" style="width:13px;height:13px;"></i> {{ form.email.label.text }}</label>
+        <div class="float-border"></div>
+      </div>
+      {% for error in form.email.errors %}
+        <span class="input-err-msg" role="alert">{{ error }}</span>
+      {% endfor %}
+    </div>
+
+    <!-- Password -->
+    <div class="animate-fade-in-up delay-2 mb-2">
+      <div class="float-label-wrap {{ 'has-error' if form.password.errors else '' }}" id="pwdWrap">
+        {{ form.password(class="float-input pe-5" + (" is-invalid" if form.password.errors else ""), id="password", autocomplete="current-password", placeholder=" ") }}
+        <label class="float-label" for="password"><i data-lucide="lock" style="width:13px;height:13px;"></i> {{ form.password.label.text }}</label>
+        <div class="float-border"></div>
+        <button type="button" class="float-pwd-toggle" id="togglePassword" aria-label="Toggle password visibility">
           <i data-lucide="eye"></i>
         </button>
       </div>
+
+      <!-- Strength bar -->
+      <div class="pwd-strength-bar-wrap" id="pwdStrengthWrap" style="display:none;">
+        <div class="pwd-strength-bar" id="pwdStrengthBar"></div>
+        <span class="pwd-strength-label" id="pwdStrengthLabel"></span>
+      </div>
+
       {% for error in form.password.errors %}
-        <span class="invalid-feedback d-block mb-3" role="alert">{{ error }}</span>
+        <span class="input-err-msg" role="alert">{{ error }}</span>
       {% endfor %}
-      {% if not form.password.errors %}<div class="mb-3"></div>{% endif %}
     </div>
 
+    <!-- Remember me -->
     <div class="animate-fade-in-up delay-3">
-      <div class="form-check mb-3">
+      <div class="form-check mb-4">
         {{ form.remember_me(class="form-check-input") }}
         <label class="form-check-label" for="remember_me">{{ form.remember_me.label.text }}</label>
       </div>
 
-      <button class="btn btn-primary w-100" type="submit"><i data-lucide="log-in"></i>Sign in</button>
+      <!-- Neon sign-in button -->
+      <button class="neon-btn w-100 auth-submit-btn" type="submit" id="signInBtn">
+        <span class="neon-btn-shine" aria-hidden="true"></span>
+        <span class="btn-default-content"><i data-lucide="log-in"></i>Sign in</span>
+        <span class="btn-loading-content" style="display:none;">
+          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Signing in…
+        </span>
+      </button>
     </div>
-    
+
     <div class="animate-fade-in-up delay-4">
-      <div class="auth-divider my-3"><span class="small text-muted text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.05em;">New to DayTone?</span></div>
-      <a href="{{ url_for('auth.register') }}" class="btn btn-glass w-100 justify-content-center"><i data-lucide="user-plus"></i>Create an account</a>
+      <div class="glass-divider">
+        <span>New to DayTone?</span>
+      </div>
+      <a href="{{ url_for('auth.register') }}" class="ghost-btn w-100">
+        <i data-lucide="user-plus"></i>Create an account
+      </a>
     </div>
   </form>
 </section>
@@ -64,25 +130,157 @@
 
 {% block scripts %}
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const toggleBtn = document.getElementById('togglePassword');
-    const passwordInput = document.getElementById('password');
-    
-    if (toggleBtn && passwordInput) {
-      toggleBtn.addEventListener('click', function() {
-        const icon = toggleBtn.querySelector('i');
-        if (passwordInput.type === 'password') {
-          passwordInput.type = 'text';
-          icon.setAttribute('data-lucide', 'eye-off');
-        } else {
-          passwordInput.type = 'password';
-          icon.setAttribute('data-lucide', 'eye');
-        }
-        if (window.lucide) {
-          window.lucide.createIcons();
-        }
-      });
-    }
+document.addEventListener('DOMContentLoaded', function () {
+
+  /* ── 1. Float label activation ── */
+  document.querySelectorAll('.float-input').forEach(inp => {
+    const wrap = inp.closest('.float-label-wrap');
+    const checkFilled = () => wrap?.classList.toggle('filled', inp.value.length > 0);
+    inp.addEventListener('focus', () => { wrap?.classList.add('focused'); checkFilled(); });
+    inp.addEventListener('blur',  () => { wrap?.classList.remove('focused'); checkFilled(); });
+    inp.addEventListener('input', checkFilled);
+    checkFilled();
   });
+
+  /* ── 2. Password toggle ── */
+  const toggleBtn   = document.getElementById('togglePassword');
+  const passwordInput = document.getElementById('password');
+  if (toggleBtn && passwordInput) {
+    toggleBtn.addEventListener('click', () => {
+      const icon = toggleBtn.querySelector('i');
+      passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password';
+      icon.setAttribute('data-lucide', passwordInput.type === 'password' ? 'eye' : 'eye-off');
+      if (window.lucide) window.lucide.createIcons();
+    });
+  }
+
+  /* ── 3. Password strength ── */
+  const pwdStrengthWrap  = document.getElementById('pwdStrengthWrap');
+  const pwdStrengthBar   = document.getElementById('pwdStrengthBar');
+  const pwdStrengthLabel = document.getElementById('pwdStrengthLabel');
+  if (passwordInput && pwdStrengthWrap) {
+    passwordInput.addEventListener('input', () => {
+      const v = passwordInput.value;
+      if (!v.length) { pwdStrengthWrap.style.display = 'none'; return; }
+      pwdStrengthWrap.style.display = 'flex';
+      let score = 0;
+      if (v.length >= 8) score++;
+      if (/[A-Z]/.test(v)) score++;
+      if (/[0-9]/.test(v)) score++;
+      if (/[^A-Za-z0-9]/.test(v)) score++;
+      const levels = [
+        { label:'Weak',   color:'#ef4444', width:'25%' },
+        { label:'Fair',   color:'#f59e0b', width:'50%' },
+        { label:'Good',   color:'#3b82f6', width:'75%' },
+        { label:'Strong', color:'#10b981', width:'100%' },
+      ];
+      const lvl = levels[Math.max(0, score - 1)];
+      pwdStrengthBar.style.width = lvl.width;
+      pwdStrengthBar.style.background = lvl.color;
+      pwdStrengthLabel.textContent = lvl.label;
+      pwdStrengthLabel.style.color  = lvl.color;
+    });
+  }
+
+  /* ── 4. Submit loading ── */
+  const signInBtn = document.getElementById('signInBtn');
+  const authPanel = document.getElementById('authPanel');
+  if (authPanel && signInBtn) {
+    authPanel.addEventListener('submit', () => {
+      signInBtn.querySelector('.btn-default-content').style.display = 'none';
+      signInBtn.querySelector('.btn-loading-content').style.display = 'inline-flex';
+      signInBtn.disabled = true;
+    });
+  }
+
+  /* ── 5. Panel 3D tilt ── */
+  const panel  = document.getElementById('authPanel');
+  const visual = document.getElementById('authVisual');
+  if (panel && visual) {
+    visual.addEventListener('mousemove', e => {
+      const r = visual.getBoundingClientRect();
+      const rx = ((e.clientY - r.top  - r.height / 2) / r.height) * 6;
+      const ry = -((e.clientX - r.left - r.width  / 2) / r.width)  * 6;
+      panel.style.transform = `perspective(1000px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+    });
+    visual.addEventListener('mouseleave', () => {
+      panel.style.transform = 'perspective(1000px) rotateX(0) rotateY(0)';
+    });
+  }
+
+  /* ── 6. Animated stat counters ── */
+  function animateCounter(el, target, dur) {
+    let start = 0;
+    const step = ts => {
+      if (!start) start = ts;
+      const pct = Math.min((ts - start) / dur, 1);
+      el.textContent = Math.round(pct * pct * target);
+      if (pct < 1) requestAnimationFrame(step);
+      else el.textContent = target;
+    };
+    requestAnimationFrame(step);
+  }
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(en => {
+      if (!en.isIntersecting) return;
+      const s = en.target, numEl = s.querySelector('.hero-stat-num');
+      if (!numEl) return;
+      if (s.dataset.target) animateCounter(numEl, parseInt(s.dataset.target), 1200);
+      else if (s.dataset.targetText) setTimeout(() => numEl.textContent = s.dataset.targetText, 600);
+      obs.unobserve(s);
+    });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('.hero-stat').forEach(s => obs.observe(s));
+
+  /* ── 7. Typing tagline ── */
+  const lines = [
+    'Your daily wellness check-in.',
+    'Track mood, sleep & burnout.',
+    'Powered by ML — built for you.',
+    'One check-in. Endless insight.',
+  ];
+  const typeEl = document.getElementById('heroTypeText');
+  if (typeEl) {
+    let li = 0, ci = 0, del = false;
+    function type() {
+      const line = lines[li];
+      if (!del) {
+        typeEl.textContent = line.slice(0, ++ci);
+        if (ci === line.length) { del = true; setTimeout(type, 2200); return; }
+        setTimeout(type, 50);
+      } else {
+        typeEl.textContent = line.slice(0, --ci);
+        if (ci === 0) { del = false; li = (li + 1) % lines.length; setTimeout(type, 400); return; }
+        setTimeout(type, 25);
+      }
+    }
+    setTimeout(type, 1000);
+  }
+
+  /* ── 8. Neon button magnetic hover ── */
+  const neonBtn = document.getElementById('signInBtn');
+  if (neonBtn) {
+    neonBtn.addEventListener('mousemove', e => {
+      const r = neonBtn.getBoundingClientRect();
+      const x = ((e.clientX - r.left) / r.width  - 0.5) * 12;
+      const y = ((e.clientY - r.top)  / r.height - 0.5) * 8;
+      neonBtn.style.transform = `translate(${x}px, ${y}px) scale(1.02)`;
+    });
+    neonBtn.addEventListener('mouseleave', () => {
+      neonBtn.style.transform = '';
+    });
+  }
+
+  /* ── 9. Blob parallax on mouse ── */
+  document.addEventListener('mousemove', e => {
+    const x = e.clientX / window.innerWidth;
+    const y = e.clientY / window.innerHeight;
+    const b1 = document.querySelector('.lb-1');
+    const b2 = document.querySelector('.lb-2');
+    if (b1) b1.style.transform = `translate(${x * 30}px, ${y * 20}px)`;
+    if (b2) b2.style.transform = `translate(${-x * 25}px, ${-y * 18}px)`;
+  });
+
+});
 </script>
 {% endblock %}

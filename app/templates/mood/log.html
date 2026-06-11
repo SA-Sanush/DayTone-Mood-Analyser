@@ -3,7 +3,7 @@
 {% block content %}
 <form method="post" class="panel form-panel elevated-panel checkin-panel">
   {{ form.hidden_tag() }}
-  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 animate-fade-in-up">
     <div class="form-heading">
       <span class="eyebrow">Daily signal</span>
       <h1>{{ "Edit check-in" if editing else "Daily check-in" }}</h1>
@@ -11,7 +11,7 @@
     {{ form.log_date(class="form-control date-input") }}
   </div>
   <div class="row g-3">
-    <div class="col-12 mb-3">
+    <div class="col-12 mb-3 animate-fade-in-up delay-1">
       <label class="form-label d-block mb-3">How are you feeling today?</label>
       <div class="mood-selection-grid">
         <input type="hidden" name="mood_score" id="mood_score" value="{{ form.mood_score.data or '' }}">
@@ -45,36 +45,60 @@
       {% endif %}
     </div>
 
-    <div class="col-md-4">
-      <label class="form-label">{{ form.sleep_hours.label }}</label>
-      {{ form.sleep_hours(class="form-control", step="0.1", min="0", max="24") }}
+    <div class="col-md-4 animate-fade-in-up delay-2">
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <label class="form-label mb-0">{{ form.sleep_hours.label }}</label>
+        <span id="sleep_value" class="text-primary fw-extrabold" style="font-size: 0.9rem;">8.0 hrs</span>
+      </div>
+      <input type="range" class="form-range" id="sleep_slider" min="3" max="12" step="0.5" value="8">
+      {{ form.sleep_hours(class="d-none") }}
     </div>
-    <div class="col-md-4">
-      <label class="form-label">{{ form.stress_level.label }} <span class="text-secondary">(1-5)</span></label>
-      {{ form.stress_level(class="form-control", min="1", max="5") }}
+    <div class="col-md-4 animate-fade-in-up delay-2">
+      <label class="form-label mb-2">{{ form.stress_level.label }}</label>
+      <div class="interactive-btn-group stress-btn-group">
+        <button type="button" class="option-btn" data-value="1" title="Very Low">1</button>
+        <button type="button" class="option-btn" data-value="2" title="Low">2</button>
+        <button type="button" class="option-btn" data-value="3" title="Moderate">3</button>
+        <button type="button" class="option-btn" data-value="4" title="High">4</button>
+        <button type="button" class="option-btn" data-value="5" title="Extreme">5</button>
+      </div>
+      {{ form.stress_level(class="d-none") }}
     </div>
-    <div class="col-md-4">
-      <label class="form-label">{{ form.social_interaction.label }} <span class="text-secondary">(1-3)</span></label>
-      {{ form.social_interaction(class="form-control", min="1", max="3") }}
+    <div class="col-md-4 animate-fade-in-up delay-2">
+      <label class="form-label mb-2">{{ form.social_interaction.label }}</label>
+      <div class="interactive-btn-group social-btn-group">
+        <button type="button" class="option-btn" data-value="1" title="Alone">👤 Alone</button>
+        <button type="button" class="option-btn" data-value="2" title="Group">👥 Group</button>
+        <button type="button" class="option-btn" data-value="3" title="Social">🗣️ Social</button>
+      </div>
+      {{ form.social_interaction(class="d-none") }}
     </div>
-    <div class="col-12">
-      <div class="form-check switch-card">
-        {{ form.activity_done(class="form-check-input") }}
-        <label class="form-check-label">{{ form.activity_done.label }}</label>
+    <div class="col-12 animate-fade-in-up delay-3">
+      <div class="form-check switch-card d-flex align-items-center gap-3" id="activity_card">
+        {{ form.activity_done(class="form-check-input d-none") }}
+        <span class="custom-switch-indicator"></span>
+        <label class="form-check-label mb-0 cursor-pointer">{{ form.activity_done.label.text }}</label>
       </div>
     </div>
-    <div class="col-12">
+    <div class="col-12 animate-fade-in-up delay-4">
       <label class="form-label">{{ form.notes.label }}</label>
       {{ form.notes(class="form-control", rows="5", maxlength="1000", id="notes") }}
       <div class="small text-secondary mt-1"><span id="noteCount">0</span>/1000</div>
     </div>
+  <div class="d-flex align-items-center gap-2 mt-4 animate-fade-in-up delay-5">
+    <button class="btn btn-primary" type="submit">
+      <i data-lucide="save"></i>{{ "Update log" if editing else "Save log" }}
+    </button>
+    <a class="btn btn-outline-secondary btn-glass d-inline-flex align-items-center justify-content-center" href="{{ url_for('mood.history') if editing else url_for('mood.dashboard') }}">
+      <i data-lucide="x" style="width: 16px; height: 16px;"></i>Cancel
+    </a>
   </div>
-  <button class="btn btn-primary mt-4" type="submit"><i data-lucide="save"></i>{{ "Update log" if editing else "Save log" }}</button>
 </form>
 {% endblock %}
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+  // Character counter for notes
   const notes = document.getElementById('notes');
   const count = document.getElementById('noteCount');
   if (notes && count) {
@@ -83,22 +107,102 @@ document.addEventListener('DOMContentLoaded', () => {
     update();
   }
 
-  const buttons = document.querySelectorAll('.mood-btn-option');
-  const input = document.getElementById('mood_score');
+  // Mood selection grid
+  const moodButtons = document.querySelectorAll('.mood-btn-option');
+  const moodInput = document.getElementById('mood_score');
   
-  buttons.forEach(button => {
+  moodButtons.forEach(button => {
     button.addEventListener('click', () => {
-      buttons.forEach(btn => btn.classList.remove('active'));
+      moodButtons.forEach(btn => btn.classList.remove('active'));
       button.classList.add('active');
-      input.value = button.dataset.value;
+      moodInput.value = button.dataset.value;
     });
   });
 
-  if (input && input.value) {
-    const activeBtn = document.querySelector(`.mood-btn-option[data-value="${input.value}"]`);
+  if (moodInput && moodInput.value) {
+    const activeBtn = document.querySelector(`.mood-btn-option[data-value="${moodInput.value}"]`);
     if (activeBtn) {
       activeBtn.classList.add('active');
     }
+  }
+
+  // Sleep slider sync
+  const sleepSlider = document.getElementById('sleep_slider');
+  const sleepValue = document.getElementById('sleep_value');
+  const sleepInput = document.getElementById('sleep_hours');
+  
+  if (sleepSlider && sleepInput && sleepValue) {
+    if (sleepInput.value) {
+      sleepSlider.value = sleepInput.value;
+      sleepValue.textContent = parseFloat(sleepInput.value).toFixed(1) + ' hrs';
+    } else {
+      sleepInput.value = sleepSlider.value;
+    }
+    
+    sleepSlider.addEventListener('input', () => {
+      sleepInput.value = sleepSlider.value;
+      sleepValue.textContent = parseFloat(sleepSlider.value).toFixed(1) + ' hrs';
+    });
+  }
+
+  // Stress Level button selection
+  const stressInput = document.getElementById('stress_level');
+  const stressBtns = document.querySelectorAll('.stress-btn-group .option-btn');
+  
+  if (stressInput && stressBtns.length) {
+    stressBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        stressBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        stressInput.value = btn.dataset.value;
+      });
+    });
+    
+    if (stressInput.value) {
+      const activeBtn = document.querySelector(`.stress-btn-group .option-btn[data-value="${stressInput.value}"]`);
+      if (activeBtn) activeBtn.classList.add('active');
+    }
+  }
+
+  // Social Interaction button selection
+  const socialInput = document.getElementById('social_interaction');
+  const socialBtns = document.querySelectorAll('.social-btn-group .option-btn');
+  
+  if (socialInput && socialBtns.length) {
+    socialBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        socialBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        socialInput.value = btn.dataset.value;
+      });
+    });
+    
+    if (socialInput.value) {
+      const activeBtn = document.querySelector(`.social-btn-group .option-btn[data-value="${socialInput.value}"]`);
+      if (activeBtn) activeBtn.classList.add('active');
+    }
+  }
+
+  // Custom switch card toggle
+  const activityCard = document.getElementById('activity_card');
+  const activityInput = document.getElementById('activity_done');
+  
+  if (activityCard && activityInput) {
+    // Initial sync
+    activityCard.classList.toggle('checked', activityInput.checked);
+    
+    // Sync class on change
+    activityInput.addEventListener('change', () => {
+      activityCard.classList.toggle('checked', activityInput.checked);
+    });
+
+    // Toggle checkbox when clicking the card background (avoiding clicking label/input directly to prevent double-toggling)
+    activityCard.addEventListener('click', (e) => {
+      if (e.target !== activityInput && !e.target.closest('label')) {
+        activityInput.checked = !activityInput.checked;
+        activityInput.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
   }
 });
 </script>

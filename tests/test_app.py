@@ -495,3 +495,97 @@ def test_admin_user_detail_view(client, app):
 
     # 4. View non-existent user
     assert client.get("/admin/user/99999").status_code == 404
+
+
+def test_admin_management_actions(client, app):
+    # Register a normal user with log
+    register(client, email="user_to_manage@example.com")
+    login(client, email="user_to_manage@example.com")
+    # Log mood
+    client.post("/log", data={
+        "log_date": "2026-06-10",
+        "mood_score": 4,
+        "sleep_hours": 7.5,
+        "stress_level": 3,
+        "social_interaction": 2,
+        "activity_done": "y",
+        "notes": "Original notes text."
+    })
+    client.get("/logout")
+
+    # Register admin user and login
+    register(client, email="super_admin@example.com", admin=True)
+    login(client, email="super_admin@example.com")
+
+    with app.app_context():
+        target = User.query.filter_by(email="user_to_manage@example.com").first()
+        target_id = target.id
+        log = MoodLog.query.filter_by(user_id=target_id).first()
+        log_id = log.id
+
+    # 1. Edit User Profile
+    res = client.get(f"/admin/user/{target_id}/profile")
+    assert res.status_code == 200
+    res = client.post(f"/admin/user/{target_id}/profile", data={
+        "name": "Updated Managed User",
+        "email": "user_to_manage@example.com",
+        "role": "user",
+        "age": 35,
+        "gender": "male",
+        "occupation": "Software Dev",
+        "preferred_activity": "Yoga",
+        "daily_reminder": "y"
+    })
+    assert res.status_code == 302 # redirect to user detail
+    with app.app_context():
+        target = User.query.get(target_id)
+        assert target.name == "Updated Managed User"
+        assert target.profile.age == 35
+        assert target.profile.preferred_activity == "Yoga"
+
+    # 2. Edit User Log
+    res = client.get(f"/admin/user/{target_id}/log/{log_id}/edit")
+    assert res.status_code == 200
+    res = client.post(f"/admin/user/{target_id}/log/{log_id}/edit", data={
+        "log_date": "2026-06-10",
+        "mood_score": 5,
+        "sleep_hours": 9.0,
+        "stress_level": 1,
+        "social_interaction": 3,
+        "activity_done": "",
+        "notes": "Admin updated notes."
+    })
+    assert res.status_code == 302 # redirect to user detail
+    with app.app_context():
+        updated_log = MoodLog.query.get(log_id)
+        assert updated_log.mood_score == 5
+        assert updated_log.sleep_hours == 9.0
+        assert updated_log.notes == "Admin updated notes."
+
+    # 3. Delete User Log
+    res = client.post(f"/admin/user/{target_id}/log/{log_id}/delete")
+    assert res.status_code == 302 # redirect to user detail
+    with app.app_context():
+        assert MoodLog.query.get(log_id) is None
+
+    # 4. Self Demotion
+    with app.app_context():
+        admin_user = User.query.filter_by(email="super_admin@example.com").first()
+        admin_id = admin_user.id
+    res = client.post(f"/admin/user/{admin_id}/toggle-role")
+    assert res.status_code == 302 # redirect to login
+    with app.app_context():
+        assert User.query.get(admin_id).role == "user"
+
+    # 5. Self Deletion
+    # Log back in as admin (demoted user above is now normal user, let's register a new one)
+    register(client, email="another_admin@example.com", admin=True)
+    login(client, email="another_admin@example.com")
+    with app.app_context():
+        another_admin = User.query.filter_by(email="another_admin@example.com").first()
+        another_id = another_admin.id
+    res = client.post(f"/admin/user/{another_id}/delete")
+    assert res.status_code == 302 # redirect to register
+    with app.app_context():
+        assert User.query.get(another_id) is None
+

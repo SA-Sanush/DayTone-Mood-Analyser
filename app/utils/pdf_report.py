@@ -51,7 +51,16 @@ def build_pdf_report(user):
 
     story.extend([Spacer(1, 18), Paragraph("Top Suggestions", styles["Heading2"])])
     for suggestion in data["suggestions"][:3]:
-        story.append(Paragraph(f"- {suggestion}", styles["Normal"]))
+        is_do = suggestion.startswith("DO: ")
+        is_dont = suggestion.startswith("DON'T: ")
+        if is_do:
+            clean_s = suggestion[4:]
+            story.append(Paragraph(f"• <b>Action:</b> {clean_s}", styles["Normal"]))
+        elif is_dont:
+            clean_s = suggestion[7:]
+            story.append(Paragraph(f"• <b>Avoid:</b> {clean_s}", styles["Normal"]))
+        else:
+            story.append(Paragraph(f"• {suggestion}", styles["Normal"]))
 
     doc.build(story)
     buffer.seek(0)

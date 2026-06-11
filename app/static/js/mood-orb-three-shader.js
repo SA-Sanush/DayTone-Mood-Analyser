@@ -101,6 +101,11 @@
       this.targetColor = new THREE.Color(palette.primary);
       this.currentColor = this.targetColor.clone();
       this.targetColorIndex = initialMood;
+      this.activeMoodId = initialMood;
+
+      this.mouse = new THREE.Vector2(0, 0);
+      this.targetMouse = new THREE.Vector2(0, 0);
+      this.clickSurge = 0;
 
       this.init();
     }
@@ -219,11 +224,53 @@
       if (!pills.length) return;
 
       pills.forEach((pill) => {
+        // Click sets mood permanently
         pill.addEventListener("click", () => {
           const moodId = Number(pill.dataset.mood);
           this.setMood(moodId);
+          this.activeMoodId = moodId;
+        });
+
+        // Hover enters preview color
+        pill.addEventListener("mouseenter", () => {
+          const moodId = Number(pill.dataset.mood);
+          this.previewMood(moodId);
+        });
+
+        // Hover leaves restores active log color
+        pill.addEventListener("mouseleave", () => {
+          this.previewMood(this.activeMoodId);
         });
       });
+
+      // Pointer tracking listener for steering
+      window.addEventListener("mousemove", (event) => {
+        const rect = this.canvas.getBoundingClientRect();
+        const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+        if (
+          event.clientX >= rect.left - 200 &&
+          event.clientX <= rect.right + 200 &&
+          event.clientY >= rect.top - 200 &&
+          event.clientY <= rect.bottom + 200
+        ) {
+          this.targetMouse.set(x * 0.75, y * 0.75);
+        } else {
+          this.targetMouse.set(0, 0);
+        }
+      });
+
+      // Click wobble listener
+      this.canvas.addEventListener("click", () => {
+        this.clickSurge = 0.65;
+      });
+    }
+
+    previewMood(moodId) {
+      if (!this.moodColors[moodId]) return;
+      const palette = this.moodColors[moodId];
+      this.targetColor.copy(new THREE.Color(palette.primary));
     }
 
     setMood(moodId) {
@@ -293,16 +340,26 @@
       const elapsedTime = this.clock.getElapsedTime();
       this.material.uniforms.uTime.value = elapsedTime;
 
+      // Click wobble surge calculation
+      this.clickSurge *= 0.93;
+      const amplitudeSurge = this.clickSurge * Math.sin(elapsedTime * 22.0);
+      this.material.uniforms.uNoiseAmplitude.value = 0.25 + amplitudeSurge;
+      this.material.uniforms.uNoiseFrequency.value = 0.45 + this.clickSurge * 0.15;
+
+      // Mouse steering interpolation
+      this.mouse.lerp(this.targetMouse, 0.08);
+
       this.currentColor.lerp(this.targetColor, 0.05);
       this.material.uniforms.uColor.value = this.currentColor;
 
       if (this.orb) {
-        this.orb.rotation.y = elapsedTime * 0.05;
-        this.orb.rotation.x = elapsedTime * 0.02;
+        this.orb.rotation.y = elapsedTime * 0.05 + this.mouse.x * 0.55;
+        this.orb.rotation.x = elapsedTime * 0.02 - this.mouse.y * 0.55;
       }
 
       if (this.particles) {
-        this.particles.rotation.y = elapsedTime * -0.01;
+        this.particles.rotation.y = elapsedTime * -0.01 - this.mouse.x * 0.12;
+        this.particles.rotation.x = this.mouse.y * 0.12;
       }
 
       this.renderer.render(this.scene, this.camera);

@@ -1,21 +1,106 @@
 {% extends "base.html" %}
-{% block title %}Users - DayTone{% endblock %}
+{% block title %}Users - DayTone Admin{% endblock %}
 {% block content %}
-<div class="page-head"><div><span class="eyebrow">People</span><h1>Users</h1></div></div>
-<div class="panel table-responsive elevated-panel">
-  <table class="table align-middle">
-    <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th></th></tr></thead>
-    <tbody>
-      {% for user in users %}
-      <tr>
-        <td>{{ user.name }}</td>
-        <td>{{ user.email }}</td>
-        <td>{{ user.role }}</td>
-        <td>{{ user.created_at.strftime("%Y-%m-%d") }}</td>
-        <td><a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin.user_detail', user_id=user.id) }}">View</a></td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+
+<div class="admin-hero">
+  <div class="admin-hero-copy">
+    <span class="eyebrow">People</span>
+    <h1>User Management</h1>
+    <p class="text-secondary mb-0">{{ users|length }} user{{ 's' if users|length != 1 }} found</p>
+  </div>
+  <a class="btn btn-glass" href="{{ url_for('admin.dashboard') }}"><i data-lucide="layout-dashboard"></i> Dashboard</a>
 </div>
+
+<!-- Search & filter bar -->
+<form method="get" class="admin-filter-bar panel elevated-panel mb-4">
+  <div class="admin-search-wrap">
+    <i data-lucide="search" class="admin-search-icon"></i>
+    <input type="text" name="q" value="{{ q }}" placeholder="Search name or email…" class="admin-search-input" id="adminSearch" autocomplete="off">
+    {% if q %}<button type="button" class="admin-search-clear" id="clearSearch" onclick="document.getElementById('adminSearch').value='';this.form.submit();" aria-label="Clear">✕</button>{% endif %}
+  </div>
+  <div class="admin-role-filter">
+    <a href="{{ url_for('admin.users', q=q) }}" class="role-pill {{ 'active' if not role_filter }}">All</a>
+    <a href="{{ url_for('admin.users', q=q, role='user') }}" class="role-pill {{ 'active' if role_filter == 'user' }}">Users</a>
+    <a href="{{ url_for('admin.users', q=q, role='admin') }}" class="role-pill {{ 'active' if role_filter == 'admin' }}">Admins</a>
+  </div>
+  <button type="submit" class="btn btn-primary btn-sm"><i data-lucide="search"></i> Search</button>
+</form>
+
+<!-- User table -->
+<div class="panel elevated-panel animate-fade-in-up">
+  {% if users %}
+  <div class="table-responsive">
+    <table class="table align-middle admin-user-table">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Role</th>
+          <th>Joined</th>
+          <th>Logs</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr class="admin-user-row" id="user-row-{{ user.id }}">
+          <td>
+            <div class="admin-user-cell">
+              <div class="admin-avatar {{ 'admin-avatar-admin' if user.is_admin else '' }}">
+                {{ user.name[0]|upper }}
+              </div>
+              <div>
+                <strong>{{ user.name }}</strong>
+                <small class="d-block text-secondary">{{ user.email }}</small>
+              </div>
+            </div>
+          </td>
+          <td>
+            {% if user.is_admin %}
+              <span class="admin-role-badge role-admin"><i data-lucide="shield-check" style="width:12px;height:12px;"></i> Admin</span>
+            {% else %}
+              <span class="admin-role-badge role-user"><i data-lucide="user" style="width:12px;height:12px;"></i> User</span>
+            {% endif %}
+          </td>
+          <td>
+            <span class="text-secondary" style="font-size:0.82rem;">{{ user.created_at.strftime("%b %d, %Y") }}</span>
+          </td>
+          <td>
+            <span class="admin-log-count">{{ user.mood_logs|length }}</span>
+          </td>
+          <td class="text-end">
+            <div class="admin-action-group">
+              <a href="{{ url_for('admin.user_detail', user_id=user.id) }}" class="btn btn-sm btn-glass admin-action-btn" title="View profile">
+                <i data-lucide="eye"></i>
+              </a>
+              <form method="post" action="{{ url_for('admin.toggle_role', user_id=user.id) }}" style="display:inline;">
+                <button type="submit" class="btn btn-sm {{ 'btn-outline-warning' if user.is_admin else 'btn-outline-primary' }} admin-action-btn"
+                        title="{{ 'Demote to User' if user.is_admin else 'Promote to Admin' }}"
+                        onclick="return confirm('{% if user.id == current_user.id %}WARNING: You are about to change your own role. Demoting yourself will revoke admin access. {% endif %}Change {{ user.name }}\'s role?')">
+                  <i data-lucide="{{ 'shield-off' if user.is_admin else 'shield-check' }}"></i>
+                </button>
+              </form>
+              <form method="post" action="{{ url_for('admin.delete_user', user_id=user.id) }}" style="display:inline;">
+                <button type="submit" class="btn btn-sm btn-outline-danger admin-action-btn"
+                        title="Delete user"
+                        onclick="return confirm('{% if user.id == current_user.id %}WARNING: You are about to permanently delete your own account! {% endif %}Permanently delete {{ user.name }}? This cannot be undone.')">
+                  <i data-lucide="trash-2"></i>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i data-lucide="users"></i>
+    <h3>No users found</h3>
+    <p class="text-secondary">Try adjusting your search or filter.</p>
+    <a href="{{ url_for('admin.users') }}" class="btn btn-primary mt-2">Clear filters</a>
+  </div>
+  {% endif %}
+</div>
+
 {% endblock %}

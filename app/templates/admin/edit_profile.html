@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Edit {{ user.name }}'s Profile - DayTone Admin{% endblock %}
+{% block content %}
+
+<div class="admin-hero">
+  <div class="admin-hero-copy">
+    <a href="{{ url_for('admin.user_detail', user_id=user.id) }}" class="btn btn-sm btn-glass mb-3">
+      <i data-lucide="arrow-left"></i> Back to Profile
+    </a>
+    <span class="eyebrow">Settings</span>
+    <h1>Edit Profile: {{ user.name }}</h1>
+    <p class="subtitle">Update basic details, occupational profile, and permissions for this account.</p>
+  </div>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <form method="post" class="panel elevated-panel animate-fade-in-up" novalidate>
+      {{ form.hidden_tag() }}
+      
+      <h3 class="mb-4 text-gradient-primary">Account & Role</h3>
+      <div class="row g-3 mb-4">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold" for="name">{{ form.name.label.text }}</label>
+          {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), id="name") }}
+          {% for error in form.name.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+        </div>
+        
+        <div class="col-md-6">
+          <label class="form-label fw-semibold" for="email">{{ form.email.label.text }}</label>
+          {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), id="email") }}
+          {% for error in form.email.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+        </div>
+        
+        <div class="col-md-6">
+          <label class="form-label fw-semibold" for="role">{{ form.role.label.text }}</label>
+          {{ form.role(class="form-select" + (" is-invalid" if form.role.errors else ""), id="role") }}
+          {% for error in form.role.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+          {% if user.id == current_user.id %}
+            <small class="text-warning"><i data-lucide="alert-triangle" style="width:14px;height:14px;vertical-align:-2px;"></i> Changing your own role to 'User' will revoke your admin privileges.</small>
+          {% endif %}
+        </div>
+      </div>
+
+      <hr class="my-4" style="opacity: 0.15;">
+      
+      <h3 class="mb-4 text-gradient-primary">Demographics & Work</h3>
+      <div class="row g-3 mb-4">
+        <div class="col-md-4">
+          <label class="form-label fw-semibold" for="age">{{ form.age.label.text }}</label>
+          {{ form.age(class="form-control" + (" is-invalid" if form.age.errors else ""), id="age", min="10", max="100") }}
+          {% for error in form.age.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+        </div>
+        
+        <div class="col-md-4">
+          <label class="form-label fw-semibold" for="gender">{{ form.gender.label.text }}</label>
+          {{ form.gender(class="form-select" + (" is-invalid" if form.gender.errors else ""), id="gender") }}
+          {% for error in form.gender.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+        </div>
+        
+        <div class="col-md-4">
+          <label class="form-label fw-semibold" for="occupation">{{ form.occupation.label.text }}</label>
+          {{ form.occupation(class="form-control" + (" is-invalid" if form.occupation.errors else ""), id="occupation") }}
+          {% for error in form.occupation.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+        </div>
+      </div>
+
+      <hr class="my-4" style="opacity: 0.15;">
+      
+      <h3 class="mb-4 text-gradient-primary">Preferences</h3>
+      <div class="row g-3 mb-4">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold" for="preferred_activity">{{ form.preferred_activity.label.text }}</label>
+          {{ form.preferred_activity(class="form-select" + (" is-invalid" if form.preferred_activity.errors else ""), id="preferred_activity") }}
+          {% for error in form.preferred_activity.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+        </div>
+        
+        <div class="col-12 mt-4">
+          <div class="form-check form-switch switch-card p-3 d-flex align-items-center gap-3">
+            {{ form.daily_reminder(class="form-check-input ms-0", style="width:2.5em; height:1.25em;", id="daily_reminder") }}
+            <label class="form-check-label fw-semibold mb-0 cursor-pointer" for="daily_reminder">
+              {{ form.daily_reminder.label.text }}
+            </label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="d-flex align-items-center gap-2 mt-4 pt-3">
+        <button class="btn btn-primary" type="submit">
+          <i data-lucide="save"></i> Save Changes
+        </button>
+        <a class="btn btn-outline-secondary btn-glass" href="{{ url_for('admin.user_detail', user_id=user.id) }}">
+          Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

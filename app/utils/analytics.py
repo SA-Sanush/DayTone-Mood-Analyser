@@ -220,12 +220,12 @@ def heatmap_data(user_id, year=None):
     start = date(year, 1, 1)
     end = date(year, 12, 31)
     logs = (
-        MoodLog.query.with_entities(MoodLog.log_date, MoodLog.mood_score, MoodLog.burnout_risk)
+        MoodLog.query.with_entities(MoodLog.id, MoodLog.log_date, MoodLog.mood_score, MoodLog.burnout_risk)
         .filter(MoodLog.user_id == user_id, MoodLog.log_date >= start, MoodLog.log_date <= end)
         .order_by(MoodLog.log_date.asc())
         .all()
     )
-    return [{"date": log.log_date.isoformat(), "mood": log.mood_score, "risk": log.burnout_risk} for log in logs]
+    return [{"id": log.id, "date": log.log_date.isoformat(), "mood": log.mood_score, "risk": log.burnout_risk} for log in logs]
 
 
 def recent_suggestions(user_id: int, log_limit: int = 3) -> list[str]:

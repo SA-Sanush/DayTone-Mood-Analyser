@@ -1,127 +1,435 @@
 {% extends "base.html" %}
 {% block title %}Register - DayTone{% endblock %}
 {% block content %}
-<form method="post" class="panel form-panel elevated-panel">
-  {{ form.hidden_tag() }}
-  <div class="form-heading">
-    <span class="eyebrow">Start your baseline</span>
-    <h1>Create your DayTone account</h1>
+
+<section class="reg-shell">
+
+  <!-- ── Left visual panel ── -->
+  <div class="reg-visual" id="regVisual" aria-hidden="true">
+    <div class="reg-glow-orb rg-1"></div>
+    <div class="reg-glow-orb rg-2"></div>
+    <div class="reg-glow-orb rg-3"></div>
+
+    <div class="reg-visual-copy">
+      <span class="eyebrow" style="color:rgba(255,255,255,0.55);">Your wellness journey</span>
+      <h2 style="color:#fff; font-size:clamp(1.8rem,4vw,2.8rem); font-weight:800; margin:0.4rem 0 0.75rem;">
+        Start your baseline<span style="color:var(--dt-primary-2);">.</span>
+      </h2>
+      <p style="color:rgba(255,255,255,0.62); font-size:0.95rem; max-width:300px; line-height:1.6;">
+        One small daily check-in. DayTone tracks your patterns and alerts you to burnout before it hits.
+      </p>
+
+      <ul class="reg-feature-list" role="list">
+        <li><span class="reg-feat-icon">🧠</span><span>AI burnout risk prediction</span></li>
+        <li><span class="reg-feat-icon">📊</span><span>5 analytics charts</span></li>
+        <li><span class="reg-feat-icon">💤</span><span>Sleep &amp; stress tracking</span></li>
+        <li><span class="reg-feat-icon">📄</span><span>Downloadable PDF report</span></li>
+      </ul>
+
+      <!-- Step progress indicator -->
+      <div class="reg-steps" id="regSteps" aria-label="Form progress">
+        <div class="reg-step active" data-step="1"><span>1</span><small>You</small></div>
+        <div class="reg-step-line" id="line-1-2"></div>
+        <div class="reg-step" data-step="2"><span>2</span><small>Security</small></div>
+        <div class="reg-step-line" id="line-2-3"></div>
+        <div class="reg-step" data-step="3"><span>3</span><small>Profile</small></div>
+      </div>
+
+      <!-- Step hint -->
+      <p class="reg-step-hint" id="regStepHint">Step 1 of 3 — Tell us about you</p>
+    </div>
   </div>
-  <div class="row g-3">
-    <div class="col-md-6">
-      <label class="form-label">{{ form.name.label }}</label>
-      {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
-      {% for error in form.name.errors %}
-        <span class="invalid-feedback d-block" role="alert">{{ error }}</span>
-      {% endfor %}
+
+  <!-- ── Right form panel ── -->
+  <form method="post" class="panel reg-panel elevated-panel" id="regForm" novalidate>
+    {{ form.hidden_tag() }}
+
+    <!-- Progress bar strip at top -->
+    <div class="reg-progress-strip" aria-hidden="true">
+      <div class="reg-progress-fill" id="regProgressFill" style="width:33.33%"></div>
     </div>
-    <div class="col-md-6">
-      <label class="form-label">{{ form.email.label }}</label>
-      {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
-      {% for error in form.email.errors %}
-        <span class="invalid-feedback d-block" role="alert">{{ error }}</span>
-      {% endfor %}
+
+    <div class="reg-form-heading animate-fade-in-up">
+      <span class="eyebrow">Start your baseline</span>
+      <h1 id="stepTitle">Create your DayTone account</h1>
     </div>
-    <div class="col-md-6">
-      <label class="form-label">{{ form.password.label }}</label>
-      <div class="password-field-container position-relative">
-        {{ form.password(class="form-control pe-5" + (" is-invalid" if form.password.errors else "")) }}
-        <button type="button" class="btn password-toggle-btn position-absolute end-0 top-0 h-100" id="togglePassword" aria-label="Toggle password visibility">
-          <i data-lucide="eye"></i>
-        </button>
-      </div>
-      {% for error in form.password.errors %}
-        <span class="invalid-feedback d-block" role="alert">{{ error }}</span>
-      {% endfor %}
-    </div>
-    <div class="col-md-6">
-      <label class="form-label">{{ form.confirm_password.label }}</label>
-      <div class="password-field-container position-relative">
-        {{ form.confirm_password(class="form-control pe-5" + (" is-invalid" if form.confirm_password.errors else "")) }}
-        <button type="button" class="btn password-toggle-btn position-absolute end-0 top-0 h-100" id="toggleConfirmPassword" aria-label="Toggle password visibility">
-          <i data-lucide="eye"></i>
-        </button>
-      </div>
-      {% for error in form.confirm_password.errors %}
-        <span class="invalid-feedback d-block" role="alert">{{ error }}</span>
-      {% endfor %}
-    </div>
-    <div class="col-md-3">
-      <label class="form-label">{{ form.age.label }}</label>
-      {{ form.age(class="form-control" + (" is-invalid" if form.age.errors else "")) }}
-      {% for error in form.age.errors %}
-        <span class="invalid-feedback d-block" role="alert">{{ error }}</span>
-      {% endfor %}
-    </div>
-    <div class="col-md-3">
-      <label class="form-label">{{ form.gender.label }}</label>
-      {{ form.gender(class="form-select" + (" is-invalid" if form.gender.errors else "")) }}
-      {% for error in form.gender.errors %}
-        <span class="invalid-feedback d-block" role="alert">{{ error }}</span>
-      {% endfor %}
-    </div>
-    <div class="col-md-3">
-      <label class="form-label">{{ form.occupation.label }}</label>
-      {{ form.occupation(class="form-control" + (" is-invalid" if form.occupation.errors else "")) }}
-      {% for error in form.occupation.errors %}
-        <span class="invalid-feedback d-block" role="alert">{{ error }}</span>
-      {% endfor %}
-    </div>
-    <div class="col-md-3">
-      <label class="form-label">{{ form.preferred_activity.label }}</label>
-      {{ form.preferred_activity(class="form-select" + (" is-invalid" if form.preferred_activity.errors else "")) }}
-      {% for error in form.preferred_activity.errors %}
-        <span class="invalid-feedback d-block" role="alert">{{ error }}</span>
-      {% endfor %}
-    </div>
-    <div class="col-12 mt-3">
-      <div class="form-check">
-        {{ form.daily_reminder(class="form-check-input") }}
-        <label class="form-check-label" for="daily_reminder">
-          {{ form.daily_reminder.label.text }}
-        </label>
+
+    <!-- ─── STEP 1 : You ─── -->
+    <div class="reg-step-pane active" id="pane-1" data-step="1">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="name">{{ form.name.label.text }}</label>
+          <div class="float-label-wrap">
+            {{ form.name(class="float-input reg-input" + (" is-invalid" if form.name.errors else ""), id="name", placeholder=" ", autocomplete="name") }}
+            <label class="float-label" for="name">Full name</label>
+            <div class="float-border"></div>
+            <span class="reg-input-check" id="nameCheck"></span>
+          </div>
+          {% for e in form.name.errors %}<span class="input-err-msg" role="alert">{{ e }}</span>{% endfor %}
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label" for="email">{{ form.email.label.text }}</label>
+          <div class="float-label-wrap">
+            {{ form.email(class="float-input reg-input" + (" is-invalid" if form.email.errors else ""), id="email", placeholder=" ", autocomplete="email") }}
+            <label class="float-label" for="email">Email address</label>
+            <div class="float-border"></div>
+            <span class="reg-input-check" id="emailCheck"></span>
+          </div>
+          {% for e in form.email.errors %}<span class="input-err-msg" role="alert">{{ e }}</span>{% endfor %}
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label" for="age">{{ form.age.label.text }}</label>
+          <div class="float-label-wrap">
+            {{ form.age(class="float-input reg-input" + (" is-invalid" if form.age.errors else ""), id="age", placeholder=" ", min="13", max="120") }}
+            <label class="float-label" for="age">Your age</label>
+            <div class="float-border"></div>
+          </div>
+          {% for e in form.age.errors %}<span class="input-err-msg" role="alert">{{ e }}</span>{% endfor %}
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label" for="gender">{{ form.gender.label.text }}</label>
+          {{ form.gender(class="form-select reg-select" + (" is-invalid" if form.gender.errors else ""), id="gender") }}
+          {% for e in form.gender.errors %}<span class="input-err-msg" role="alert">{{ e }}</span>{% endfor %}
+        </div>
       </div>
     </div>
-    {% if show_admin %}
-    <div class="col-md-6 mt-3">
-      <label class="form-label">{{ form.admin_code.label }}</label>
-      {{ form.admin_code(class="form-control" + (" is-invalid" if form.admin_code.errors else ""), placeholder="Enter admin code") }}
-      {% for error in form.admin_code.errors %}
-        <span class="invalid-feedback d-block" role="alert">{{ error }}</span>
-      {% endfor %}
+
+    <!-- ─── STEP 2 : Security ─── -->
+    <div class="reg-step-pane" id="pane-2" data-step="2">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="password">{{ form.password.label.text }}</label>
+          <div class="password-field-container position-relative float-label-wrap">
+            {{ form.password(class="float-input pe-5 reg-input" + (" is-invalid" if form.password.errors else ""), id="password", placeholder=" ", autocomplete="new-password") }}
+            <label class="float-label" for="password">Create password</label>
+            <div class="float-border"></div>
+            <button type="button" class="float-pwd-toggle" id="togglePassword" aria-label="Toggle password">
+              <i data-lucide="eye"></i>
+            </button>
+          </div>
+
+          <div class="pwd-strength-bar-wrap mt-1" id="pwdStrengthWrap" style="display:none;">
+            <div class="pwd-strength-bar" id="pwdStrengthBar"></div>
+            <span class="pwd-strength-label" id="pwdStrengthLabel"></span>
+          </div>
+
+          <ul class="pwd-req-list mt-2" id="pwdReqList">
+            <li id="req-len"   class="req-item"><i data-lucide="circle" style="width:10px;height:10px;"></i> 8+ characters</li>
+            <li id="req-upper" class="req-item"><i data-lucide="circle" style="width:10px;height:10px;"></i> Uppercase letter</li>
+            <li id="req-num"   class="req-item"><i data-lucide="circle" style="width:10px;height:10px;"></i> Number</li>
+            <li id="req-sym"   class="req-item"><i data-lucide="circle" style="width:10px;height:10px;"></i> Special character</li>
+          </ul>
+          {% for e in form.password.errors %}<span class="input-err-msg" role="alert">{{ e }}</span>{% endfor %}
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label" for="confirm_password">{{ form.confirm_password.label.text }}</label>
+          <div class="password-field-container position-relative float-label-wrap">
+            {{ form.confirm_password(class="float-input pe-5 reg-input" + (" is-invalid" if form.confirm_password.errors else ""), id="confirm_password", placeholder=" ", autocomplete="new-password") }}
+            <label class="float-label" for="confirm_password">Confirm password</label>
+            <div class="float-border"></div>
+            <button type="button" class="float-pwd-toggle" id="toggleConfirmPassword" aria-label="Toggle confirm password">
+              <i data-lucide="eye"></i>
+            </button>
+          </div>
+          <div class="pwd-match-row mt-1" id="pwdMatchRow" style="display:none;">
+            <span id="pwdMatchLabel" class="pwd-match-label"></span>
+          </div>
+          {% for e in form.confirm_password.errors %}<span class="input-err-msg" role="alert">{{ e }}</span>{% endfor %}
+        </div>
+      </div>
     </div>
-    {% endif %}
-  </div>
-  <button class="btn btn-primary mt-4" type="submit"><i data-lucide="sparkles"></i>Create account</button>
-</form>
+
+    <!-- ─── STEP 3 : Profile ─── -->
+    <div class="reg-step-pane" id="pane-3" data-step="3">
+      <div class="row g-3">
+        <div class="col-12">
+          <label class="form-label" for="occupation">{{ form.occupation.label.text }}</label>
+          <div class="float-label-wrap">
+            {{ form.occupation(class="float-input reg-input" + (" is-invalid" if form.occupation.errors else ""), id="occupation", placeholder=" ") }}
+            <label class="float-label" for="occupation">e.g. Student, Engineer…</label>
+            <div class="float-border"></div>
+          </div>
+          {% for e in form.occupation.errors %}<span class="input-err-msg" role="alert">{{ e }}</span>{% endfor %}
+        </div>
+
+        <div class="col-12">
+          <label class="form-label">{{ form.preferred_activity.label.text }}</label>
+          <div class="activity-picker" id="activityPicker" role="radiogroup" aria-label="Preferred activity">
+            <label class="activity-chip" data-value="Walk">🚶 Walk</label>
+            <label class="activity-chip" data-value="Run">🏃 Run</label>
+            <label class="activity-chip" data-value="Cycle">🚴 Cycle</label>
+            <label class="activity-chip" data-value="Yoga">🧘 Yoga</label>
+            <label class="activity-chip" data-value="Gym">🏋 Gym</label>
+            <label class="activity-chip" data-value="Swim">🏊 Swim</label>
+          </div>
+          {{ form.preferred_activity(class="form-select d-none", id="preferred_activity") }}
+          {% for e in form.preferred_activity.errors %}<span class="input-err-msg" role="alert">{{ e }}</span>{% endfor %}
+        </div>
+
+        <div class="col-12">
+          <div class="reminder-switch-card">
+            {{ form.daily_reminder(class="form-check-input", id="daily_reminder") }}
+            <label class="form-check-label" for="daily_reminder">
+              <span class="reminder-icon">🔔</span>
+              <span>
+                <strong>Send daily check-in reminder</strong>
+                <small>We'll nudge you once a day — no spam, ever.</small>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        {% if show_admin %}
+        <div class="col-12">
+          <label class="form-label">{{ form.admin_code.label }}</label>
+          <div class="float-label-wrap">
+            {{ form.admin_code(class="float-input" + (" is-invalid" if form.admin_code.errors else ""), placeholder="Enter admin code") }}
+            <div class="float-border"></div>
+          </div>
+          {% for e in form.admin_code.errors %}<span class="input-err-msg" role="alert">{{ e }}</span>{% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ─── Navigation ─── -->
+    <div class="reg-nav-actions mt-4" id="regNavActions">
+      <button type="button" class="btn btn-glass reg-back-btn" id="regBackBtn" style="display:none;">
+        <i data-lucide="arrow-left"></i> Back
+      </button>
+      <button type="button" class="neon-btn reg-next-btn" id="regNextBtn">
+        <span class="neon-btn-shine" aria-hidden="true"></span>
+        Next <i data-lucide="arrow-right"></i>
+      </button>
+      <button type="submit" class="neon-btn auth-submit-btn" id="regSubmitBtn" style="display:none;">
+        <span class="neon-btn-shine" aria-hidden="true"></span>
+        <span class="btn-default-content"><i data-lucide="sparkles"></i> Create account</span>
+        <span class="btn-loading-content" style="display:none;">
+          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Creating…
+        </span>
+      </button>
+    </div>
+
+  </form>
+</section>
 {% endblock %}
 
 {% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  function setupPasswordToggle(btnId, inputId) {
-    const toggleBtn = document.getElementById(btnId);
-    const passwordInput = document.getElementById(inputId);
-    
-    if (toggleBtn && passwordInput) {
-      toggleBtn.addEventListener('click', function() {
-        const icon = toggleBtn.querySelector('i');
-        if (passwordInput.type === 'password') {
-          passwordInput.type = 'text';
-          icon.setAttribute('data-lucide', 'eye-off');
-        } else {
-          passwordInput.type = 'password';
-          icon.setAttribute('data-lucide', 'eye');
-        }
-        if (window.lucide) {
-          window.lucide.createIcons();
-        }
-      });
-    }
+document.addEventListener('DOMContentLoaded', function () {
+
+  /* ── State ── */
+  let currentStep = 1;
+  const totalSteps = 3;
+
+  const panes      = document.querySelectorAll('.reg-step-pane');
+  const stepDots   = document.querySelectorAll('#regSteps .reg-step');
+  const nextBtn    = document.getElementById('regNextBtn');
+  const backBtn    = document.getElementById('regBackBtn');
+  const submitBtn  = document.getElementById('regSubmitBtn');
+  const progressFill = document.getElementById('regProgressFill');
+  const stepHint   = document.getElementById('regStepHint');
+  const stepTitle  = document.getElementById('stepTitle');
+
+  const hints  = ['Step 1 of 3 — Tell us about you', 'Step 2 of 3 — Secure your account', 'Step 3 of 3 — Build your profile'];
+  const titles = ['Create your DayTone account', 'Secure your account', 'Build your profile'];
+
+  /* ── Show step ── */
+  function showStep(n) {
+    panes.forEach(p => {
+      p.classList.toggle('active', parseInt(p.dataset.step) === n);
+    });
+    stepDots.forEach(dot => {
+      const s = parseInt(dot.dataset.step);
+      dot.classList.toggle('active', s === n);
+      dot.classList.toggle('done', s < n);
+    });
+
+    // Update progress fill
+    progressFill.style.width = ((n / totalSteps) * 100) + '%';
+
+    // Update text
+    if (stepHint)  stepHint.textContent  = hints[n - 1];
+    if (stepTitle) stepTitle.textContent = titles[n - 1];
+
+    // Update connecting lines
+    const line12 = document.getElementById('line-1-2');
+    const line23 = document.getElementById('line-2-3');
+    if (line12) line12.classList.toggle('done', n > 1);
+    if (line23) line23.classList.toggle('done', n > 2);
+
+    // Buttons
+    backBtn.style.display   = n > 1 ? 'inline-flex' : 'none';
+    nextBtn.style.display   = n < totalSteps ? 'inline-flex' : 'none';
+    submitBtn.style.display = n === totalSteps ? 'inline-flex' : 'none';
+
+    currentStep = n;
+
+    // Re-init lucide icons for new pane
+    if (window.lucide) window.lucide.createIcons();
   }
-  
-  setupPasswordToggle('togglePassword', 'password');
-  setupPasswordToggle('toggleConfirmPassword', 'confirm_password');
+
+  /* ── Validate step before advancing ── */
+  function validateStep(n) {
+    let ok = true;
+    const pane = document.getElementById('pane-' + n);
+    pane.querySelectorAll('.reg-input').forEach(inp => {
+      if (!inp.value.trim()) {
+        inp.classList.add('is-invalid');
+        // Shake animation
+        inp.closest('.float-label-wrap')?.classList.add('shake');
+        setTimeout(() => inp.closest('.float-label-wrap')?.classList.remove('shake'), 500);
+        ok = false;
+      } else {
+        inp.classList.remove('is-invalid');
+      }
+    });
+    if (n === 2) {
+      const pwd  = document.getElementById('password');
+      const conf = document.getElementById('confirm_password');
+      if (pwd && conf && pwd.value !== conf.value) {
+        conf.classList.add('is-invalid');
+        ok = false;
+      }
+    }
+    return ok;
+  }
+
+  /* ── Nav buttons ── */
+  nextBtn.addEventListener('click', () => {
+    if (!validateStep(currentStep)) return;
+    if (currentStep < totalSteps) showStep(currentStep + 1);
+  });
+  backBtn.addEventListener('click', () => {
+    if (currentStep > 1) showStep(currentStep - 1);
+  });
+
+  /* ── Submit loading ── */
+  document.getElementById('regForm').addEventListener('submit', () => {
+    submitBtn.querySelector('.btn-default-content').style.display = 'none';
+    submitBtn.querySelector('.btn-loading-content').style.display = 'inline-flex';
+    submitBtn.disabled = true;
+  });
+
+  /* ── Float labels ── */
+  document.querySelectorAll('.float-input').forEach(inp => {
+    const wrap = inp.closest('.float-label-wrap');
+    const checkFilled = () => wrap?.classList.toggle('filled', inp.value.length > 0);
+    inp.addEventListener('focus', () => { wrap?.classList.add('focused'); checkFilled(); });
+    inp.addEventListener('blur',  () => { wrap?.classList.remove('focused'); checkFilled(); });
+    inp.addEventListener('input', checkFilled);
+    checkFilled();
+  });
+
+  /* ── Password toggles ── */
+  function setupToggle(btnId, inputId) {
+    const btn = document.getElementById(btnId);
+    const inp = document.getElementById(inputId);
+    if (!btn || !inp) return;
+    btn.addEventListener('click', () => {
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+      const icon = btn.querySelector('i');
+      icon.setAttribute('data-lucide', inp.type === 'password' ? 'eye' : 'eye-off');
+      if (window.lucide) window.lucide.createIcons();
+    });
+  }
+  setupToggle('togglePassword', 'password');
+  setupToggle('toggleConfirmPassword', 'confirm_password');
+
+  /* ── Password strength ── */
+  const pwdInput      = document.getElementById('password');
+  const strengthWrap  = document.getElementById('pwdStrengthWrap');
+  const strengthBar   = document.getElementById('pwdStrengthBar');
+  const strengthLabel = document.getElementById('pwdStrengthLabel');
+  const reqItems = {
+    len:   { el: document.getElementById('req-len'),   fn: v => v.length >= 8 },
+    upper: { el: document.getElementById('req-upper'), fn: v => /[A-Z]/.test(v) },
+    num:   { el: document.getElementById('req-num'),   fn: v => /[0-9]/.test(v) },
+    sym:   { el: document.getElementById('req-sym'),   fn: v => /[^A-Za-z0-9]/.test(v) },
+  };
+  const levels = [
+    { label:'Weak',   color:'#ef4444', width:'25%' },
+    { label:'Fair',   color:'#f59e0b', width:'50%' },
+    { label:'Good',   color:'#3b82f6', width:'75%' },
+    { label:'Strong', color:'#10b981', width:'100%' },
+  ];
+  if (pwdInput) {
+    pwdInput.addEventListener('input', () => {
+      const v = pwdInput.value;
+      let score = 0;
+      Object.values(reqItems).forEach(({ el, fn }) => {
+        const pass = fn(v);
+        if (pass) score++;
+        el?.classList.toggle('req-met', pass);
+        const icon = el?.querySelector('i');
+        if (icon) icon.setAttribute('data-lucide', pass ? 'check-circle' : 'circle');
+      });
+      if (window.lucide) window.lucide.createIcons();
+      if (!v.length) { strengthWrap.style.display = 'none'; return; }
+      strengthWrap.style.display = 'flex';
+      const lvl = levels[Math.max(0, score - 1)];
+      strengthBar.style.width = lvl.width;
+      strengthBar.style.background = lvl.color;
+      strengthLabel.textContent = lvl.label;
+      strengthLabel.style.color = lvl.color;
+      checkMatch();
+    });
+  }
+
+  /* ── Password match ── */
+  const confInput  = document.getElementById('confirm_password');
+  const matchRow   = document.getElementById('pwdMatchRow');
+  const matchLabel = document.getElementById('pwdMatchLabel');
+  function checkMatch() {
+    if (!confInput?.value.length) { matchRow.style.display = 'none'; return; }
+    const match = pwdInput?.value === confInput.value;
+    matchRow.style.display = 'flex';
+    matchLabel.textContent = match ? '✓ Passwords match' : '✗ Passwords do not match';
+    matchLabel.style.color = match ? '#10b981' : '#ef4444';
+  }
+  confInput?.addEventListener('input', checkMatch);
+
+  /* ── Live check icons ── */
+  function liveCheck(inputId, checkId, validator) {
+    const inp = document.getElementById(inputId);
+    const chk = document.getElementById(checkId);
+    if (!inp || !chk) return;
+    inp.addEventListener('input', () => {
+      const ok = validator(inp.value);
+      chk.textContent = inp.value.length ? (ok ? '✓' : '✗') : '';
+      chk.className   = 'reg-input-check ' + (inp.value.length ? (ok ? 'check-ok' : 'check-fail') : '');
+    });
+  }
+  liveCheck('name',  'nameCheck',  v => v.trim().length >= 2);
+  liveCheck('email', 'emailCheck', v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v));
+
+  /* ── Activity chip picker ── */
+  const picker = document.getElementById('activityPicker');
+  const hiddenSelect = document.getElementById('preferred_activity');
+  if (picker && hiddenSelect) {
+    picker.querySelectorAll('.activity-chip').forEach(chip => {
+      if (chip.dataset.value === hiddenSelect.value) chip.classList.add('selected');
+      chip.addEventListener('click', () => {
+        picker.querySelectorAll('.activity-chip').forEach(c => c.classList.remove('selected'));
+        chip.classList.add('selected');
+        hiddenSelect.value = chip.dataset.value;
+      });
+    });
+  }
+
+  /* ── Handle server-side errors: jump to the correct step ── */
+  const nameErr = {{ 'true' if form.name.errors or form.email.errors or form.age.errors or form.gender.errors else 'false' }};
+  const pwdErr  = {{ 'true' if form.password.errors or form.confirm_password.errors else 'false' }};
+  const profErr = {{ 'true' if form.occupation.errors or form.preferred_activity.errors else 'false' }};
+
+  if (profErr && !pwdErr && !nameErr) showStep(3);
+  else if (pwdErr && !nameErr)        showStep(2);
+  else                                 showStep(1);
+
 });
 </script>
 {% endblock %}

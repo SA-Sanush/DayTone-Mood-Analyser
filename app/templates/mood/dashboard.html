@@ -56,28 +56,35 @@ block content %} {% if data.latest %}
 
   <section class="motion-grid" aria-label="Today at a glance">
     <button class="panel motion-card breath-card" id="breathCardTrigger" type="button" data-bs-toggle="modal" data-bs-target="#breathingModal" aria-label="Start Guided Box Breathing Session" aria-haspopup="dialog" aria-controls="breathingModal">
-      <div class="breath-orb" aria-hidden="true">
+      <div class="motion-orb breath-orb" aria-hidden="true">
         <i data-lucide="wind"></i>
       </div>
       <span>Breathing room</span>
       <strong>60 sec</strong>
     </button>
     <div class="panel motion-card">
-      <i data-lucide="flame"></i>
+      <div class="motion-orb streak-orb" aria-hidden="true">
+        <i data-lucide="flame"></i>
+      </div>
       <span>Day streak</span>
       <strong>{{ data.streak_count }}</strong>
     </div>
     <div
       class="panel motion-card challenge-card"
-      style="--challenge: {{ data.challenge_progress }}%;"
+      style="--challenge-val: {{ data.challenge_progress }}%;"
     >
       <div class="challenge-ring">
-        <strong>{{ data.challenge_progress }}%</strong>
+        <div class="challenge-ring-inner">
+          <i data-lucide="target"></i>
+        </div>
       </div>
       <span>Daily challenge</span>
+      <strong>{{ data.challenge_progress }}%</strong>
     </div>
     <div class="panel motion-card">
-      <i data-lucide="trophy"></i>
+      <div class="motion-orb badges-orb" aria-hidden="true">
+        <i data-lucide="trophy"></i>
+      </div>
       <span>Badges unlocked</span>
       <strong
         >{{ data.badges|selectattr("unlocked")|list|length }}/{{
@@ -119,15 +126,43 @@ block content %} {% if data.latest %}
       </div>
       <div class="badge-grid">
         {% for badge in data.badges %}
-        <div class="badge-card{% if badge.unlocked %} unlocked{% endif %}">
-          <i data-lucide="{{ badge.icon }}"></i>
-          <span>{{ badge.name }}</span>
-          <small>{{ badge.detail }}</small>
+        <div class="badge-card-container">
+          <div class="badge-card-inner">
+            <!-- Front Face -->
+            <div class="badge-card-front{% if badge.unlocked %} unlocked{% endif %}">
+              <i data-lucide="{{ badge.icon }}"></i>
+              <span>{{ badge.name }}</span>
+              <span class="badge-status-pill">
+                {% if badge.unlocked %}Unlocked{% else %}Locked{% endif %}
+              </span>
+            </div>
+            <!-- Back Face -->
+            <div class="badge-card-back{% if badge.unlocked %} unlocked{% endif %}">
+              <strong>{{ badge.name }}</strong>
+              <p class="badge-detail-text">{{ badge.detail }}</p>
+              {% if badge.unlocked %}
+              <div class="badge-unlock-date"><i data-lucide="check" style="width:12px; height:12px;"></i> Active</div>
+              {% else %}
+              <div class="badge-lock-hint"><i data-lucide="lock" style="width:12px; height:12px;"></i> Locked</div>
+              {% endif %}
+            </div>
+          </div>
         </div>
         {% endfor %}
       </div>
     </div>
   </section>
+
+  <div class="analytics-header-row d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1 mt-3">
+    <div class="d-flex align-items-center gap-2">
+      <i data-lucide="line-chart" class="text-primary" style="width: 22px; height: 22px;"></i>
+      <h2 class="mb-0" style="font-size: 1.25rem; font-weight: 800;">Analytics & Trends</h2>
+    </div>
+    <div class="time-range-selector" role="group" aria-label="Select timeframe">
+      <button type="button" class="range-btn active" data-range="7">7 Days</button>
+      <button type="button" class="range-btn" data-range="30">30 Days</button>
+    </div>
+  </div>
 
   <section class="analytics-layout" aria-label="Analytics">
     <div class="analytics-main">
@@ -173,11 +208,24 @@ block content %} {% if data.latest %}
           <i data-lucide="message-circle-heart"></i>
           <h2>Suggestions</h2>
         </div>
-        <ul class="suggestions">
+        <div class="suggestions-checklist">
           {% for suggestion in data.suggestions %}
-          <li>{{ suggestion }}</li>
+          {% set is_do = suggestion.startswith("DO: ") %}
+          {% set is_dont = suggestion.startswith("DON'T: ") %}
+          {% set clean_suggestion = suggestion[4:] if is_do else (suggestion[7:] if is_dont else suggestion) %}
+          <div class="suggestion-item d-flex align-items-start gap-2 mb-2 p-2 rounded cursor-pointer {% if is_dont %}suggestion-dont{% else %}suggestion-do{% endif %}" data-suggestion-index="{{ loop.index }}">
+            <input type="checkbox" class="suggestion-checkbox mt-1" id="sugg-{{ loop.index }}" aria-label="Mark suggestion as done">
+            <div class="d-flex flex-column flex-grow-1">
+              <span class="badge {% if is_dont %}bg-danger-subtle text-danger{% else %}bg-success-subtle text-success{% endif %} mb-1" style="font-size: 0.68rem; font-weight: 800; width: fit-content; text-transform: uppercase; padding: 0.25rem 0.5rem; border-radius: 4px;">
+                {% if is_dont %}Avoid{% else %}Action{% endif %}
+              </span>
+              <label class="suggestion-label mb-0 cursor-pointer" for="sugg-{{ loop.index }}" style="font-weight: 650; font-size: 0.88rem;">
+                {{ clean_suggestion }}
+              </label>
+            </div>
+          </div>
           {% endfor %}
-        </ul>
+        </div>
         <div class="d-flex gap-2 flex-wrap">
           <a
             class="btn btn-outline-primary"
@@ -233,7 +281,7 @@ block content %} {% if data.latest %}
   window.DAYTONE_DASHBOARD = {{ dashboard_state|tojson }};
 </script>
 <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
-<script src="{{ url_for('static', filename='js/mood-orb-three-shader.js') }}?v=1.0.4"></script>
+<script src="{{ url_for('static', filename='js/mood-orb-three-shader.js') }}?v=1.0.5"></script>
 <script>
 (function() {
   const modal = document.getElementById('breathingModal');
@@ -335,5 +383,354 @@ block content %} {% if data.latest %}
   modal.addEventListener('hidden.bs.modal', resetSession);
   modal.addEventListener('show.bs.modal', resetSession);
 })();
+</script>
+
+<!-- Daily Challenge Checklist Modal -->
+<div class="modal fade" id="challengeModal" tabindex="-1" role="dialog" aria-labelledby="challengeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content panel elevated-panel" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--dt-border);">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title d-flex align-items-center gap-2" id="challengeModalLabel">
+          <i data-lucide="target" class="text-accent" style="color: var(--dt-accent); width:20px; height:20px;"></i>
+          <span style="font-weight: 800; font-size: 1.1rem; color: var(--dt-text);">Daily Challenge Progress</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="closeChallengeModalBtn"></button>
+      </div>
+      <div class="modal-body text-center py-4">
+        <!-- Circular Progress Ring in Modal -->
+        <div class="modal-challenge-ring-container mb-3">
+          <div class="modal-challenge-ring" id="modalChallengeRing" style="--challenge-val: {{ data.challenge_progress }}%;">
+            <div class="modal-challenge-inner">
+              <span class="fs-4 fw-extrabold text-primary" id="modalChallengeValText" style="font-weight: 800; color: var(--dt-primary);">{{ data.challenge_progress }}%</span>
+            </div>
+          </div>
+        </div>
+        
+        <p class="text-secondary mb-4 px-3" style="font-size: 0.88rem; font-weight: 600;">
+          Complete wellness check-ins to reach 100% and build your logging routine.
+        </p>
+        
+        <!-- Checklist Items -->
+        <div class="challenge-checklist text-start px-2">
+          <!-- Item 1: Base Participation (Historical logging) -->
+          <div class="challenge-item completed">
+            <i data-lucide="check-circle" class="check-icon"></i>
+            <div class="item-text-wrap">
+              <span>Base logging participation</span>
+              <small class="text-secondary">+20% • Active wellness logs</small>
+            </div>
+          </div>
+          
+          <!-- Item 2: Checked In Today -->
+          {% set checked_in_today = (data.latest and data.latest.log_date.isoformat() == data.latest_orb_state.date) %}
+          <div class="challenge-item {% if checked_in_today %}completed{% endif %}" id="challenge-item-checkin">
+            <i data-lucide="{% if checked_in_today %}check-circle{% else %}circle{% endif %}" class="check-icon"></i>
+            <div class="item-text-wrap">
+              <span>Mood logged today</span>
+              <small class="text-secondary">+30% • Daily self-reflection</small>
+            </div>
+          </div>
+          
+          <!-- Item 3: Physical Activity Done -->
+          {% set activity_done = (data.latest and data.latest.activity_done) %}
+          <div class="challenge-item {% if activity_done %}completed{% endif %}" id="challenge-item-activity">
+            <i data-lucide="{% if activity_done %}check-circle{% else %}circle{% endif %}" class="check-icon" id="challenge-icon-activity"></i>
+            <div class="item-text-wrap">
+              <span>Completed physical activity</span>
+              <small class="text-secondary" id="challenge-desc-activity">{% if activity_done %}+20% • Active movement done{% else %}+20% • Select physical activity in check-in, or tick suggestions{% endif %}</small>
+            </div>
+          </div>
+          
+          <!-- Item 4: Sleep Duration >= 7 Hours -->
+          {% set sleep_done = (data.latest and data.latest.sleep_hours >= 7) %}
+          <div class="challenge-item {% if sleep_done %}completed{% endif %}" id="challenge-item-sleep">
+            <i data-lucide="{% if sleep_done %}check-circle{% else %}circle{% endif %}" class="check-icon"></i>
+            <div class="item-text-wrap">
+              <span>Restful sleep duration</span>
+              <small class="text-secondary">+15% • Sleep 7+ hours</small>
+            </div>
+          </div>
+          
+          <!-- Item 5: Stress Level <= 3 -->
+          {% set stress_calm = (data.latest and data.latest.stress_level <= 3) %}
+          <div class="challenge-item {% if stress_calm %}completed{% endif %}" id="challenge-item-stress">
+            <i data-lucide="{% if stress_calm %}check-circle{% else %}circle{% endif %}" class="check-icon"></i>
+            <div class="item-text-wrap">
+              <span>Calm mind (stress level <= 3)</span>
+              <small class="text-secondary">+15% • Regulated stress level</small>
+            </div>
+          </div>
+          
+          <!-- Item 6: Streak Bonus -->
+          {% set streak_bonus = [data.streak_count * 2, 10]|min %}
+          <div class="challenge-item {% if data.streak_count > 0 %}completed{% endif %}">
+            <i data-lucide="{% if data.streak_count > 0 %}check-circle{% else %}circle{% endif %}" class="check-icon"></i>
+            <div class="item-text-wrap">
+              <span>Streak multiplier bonus</span>
+              <small class="text-secondary">+2% per streak day (up to +10%) • Currently +{{ streak_bonus }}%</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Toast Notification Container -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer" style="z-index: 1080;"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Lucide helper to update newly added icons
+  if (window.lucide) {
+    window.lucide.createIcons();
+  }
+
+  // --- Toast Notification System ---
+  function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    const id = 'toast-' + Date.now();
+    
+    // Choose theme variables and icon name based on type
+    let borderStyle = 'var(--dt-good)';
+    let iconName = 'check-circle';
+    if (type === 'streak') {
+      borderStyle = 'var(--dt-accent)';
+      iconName = 'flame';
+    } else if (type === 'info') {
+      borderStyle = 'var(--dt-primary)';
+      iconName = 'sparkles';
+    }
+    
+    const toastHtml = `
+      <div id="${id}" class="custom-toast animate-slide-in d-flex align-items-center gap-2 p-3 mb-2 rounded shadow elevated-panel" style="background: rgba(255, 255, 255, 0.95); border: 1px solid var(--dt-border); border-left: 4px solid ${borderStyle}; min-width: 280px; backdrop-filter: blur(15px);">
+        <i data-lucide="${iconName}" style="color: ${borderStyle}; width: 20px; height: 20px; flex-shrink: 0;"></i>
+        <span class="fw-bold flex-grow-1" style="font-size: 0.85rem; color: var(--dt-text);">${message}</span>
+        <button type="button" class="btn-close ms-2" style="font-size: 0.75rem; background-size: 0.5rem; flex-shrink: 0;" aria-label="Close"></button>
+      </div>
+    `;
+    container.insertAdjacentHTML('beforeend', toastHtml);
+    
+    // Wire close button
+    const toastEl = document.getElementById(id);
+    const closeBtn = toastEl.querySelector('.btn-close');
+    closeBtn.addEventListener('click', () => {
+      toastEl.classList.add('animate-fade-out');
+      setTimeout(() => toastEl.remove(), 400);
+    });
+
+    if (window.lucide) {
+      window.lucide.createIcons({
+        attrs: {
+          class: 'lucide-icon-toast'
+        },
+        nameAttr: 'data-lucide',
+        node: toastEl
+      });
+    }
+    
+    // Auto remove toast
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.classList.add('animate-fade-out');
+        setTimeout(() => el.remove(), 400);
+      }
+    }, 4500);
+  }
+
+  // --- Day Streak Flame Celebration Emitter ---
+  const streakCard = document.querySelector('.streak-orb')?.closest('.panel');
+  if (streakCard) {
+    streakCard.style.cursor = 'pointer';
+    streakCard.addEventListener('click', (event) => {
+      const rect = streakCard.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      
+      let container = document.getElementById('particle-emitter-layer');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'particle-emitter-layer';
+        container.style.position = 'fixed';
+        container.style.inset = '0';
+        container.style.pointerEvents = 'none';
+        container.style.zIndex = '9999';
+        document.body.appendChild(container);
+      }
+      
+      const emojis = ['🔥', '✨', '⚡', '🎉', '🌟', '🧡'];
+      const particleCount = 24;
+      
+      for (let i = 0; i < particleCount; i++) {
+        const el = document.createElement('span');
+        el.className = 'spark-particle';
+        el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        el.style.position = 'absolute';
+        el.style.left = centerX + 'px';
+        el.style.top = centerY + 'px';
+        el.style.fontSize = (Math.random() * 12 + 16) + 'px';
+        
+        const angle = Math.random() * Math.PI * 2;
+        const velocity = Math.random() * 10 + 5;
+        const vx = Math.cos(angle) * velocity;
+        const vy = Math.sin(angle) * velocity - 2;
+        
+        container.appendChild(el);
+        
+        let x = centerX;
+        let y = centerY;
+        let opacity = 1.0;
+        const gravity = 0.22;
+        let currentVx = vx;
+        let currentVy = vy;
+        
+        function updateParticle() {
+          x += currentVx;
+          y += currentVy;
+          currentVy += gravity;
+          opacity -= 0.022;
+          
+          el.style.transform = `translate(${x - centerX}px, ${y - centerY}px) scale(${opacity})`;
+          el.style.opacity = opacity;
+          
+          if (opacity > 0) {
+            requestAnimationFrame(updateParticle);
+          } else {
+            el.remove();
+          }
+        }
+        requestAnimationFrame(updateParticle);
+      }
+      
+      showToast("Streak is burning hot! Keep reflecting daily!", "streak");
+    });
+  }
+
+  // --- Daily Challenge Panel Trigger ---
+  const challengeCard = document.querySelector('.challenge-card');
+  if (challengeCard) {
+    challengeCard.style.cursor = 'pointer';
+    challengeCard.setAttribute('role', 'button');
+    challengeCard.setAttribute('aria-haspopup', 'dialog');
+    
+    challengeCard.addEventListener('click', () => {
+      const modalEl = new bootstrap.Modal(document.getElementById('challengeModal'));
+      modalEl.show();
+    });
+  }
+
+  // --- Badges Unlocked Smooth Scroll and Pulse ---
+  const badgesGridCard = document.querySelector('.badges-orb')?.closest('.panel');
+  if (badgesGridCard) {
+    badgesGridCard.style.cursor = 'pointer';
+    badgesGridCard.addEventListener('click', () => {
+      const section = document.querySelector('.badge-panel');
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        section.classList.add('pulse-highlight');
+        setTimeout(() => {
+          section.classList.remove('pulse-highlight');
+        }, 1500);
+      }
+    });
+  }
+
+  // --- 3D Flip Card Clicking ---
+  const badgeContainers = document.querySelectorAll('.badge-card-container');
+  badgeContainers.forEach(container => {
+    container.addEventListener('click', () => {
+      container.classList.toggle('flipped');
+    });
+  });
+
+  // --- Chart Timeframe Filter ---
+  const timeBtns = document.querySelectorAll('.range-btn');
+  timeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      timeBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const range = parseInt(btn.dataset.range, 10);
+      if (window.updateChartsTimeframe) {
+        window.updateChartsTimeframe(range);
+        showToast(`Timeline adjusted to last ${range} days`, 'info');
+      }
+    });
+  });
+
+  // --- Suggestions Checklist Toggles ---
+  const suggestionItems = document.querySelectorAll('.suggestion-item');
+  
+  let suggestionsCompletedCount = 0;
+  const totalSuggestions = suggestionItems.length;
+  
+  const baseChallengeProgress = parseInt('{{ data.challenge_progress }}', 10);
+  const isInitiallyActivityDone = {% if activity_done %}true{% else %}false{% endif %};
+  let currentActivityCompleted = isInitiallyActivityDone;
+  
+  suggestionItems.forEach(item => {
+    const checkbox = item.querySelector('.suggestion-checkbox');
+    
+    item.addEventListener('click', (e) => {
+      if (e.target === checkbox) return;
+      checkbox.checked = !checkbox.checked;
+      checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    
+    checkbox.addEventListener('change', () => {
+      const isChecked = checkbox.checked;
+      item.classList.toggle('completed', isChecked);
+      
+      if (isChecked) {
+        suggestionsCompletedCount++;
+        showToast("Logged task: Suggestion completed!", "info");
+      } else {
+        suggestionsCompletedCount--;
+      }
+      
+      let dynamicChallengeVal = baseChallengeProgress;
+      
+      if (!isInitiallyActivityDone) {
+        if (suggestionsCompletedCount > 0 && !currentActivityCompleted) {
+          currentActivityCompleted = true;
+          dynamicChallengeVal = Math.min(100, baseChallengeProgress + 20);
+          
+          const activityItem = document.getElementById('challenge-item-activity');
+          const activityIcon = document.getElementById('challenge-icon-activity');
+          const activityDesc = document.getElementById('challenge-desc-activity');
+          if (activityItem) activityItem.classList.add('completed');
+          if (activityIcon) activityIcon.setAttribute('data-lucide', 'check-circle');
+          if (activityDesc) activityDesc.textContent = '+20% • Physical activity checked off!';
+        } else if (suggestionsCompletedCount === 0 && currentActivityCompleted) {
+          currentActivityCompleted = false;
+          dynamicChallengeVal = baseChallengeProgress;
+          
+          const activityItem = document.getElementById('challenge-item-activity');
+          const activityIcon = document.getElementById('challenge-icon-activity');
+          const activityDesc = document.getElementById('challenge-desc-activity');
+          if (activityItem) activityItem.classList.remove('completed');
+          if (activityIcon) activityIcon.setAttribute('data-lucide', 'circle');
+          if (activityDesc) activityDesc.textContent = '+20% • Select physical activity in check-in, or tick suggestions';
+        }
+      }
+      
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
+      
+      document.querySelectorAll('.challenge-ring, #modalChallengeRing').forEach(ring => {
+        ring.style.setProperty('--challenge-progress-val', dynamicChallengeVal + '%');
+        ring.style.setProperty('--challenge-val', dynamicChallengeVal + '%');
+      });
+      
+      const challengeText = document.querySelector('.challenge-card strong');
+      if (challengeText) challengeText.textContent = dynamicChallengeVal + '%';
+      
+      const modalChallengeText = document.getElementById('modalChallengeValText');
+      if (modalChallengeText) modalChallengeText.textContent = dynamicChallengeVal + '%';
+    });
+  });
+});
 </script>
 {% endif %} {% endblock %}

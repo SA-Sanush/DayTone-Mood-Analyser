@@ -7,12 +7,76 @@
     <h1>Mood heatmap</h1>
     <p class="text-secondary">A year-long view of your daily mood scores.</p>
   </div>
+  
+  <!-- Year Selector (populated dynamically in JS) -->
+  <div class="time-range-selector" id="heatmapYearSelector" role="group" aria-label="Select year"></div>
 </div>
-<div class="panel elevated-panel heatmap-panel">
-  <div id="heatmap"></div>
+
+<div class="panel elevated-panel heatmap-panel mb-4" style="position: relative; overflow: visible;">
+  <!-- Loading state overlay -->
+  <div id="heatmapLoader" class="position-absolute start-50 top-50 translate-middle text-primary d-none" style="z-index: 10;">
+    <div class="spinner-border spinner-border-sm" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+  <div id="heatmap" style="min-height: 140px;"></div>
 </div>
+
+<!-- Interactive Legend & Details Section -->
+<div class="row g-3">
+  <!-- Legend panel -->
+  <div class="col-md-5">
+    <div class="panel h-100" style="padding: 1.25rem;">
+      <h3 style="font-size: 0.95rem; font-weight: 800; color: var(--dt-text); margin-bottom: 0.85rem;" class="d-flex align-items-center gap-1">
+        <i data-lucide="info" style="width: 15px; height: 15px; color: var(--dt-primary);"></i>
+        <span>Interactive Legend</span>
+      </h3>
+      <p class="text-secondary small mb-3">Hover over a mood below to highlight matching calendar days:</p>
+      
+      <div class="heatmap-legend d-flex flex-column gap-2">
+        <div class="legend-item cursor-pointer p-1 rounded" data-mood-val="5" style="transition: background-color 0.2s ease;">
+          <span class="legend-color-box" style="background-color: #86efac; border-radius: 4px; display: inline-block; width: 14px; height: 14px; margin-right: 0.5rem; vertical-align: middle;"></span>
+          <span style="font-size: 0.84rem; font-weight: 700; color: #22c55e;">😊 Happy (5/5)</span>
+        </div>
+        <div class="legend-item cursor-pointer p-1 rounded" data-mood-val="4" style="transition: background-color 0.2s ease;">
+          <span class="legend-color-box" style="background-color: #bbf7d0; border-radius: 4px; display: inline-block; width: 14px; height: 14px; margin-right: 0.5rem; vertical-align: middle;"></span>
+          <span style="font-size: 0.84rem; font-weight: 700; color: #10b981;">😌 Calm (4/5)</span>
+        </div>
+        <div class="legend-item cursor-pointer p-1 rounded" data-mood-val="3" style="transition: background-color 0.2s ease;">
+          <span class="legend-color-box" style="background-color: #fef3c7; border-radius: 4px; display: inline-block; width: 14px; height: 14px; margin-right: 0.5rem; vertical-align: middle;"></span>
+          <span style="font-size: 0.84rem; font-weight: 700; color: #eab308;">😰 Anxious (3/5)</span>
+        </div>
+        <div class="legend-item cursor-pointer p-1 rounded" data-mood-val="2" style="transition: background-color 0.2s ease;">
+          <span class="legend-color-box" style="background-color: #fed7aa; border-radius: 4px; display: inline-block; width: 14px; height: 14px; margin-right: 0.5rem; vertical-align: middle;"></span>
+          <span style="font-size: 0.84rem; font-weight: 700; color: #f97316;">😢 Sad (2/5)</span>
+        </div>
+        <div class="legend-item cursor-pointer p-1 rounded" data-mood-val="1" style="transition: background-color 0.2s ease;">
+          <span class="legend-color-box" style="background-color: #fee2e2; border-radius: 4px; display: inline-block; width: 14px; height: 14px; margin-right: 0.5rem; vertical-align: middle;"></span>
+          <span style="font-size: 0.84rem; font-weight: 700; color: #ef4444;">🤒 Sick (1/5)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Detail display card panel -->
+  <div class="col-md-7">
+    <div class="panel h-100 d-flex flex-column justify-content-center" id="heatmapDetailCard" style="padding: 1.25rem; transition: all 0.3s ease;">
+      <div class="text-center text-secondary py-4" id="heatmapDetailDefault">
+        <i data-lucide="mouse-pointer-click" class="mb-2 text-muted" style="width: 28px; height: 28px;"></i>
+        <p class="mb-0 small fw-bold">Hover over cells for tooltips, or click any cell to view detailed stats and recommendations.</p>
+      </div>
+      <div id="heatmapDetailContent" class="d-none">
+        <!-- Will be dynamically populated via Javascript -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Custom HTML floating tooltip element -->
+<div id="heatmapTooltip" class="custom-tooltip shadow elevated-panel" style="position: fixed; display: none; pointer-events: none; z-index: 1000; background: rgba(255, 255, 255, 0.96); border: 1px solid var(--dt-border); border-radius: 8px; padding: 0.5rem 0.75rem; backdrop-filter: blur(10px); min-width: 170px;"></div>
 {% endblock %}
+
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
-<script src="{{ url_for('static', filename='js/heatmap.js') }}"></script>
+<script src="{{ url_for('static', filename='js/heatmap.js') }}?v=1.0.5"></script>
 {% endblock %}

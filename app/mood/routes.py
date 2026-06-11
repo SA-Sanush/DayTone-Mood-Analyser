@@ -61,6 +61,12 @@ def _replace_suggestions(log):
 @login_required
 def log_mood():
     form = MoodLogForm()
+    if request.method == "GET" and request.args.get("date"):
+        try:
+            from datetime import date
+            form.log_date.data = date.fromisoformat(request.args.get("date"))
+        except Exception:
+            pass
     if form.validate_on_submit():
         existing = MoodLog.query.filter_by(user_id=current_user.id, log_date=form.log_date.data).first()
         if existing:
@@ -170,8 +176,10 @@ def dashboard():
 @mood_bp.route("/history")
 @login_required
 def history():
+    from sqlalchemy.orm import joinedload
     page = request.args.get('page', 1, type=int)
     pagination = MoodLog.query.filter_by(user_id=current_user.id) \
+        .options(joinedload(MoodLog.suggestions), joinedload(MoodLog.burnout_history)) \
         .order_by(MoodLog.log_date.desc()) \
         .paginate(page=page, per_page=30, error_out=False)
     return render_template("mood/history.html", logs=pagination.items, pagination=pagination)
@@ -186,7 +194,8 @@ def heatmap():
 @mood_bp.route("/api/heatmap")
 @login_required
 def heatmap_api():
-    return jsonify(heatmap_data(current_user.id))
+    year = request.args.get("year", type=int)
+    return jsonify(heatmap_data(current_user.id, year=year))
 
 
 @mood_bp.route("/report/pdf")

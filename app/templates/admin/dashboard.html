@@ -1,28 +1,95 @@
 {% extends "base.html" %}
-{% block title %}Admin - DayTone{% endblock %}
+{% block title %}Admin Dashboard - DayTone{% endblock %}
 {% block content %}
-<div class="page-head">
-  <div>
+
+<div class="admin-hero">
+  <div class="admin-hero-copy">
     <span class="eyebrow">Platform view</span>
-    <h1>Admin analytics</h1>
+    <h1>Admin Dashboard</h1>
+    <p class="text-secondary mb-0">Real-time overview of all DayTone users &amp; wellness signals.</p>
   </div>
-  <a class="btn btn-outline-primary" href="{{ url_for('admin.users') }}"><i data-lucide="users"></i>Users</a>
+  <div class="admin-hero-actions">
+    <a class="btn btn-primary" href="{{ url_for('admin.users') }}"><i data-lucide="users"></i> Manage Users</a>
+  </div>
 </div>
-<div class="stats-grid">
-  <div class="stat"><span>Total Users</span><strong>{{ stats.total_users }}</strong></div>
-  <div class="stat"><span>Active Users</span><strong>{{ stats.active_users }}</strong></div>
-  <div class="stat"><span>High Risk</span><strong>{{ stats.high_risk_users }}</strong></div>
-  <div class="stat"><span>Average Mood</span><strong>{{ stats.avg_mood }}</strong></div>
-  <div class="stat"><span>Average Sleep</span><strong>{{ stats.avg_sleep }}</strong></div>
+
+<!-- KPI cards -->
+<div class="admin-kpi-grid">
+  <div class="admin-kpi-card kpi-blue animate-fade-in-up">
+    <div class="kpi-icon"><i data-lucide="users"></i></div>
+    <div class="kpi-body">
+      <span class="kpi-label">Total Users</span>
+      <strong class="kpi-value" data-count="{{ stats.total_users }}">{{ stats.total_users }}</strong>
+    </div>
+    <div class="kpi-glow"></div>
+  </div>
+  <div class="admin-kpi-card kpi-teal animate-fade-in-up delay-1">
+    <div class="kpi-icon"><i data-lucide="activity"></i></div>
+    <div class="kpi-body">
+      <span class="kpi-label">Active (7d)</span>
+      <strong class="kpi-value" data-count="{{ stats.active_users }}">{{ stats.active_users }}</strong>
+    </div>
+    <div class="kpi-glow"></div>
+  </div>
+  <div class="admin-kpi-card kpi-red animate-fade-in-up delay-2">
+    <div class="kpi-icon"><i data-lucide="alert-triangle"></i></div>
+    <div class="kpi-body">
+      <span class="kpi-label">High Burnout Risk</span>
+      <strong class="kpi-value" data-count="{{ stats.high_risk_users }}">{{ stats.high_risk_users }}</strong>
+    </div>
+    <div class="kpi-glow"></div>
+  </div>
+  <div class="admin-kpi-card kpi-amber animate-fade-in-up delay-3">
+    <div class="kpi-icon"><i data-lucide="smile"></i></div>
+    <div class="kpi-body">
+      <span class="kpi-label">Avg Mood</span>
+      <strong class="kpi-value">{{ stats.avg_mood }}<small>/5</small></strong>
+    </div>
+    <div class="kpi-glow"></div>
+  </div>
+  <div class="admin-kpi-card kpi-purple animate-fade-in-up delay-4">
+    <div class="kpi-icon"><i data-lucide="moon"></i></div>
+    <div class="kpi-body">
+      <span class="kpi-label">Avg Sleep</span>
+      <strong class="kpi-value">{{ stats.avg_sleep }}<small>h</small></strong>
+    </div>
+    <div class="kpi-glow"></div>
+  </div>
 </div>
-<div class="panel chart-panel mt-4">
-  <div class="panel-title"><i data-lucide="pie-chart"></i><h2>Platform Burnout Distribution</h2></div>
-  <canvas id="adminBurnoutChart"></canvas>
+
+<!-- Charts row -->
+<div class="admin-charts-grid mt-4">
+  <div class="panel chart-panel elevated-panel animate-fade-in-up">
+    <div class="panel-title"><i data-lucide="pie-chart"></i><h2>Burnout Distribution</h2></div>
+    <canvas id="adminBurnoutChart" style="max-height:280px;"></canvas>
+  </div>
+
+  <div class="panel elevated-panel animate-fade-in-up delay-1">
+    <div class="panel-title"><i data-lucide="bar-chart-2"></i><h2>Risk Breakdown</h2></div>
+    <div class="admin-risk-bars">
+      {% set total = (stats.burnout_distribution['Low'] + stats.burnout_distribution['Medium'] + stats.burnout_distribution['High']) or 1 %}
+      <div class="admin-risk-row">
+        <span class="risk-label">🟢 Low</span>
+        <div class="risk-bar-track"><div class="risk-bar risk-bar-low" style="width:{{ (stats.burnout_distribution['Low'] / total * 100)|round }}%"></div></div>
+        <span class="risk-count">{{ stats.burnout_distribution['Low'] }}</span>
+      </div>
+      <div class="admin-risk-row">
+        <span class="risk-label">🟡 Medium</span>
+        <div class="risk-bar-track"><div class="risk-bar risk-bar-med" style="width:{{ (stats.burnout_distribution['Medium'] / total * 100)|round }}%"></div></div>
+        <span class="risk-count">{{ stats.burnout_distribution['Medium'] }}</span>
+      </div>
+      <div class="admin-risk-row">
+        <span class="risk-label">🔴 High</span>
+        <div class="risk-bar-track"><div class="risk-bar risk-bar-high" style="width:{{ (stats.burnout_distribution['High'] / total * 100)|round }}%"></div></div>
+        <span class="risk-count">{{ stats.burnout_distribution['High'] }}</span>
+      </div>
+    </div>
+    <a href="{{ url_for('admin.users') }}" class="btn btn-sm btn-glass mt-3 w-100"><i data-lucide="users"></i> View All Users</a>
+  </div>
 </div>
+
 {% endblock %}
 {% block scripts %}
-<script>
-window.DAYTONE_ADMIN = {{ stats|tojson }};
-</script>
+<script>window.DAYTONE_ADMIN = {{ stats|tojson }};</script>
 <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
 {% endblock %}

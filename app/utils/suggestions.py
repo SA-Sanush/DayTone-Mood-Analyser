@@ -19,41 +19,128 @@ def crisis_resource_text():
 
 
 RULES = [
+    # --- Sleep Deprivation (< 5 hours) ---
     {
         "condition": lambda sleep_hours, **_: sleep_hours < 5,
-        "tip": lambda **_: "You slept very little. Aim for 7-8 hours tonight and set a fixed bedtime alarm.",
+        "tip": lambda **_: "DO: Drink a warm glass of water or chamomile tea tonight and aim for a strict bedtime.",
+    },
+    {
+        "condition": lambda sleep_hours, **_: sleep_hours < 5,
+        "tip": lambda **_: "DON'T: Consuming caffeine after 2:00 PM today, as it will further disrupt your recovery.",
+    },
+    {
+        "condition": lambda sleep_hours, **_: sleep_hours < 5,
+        "tip": lambda **_: "DON'T: Using screens or scrolling for at least 45 minutes before attempting to sleep.",
+    },
+    
+    # --- Mild Sleep Insufficiency (5 <= sleep < 7 hours) ---
+    {
+        "condition": lambda sleep_hours, **_: 5 <= sleep_hours < 7,
+        "tip": lambda **_: "DO: Wind down 30 minutes earlier than usual tonight to build up sleep reserves.",
     },
     {
         "condition": lambda sleep_hours, **_: 5 <= sleep_hours < 7,
-        "tip": lambda **_: "Try getting to bed 30 minutes earlier tonight to improve your sleep score.",
+        "tip": lambda **_: "DON'T: Eating heavy meals or doing high-intensity workouts late in the evening.",
+    },
+    
+    # --- High Stress (>= 4) ---
+    {
+        "condition": lambda stress_level, **_: stress_level >= 4,
+        "tip": lambda **_: "DO: Practice a 5-minute guided box breathing session to reset your nervous system.",
     },
     {
         "condition": lambda stress_level, **_: stress_level >= 4,
-        "tip": lambda **_: "Your stress is high. Try a 5-minute box breathing exercise right now.",
+        "tip": lambda **_: "DO: Plan 15 minutes of quiet reflection or mindfulness to declutter your thoughts.",
+    },
+    {
+        "condition": lambda stress_level, **_: stress_level >= 4,
+        "tip": lambda **_: "DON'T: Skipping meal breaks; take a full hour away from screens to rest.",
+    },
+    {
+        "condition": lambda stress_level, **_: stress_level >= 4,
+        "tip": lambda **_: "DON'T: Accepting new responsibilities today. Practice saying no gently.",
+    },
+    
+    # --- Moderate Stress (3) ---
+    {
+        "condition": lambda stress_level, **_: stress_level == 3,
+        "tip": lambda **_: "DO: Step away from your desk for a brief 10-minute stretching break.",
+    },
+    {
+        "condition": lambda stress_level, **_: stress_level == 3,
+        "tip": lambda **_: "DON'T: Drinking extra coffee or energy drinks; switch to water or herbal tea.",
+    },
+
+    # --- Isolation / Low Social Contact (social == 1) ---
+    {
+        "condition": lambda social_interaction, **_: social_interaction == 1,
+        "tip": lambda **_: "DO: Send a quick message to a trusted friend or call a family member for a brief catch-up.",
     },
     {
         "condition": lambda social_interaction, **_: social_interaction == 1,
-        "tip": lambda **_: "You had no social contact today. Send a quick message to someone you trust.",
+        "tip": lambda **_: "DON'T: Isolating yourself completely; even a short chat with a neighbor helps.",
+    },
+
+    # --- No Physical Activity ---
+    {
+        "condition": lambda activity_done, **_: not activity_done,
+        "tip": lambda preferred_activity, **_: f"DO: Engage in a light 10-minute {preferred_activity} to boost your endorphins.",
     },
     {
         "condition": lambda activity_done, **_: not activity_done,
-        "tip": lambda preferred_activity, **_: f"No activity today. A 10-minute {preferred_activity} can help lift your mood.",
+        "tip": lambda **_: "DON'T: Sitting for more than 90 consecutive minutes. Stand up and stretch.",
+    },
+
+    # --- High Burnout Risk ---
+    {
+        "condition": lambda burnout_risk, **_: burnout_risk == BurnoutRisk.HIGH,
+        "tip": lambda **_: "DO: Delegate non-essential work and discuss your current capacity with a manager or peer.",
     },
     {
         "condition": lambda burnout_risk, **_: burnout_risk == BurnoutRisk.HIGH,
-        "tip": lambda **_: "High burnout risk detected. DayTone is not medical advice; speak to a trusted person or counsellor today.",
+        "tip": lambda **_: "DO: Establish a firm, uncompromised boundary for when you stop working today.",
     },
     {
         "condition": lambda burnout_risk, **_: burnout_risk == BurnoutRisk.HIGH,
-        "tip": lambda **_: f"If you feel unsafe or may harm yourself, contact local emergency services now. {crisis_resource_text()}",
+        "tip": lambda **_: "DON'T: Checking work emails or messages after your established hours.",
     },
     {
         "condition": lambda burnout_risk, **_: burnout_risk == BurnoutRisk.HIGH,
-        "tip": lambda **_: "Avoid heavy workload tomorrow. Rest is productive.",
+        "tip": lambda **_: "DON'T: Ignoring your physical exhaustion. Rest is productive and necessary.",
+    },
+    {
+        "condition": lambda burnout_risk, **_: burnout_risk == BurnoutRisk.HIGH,
+        "tip": lambda **_: f"DO: If you feel overwhelmed, seek guidance from a doctor or counselor. DayTone is not medical advice.",
+    },
+
+    # --- Medium Burnout Risk ---
+    {
+        "condition": lambda burnout_risk, **_: burnout_risk == BurnoutRisk.MEDIUM,
+        "tip": lambda **_: "DO: Set up 5-minute buffer spaces between meetings to avoid context-switching fatigue.",
     },
     {
         "condition": lambda burnout_risk, **_: burnout_risk == BurnoutRisk.MEDIUM,
-        "tip": lambda **_: "You are showing medium burnout signs. Take short breaks every 45 minutes.",
+        "tip": lambda **_: "DON'T: Packing your to-do list today; limit your focus to 3 key priorities.",
+    },
+
+    # --- Compound Condition: High Stress & Sleep Deprivation ---
+    {
+        "condition": lambda stress_level, sleep_hours, **_: stress_level >= 4 and sleep_hours < 5,
+        "tip": lambda **_: "DO: Dedicate 10 minutes to progressive muscle relaxation before bed to calm your mind.",
+    },
+    {
+        "condition": lambda stress_level, sleep_hours, **_: stress_level >= 4 and sleep_hours < 5,
+        "tip": lambda **_: "DON'T: Working late or using high-sugar snacks to push through your tiredness.",
+    },
+
+    # --- Compound Condition: High Stress & No Activity ---
+    {
+        "condition": lambda stress_level, activity_done, **_: stress_level >= 4 and not activity_done,
+        "tip": lambda **_: "DO: Take a slow, quiet walk outdoors or practice a gentle yoga sequence to release tension.",
+    },
+    {
+        "condition": lambda stress_level, activity_done, **_: stress_level >= 4 and not activity_done,
+        "tip": lambda **_: "DON'T: Staying indoors in a sedentary posture all day; movement is a stress reliever.",
     },
 ]
 
@@ -83,4 +170,7 @@ def get_suggestions(
         except Exception:
             continue
 
-    return tips or ["Great day. Keep maintaining your healthy habits."]
+    return tips or [
+        "DO: Maintain your current healthy streaks and check-in daily.",
+        "DON'T: Disrupting your established wellness habits."
+    ]
