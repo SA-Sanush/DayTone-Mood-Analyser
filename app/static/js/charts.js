@@ -31,7 +31,7 @@
     chart('moodChart', {
       type: 'line',
       data: { labels: data.labels, datasets: [{ label: 'Mood', data: data.mood, borderColor: colors.blue, backgroundColor: 'rgba(37, 99, 235, 0.14)', fill: true, pointRadius: 3, pointHoverRadius: 6, tension: 0.36 }] },
-      options: { responsive: true, maintainAspectRatio: false, interaction: { intersect: false, mode: 'index' }, scales: { ...baseScales, y: { ...baseScales.y, min: 1, max: 5 } } }
+      options: { responsive: true, maintainAspectRatio: false, interaction: { intersect: false, mode: 'index' }, scales: { ...baseScales, y: { ...baseScales.y, min: 1, max: 5, ticks: { stepSize: 1, callback: function(value) { return {1: 'Sick', 2: 'Sad', 3: 'Anxious', 4: 'Calm', 5: 'Happy'}[value] || ''; } } } } }
     });
     chart('sleepChart', {
       type: 'bar',
@@ -54,7 +54,7 @@
     chart('scatterChart', {
       type: 'scatter',
       data: { datasets: [{ label: 'Sleep vs Mood', data: data.scatter, backgroundColor: 'rgba(37, 99, 235, 0.76)', pointRadius: 6, pointHoverRadius: 9 }] },
-      options: { responsive: true, maintainAspectRatio: false, scales: { x: { ...baseScales.x, title: { display: true, text: 'Sleep hours' } }, y: { ...baseScales.y, min: 1, max: 5, title: { display: true, text: 'Mood' } } } }
+      options: { responsive: true, maintainAspectRatio: false, scales: { x: { ...baseScales.x, title: { display: true, text: 'Sleep hours' } }, y: { ...baseScales.y, min: 1, max: 5, title: { display: true, text: 'Mood' }, ticks: { stepSize: 1, callback: function(value) { return {1: 'Sick', 2: 'Sad', 3: 'Anxious', 4: 'Calm', 5: 'Happy'}[value] || ''; } } } } }
     });
   }
 

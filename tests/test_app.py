@@ -28,6 +28,13 @@ def client(app):
     return app.test_client()
 
 
+@pytest.fixture()
+def logged_in_client(client):
+    register(client)
+    login(client)
+    return client
+
+
 def register(client, email="user@example.com", admin=False):
     return client.post(
         "/register",
@@ -76,10 +83,8 @@ def test_login_rejects_external_next_redirect(client):
     assert "evil.example" not in response.headers["Location"]
 
 
-def test_mood_log_prediction_suggestion_and_exports(client, app):
-    register(client)
-    login(client)
-    response = client.post(
+def test_mood_log_prediction_suggestion_and_exports(logged_in_client, app):
+    response = logged_in_client.post(
         "/log",
         data={
             "log_date": date.today().isoformat(),
@@ -104,20 +109,24 @@ def test_mood_log_prediction_suggestion_and_exports(client, app):
         data = dashboard_data(log.user_id)
         assert data["burnout_risk_trend"] == [log.burnout_risk]
 
-    assert client.get("/history").status_code == 200
-    assert client.get("/heatmap").status_code == 200
-    assert client.get("/api/heatmap").json
-    export = client.get("/export/csv")
+    assert logged_in_client.get("/history").status_code == 200
+    assert logged_in_client.get("/heatmap").status_code == 200
+    assert logged_in_client.get("/api/heatmap").json
+    export = logged_in_client.get("/export/csv")
     assert export.status_code == 200
     assert b"notes" not in export.data.splitlines()[0]
-    private_export = client.get("/export/csv?include_notes=1")
+    private_export = logged_in_client.get("/export/csv?include_notes=1")
     assert b"notes" in private_export.data.splitlines()[0]
-    assert client.get("/report/pdf").status_code == 200
+    
+    pdf_response = logged_in_client.get("/report/pdf")
+    assert pdf_response.status_code == 200
+    assert pdf_response.headers["Content-Type"] == "application/pdf"
+    assert pdf_response.headers["X-Content-Type-Options"] == "nosniff"
+    assert pdf_response.data.startswith(b"%PDF-")
+    assert b"DayTone" in pdf_response.data
 
 
-def test_duplicate_log_date_warns_without_creating_second_log(client, app):
-    register(client)
-    login(client)
+def test_duplicate_log_date_warns_without_creating_second_log(logged_in_client, app):
     payload = {
         "log_date": date.today().isoformat(),
         "mood_score": 3,
@@ -127,17 +136,15 @@ def test_duplicate_log_date_warns_without_creating_second_log(client, app):
         "social_interaction": 2,
         "notes": "",
     }
-    client.post("/log", data=payload, follow_redirects=True)
-    response = client.post("/log", data=payload, follow_redirects=True)
+    logged_in_client.post("/log", data=payload, follow_redirects=True)
+    response = logged_in_client.post("/log", data=payload, follow_redirects=True)
     assert b"already have a log" in response.data
     with app.app_context():
         assert MoodLog.query.count() == 1
 
 
-def test_edit_log_recomputes_prediction(client, app):
-    register(client)
-    login(client)
-    client.post(
+def test_edit_log_recomputes_prediction(logged_in_client, app):
+    logged_in_client.post(
         "/log",
         data={
             "log_date": date.today().isoformat(),
@@ -151,7 +158,7 @@ def test_edit_log_recomputes_prediction(client, app):
     )
     with app.app_context():
         log_id = MoodLog.query.first().id
-    response = client.post(
+    response = logged_in_client.post(
         f"/log/{log_id}/edit",
         data={
             "log_date": date.today().isoformat(),
@@ -186,7 +193,7 @@ def test_dashboard_derived_state_helpers():
 
     assert streak == 3
     assert state["mood"] == 5
-    assert state["label"] == "Radiant"
+    assert state["label"] == "Happy"
     assert trend["direction"] == "up"
     assert any(badge["name"] == "Bright Average" and badge["unlocked"] for badge in badges)
     assert any(badge["name"] == "Calm Pocket" and badge["unlocked"] for badge in badges)
@@ -275,3 +282,216 @@ def test_missing_model_artifact_uses_rule_fallback(monkeypatch, app):
         result = predictor.predict_burnout(features)
     assert result == {"prediction": BurnoutRisk.HIGH, "confidence": 0.78, "algorithm": "Rules"}
     predictor._model_payload.cache_clear()
+
+
+def test_safe_next_url():
+    from app.auth.routes import safe_next_url
+    
+    # Valid relative URLs
+    assert safe_next_url("/dashboard") == "/dashboard"
+    assert safe_next_url("/profile?edit=1") == "/profile?edit=1"
+    
+    # Invalid URLs
+    assert safe_next_url(None) is None
+    assert safe_next_url("") is None
+    assert safe_next_url("http://google.com") is None
+    assert safe_next_url("https://google.com") is None
+    assert safe_next_url("//google.com") is None  # protocol-relative
+    assert safe_next_url("///google.com") is None
+    assert safe_next_url("dashboard") is None  # must start with /
+
+
+def test_api_heatmap(logged_in_client):
+    logged_in_client.post(
+        "/log",
+        data={
+            "log_date": date.today().isoformat(),
+            "mood_score": 4,
+            "sleep_hours": 7.5,
+            "stress_level": 2,
+            "activity_done": "y",
+            "social_interaction": 2,
+            "notes": "Good day",
+        },
+    )
+    
+    response = logged_in_client.get("/api/heatmap")
+    assert response.status_code == 200
+    data = response.json
+    assert isinstance(data, list)
+    
+    assert len(data) >= 1
+    day_detail = data[0]
+    assert "date" in day_detail
+    assert "mood" in day_detail
+    assert "risk" in day_detail
+
+
+def test_production_config_sqlite_and_admin_code_validation():
+    # Test SQLite validation
+    class ProductionSqliteConfig(Config):
+        TESTING = False
+        ENV = "production"
+        SECRET_KEY = "super-secret-key-123456"
+        RATELIMIT_STORAGE_URI = "redis://localhost:6379/0"
+        SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+        ADMIN_REGISTRATION_CODE = "admin-code-is-very-long-16chars"
+
+    with pytest.raises(RuntimeError, match="DATABASE_URL must not use SQLite"):
+        create_app(ProductionSqliteConfig)
+
+    # Test missing ADMIN_REGISTRATION_CODE
+    class ProductionMissingAdminCodeConfig(Config):
+        TESTING = False
+        ENV = "production"
+        SECRET_KEY = "super-secret-key-123456"
+        RATELIMIT_STORAGE_URI = "redis://localhost:6379/0"
+        SQLALCHEMY_DATABASE_URI = "postgresql://localhost/db"
+        ADMIN_REGISTRATION_CODE = None
+
+    with pytest.raises(RuntimeError, match="ADMIN_REGISTRATION_CODE must be set"):
+        create_app(ProductionMissingAdminCodeConfig)
+
+    # Test too short ADMIN_REGISTRATION_CODE
+    class ProductionShortAdminCodeConfig(Config):
+        TESTING = False
+        ENV = "production"
+        SECRET_KEY = "super-secret-key-123456"
+        RATELIMIT_STORAGE_URI = "redis://localhost:6379/0"
+        SQLALCHEMY_DATABASE_URI = "postgresql://localhost/db"
+        ADMIN_REGISTRATION_CODE = "shortcode"
+
+    with pytest.raises(RuntimeError, match="ADMIN_REGISTRATION_CODE must be at least 16 characters"):
+        create_app(ProductionShortAdminCodeConfig)
+
+
+def test_send_daily_reminder(app):
+    from app.utils.mailer import send_daily_reminder
+    from app.models import User
+    from unittest.mock import patch
+    
+    with app.app_context():
+        user = User(name="Test User", email="test@example.com")
+        
+        with patch("app.utils.mailer._mail_ready", return_value=True), \
+             patch("app.extensions.mail.send") as mock_send:
+            
+            success = send_daily_reminder(user)
+            assert success is True
+            mock_send.assert_called_once()
+            args, _ = mock_send.call_args
+            msg = args[0]
+            assert msg.subject == "DayTone daily check-in"
+            assert msg.recipients == ["test@example.com"]
+            assert "Test User" in msg.body
+
+
+def test_send_high_risk_alert(app):
+    from app.utils.mailer import send_high_risk_alert
+    from app.models import User, MoodLog
+    from unittest.mock import patch
+    
+    with app.app_context():
+        user = User(name="High Risk User", email="hr@example.com")
+        log = MoodLog(mood_score=1, stress_level=5, sleep_hours=4.0)
+        
+        with patch("app.utils.mailer._mail_ready", return_value=True), \
+             patch("app.extensions.mail.send") as mock_send:
+            
+            app.config["ADMIN_ALERT_EMAIL"] = "admin@example.com"
+            success = send_high_risk_alert(user, log)
+            assert success is True
+            mock_send.assert_called_once()
+            args, _ = mock_send.call_args
+            msg = args[0]
+            assert msg.subject == "DayTone high-risk alert: High Risk User"
+            assert msg.recipients == ["admin@example.com"]
+            assert "hr@example.com" in msg.body
+
+
+def test_send_reminders_cli(app):
+    from run import send_reminders
+    from app.models import User, UserProfile
+    from app.extensions import db
+    from unittest.mock import patch
+    
+    if "send-reminders" not in app.cli.commands:
+        app.cli.add_command(send_reminders)
+        
+    with app.app_context():
+        user1 = User(name="Remind Me", email="remind@example.com")
+        user1.set_password("secret12")
+        user1.profile = UserProfile(daily_reminder=True)
+        
+        user2 = User(name="No Reminder", email="noremind@example.com")
+        user2.set_password("secret12")
+        user2.profile = UserProfile(daily_reminder=False)
+        
+        db.session.add_all([user1, user2])
+        db.session.commit()
+        
+        runner = app.test_cli_runner()
+        with patch("app.utils.mailer._mail_ready", return_value=True), \
+             patch("app.extensions.mail.send") as mock_send:
+            
+            result = runner.invoke(args=["send-reminders"])
+            assert "Daily reminder run complete" in result.output
+            assert "Sent reminder to Remind Me" in result.output
+            assert "No Reminder" not in result.output
+            assert mock_send.call_count == 1
+
+
+def test_high_risk_mood_log_sends_email_alert(logged_in_client, app):
+    from unittest.mock import patch
+    
+    with patch("app.utils.mailer._mail_ready", return_value=True), \
+         patch("app.extensions.mail.send") as mock_send:
+        
+        app.config["ADMIN_ALERT_EMAIL"] = "admin@example.com"
+        
+        logged_in_client.post(
+            "/log",
+            data={
+                "log_date": date.today().isoformat(),
+                "mood_score": 1,
+                "sleep_hours": 3.0,
+                "stress_level": 5,
+                "activity_done": "",
+                "social_interaction": 1,
+                "notes": "Extremely burnt out.",
+            },
+            follow_redirects=True,
+        )
+        
+        assert mock_send.call_count == 1
+        args, _ = mock_send.call_args
+        msg = args[0]
+        assert msg.subject.startswith("DayTone high-risk alert:")
+        assert msg.recipients == ["admin@example.com"]
+
+
+def test_admin_user_detail_view(client, app):
+    # 1. As anonymous user
+    assert client.get("/admin/user/1").status_code == 302
+
+    # 2. Register a normal user and login
+    register(client, email="normal@example.com")
+    login(client, email="normal@example.com")
+    assert client.get("/admin/user/1").status_code == 403
+    client.get("/logout")
+
+    # 3. Register an admin user and login
+    register(client, email="admin@example.com", admin=True)
+    login(client, email="admin@example.com")
+    
+    with app.app_context():
+        target_user = User.query.filter_by(email="normal@example.com").first()
+        assert target_user is not None
+        target_id = target_user.id
+        
+    response = client.get(f"/admin/user/{target_id}")
+    assert response.status_code == 200
+    assert b"normal@example.com" in response.data
+
+    # 4. View non-existent user
+    assert client.get("/admin/user/99999").status_code == 404

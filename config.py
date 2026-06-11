@@ -1,6 +1,7 @@
 import os
 import secrets
 import warnings
+from datetime import timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -27,10 +28,26 @@ class Config:
         "DATABASE_URL", f"sqlite:///{BASE_DIR / 'instance' / 'daytone.db'}"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_pre_ping": True,
+        "pool_recycle": 300,
+    }
     WTF_CSRF_ENABLED = True
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
-    SESSION_COOKIE_SECURE = _bool_env("SESSION_COOKIE_SECURE", True)
+    SESSION_COOKIE_SECURE = _bool_env("SESSION_COOKIE_SECURE", ENV == "production")
+    PERMANENT_SESSION_LIFETIME = timedelta(hours=8)
+    REMEMBER_COOKIE_DURATION = timedelta(days=14)
+    MAX_CONTENT_LENGTH = 2 * 1024 * 1024
+
+    # Caching configuration
+    _redis_url = os.getenv("REDIS_URL") or os.getenv("RATELIMIT_STORAGE_URI")
+    if _redis_url and _redis_url.startswith("redis://"):
+        CACHE_TYPE = "RedisCache"
+        CACHE_REDIS_URL = _redis_url
+    else:
+        CACHE_TYPE = "SimpleCache"
+    CACHE_DEFAULT_TIMEOUT = 120
 
     MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.gmail.com")
     MAIL_PORT = int(os.getenv("MAIL_PORT", "587"))

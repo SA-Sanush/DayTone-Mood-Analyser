@@ -1,6 +1,6 @@
 import pickle
 from flask import current_app, has_app_context
-from datetime import timedelta
+from datetime import date, timedelta
 from functools import lru_cache
 from pathlib import Path
 
@@ -34,7 +34,7 @@ MODEL_PATH = Path(__file__).resolve().parent / "model.pkl"
 @lru_cache(maxsize=1)
 def _model_payload():
     if not MODEL_PATH.exists():
-        return None
+        raise FileNotFoundError(f"Model file not found at {MODEL_PATH}")
 
     with MODEL_PATH.open("rb") as model_file:
         return pickle.load(model_file)
@@ -61,7 +61,22 @@ def _consecutive_bad_days(logs, current_mood):
     return count
 
 
-def build_features(user_id, log_date, mood_score, sleep_hours, stress_level, activity_done, social_interaction, sentiment_score):
+def build_features(
+    user_id: int,
+    log_date: date,
+    mood_score: int,
+    sleep_hours: float,
+    stress_level: int,
+    activity_done: bool,
+    social_interaction: int,
+    sentiment_score: float,
+) -> dict[str, float | int]:
+    """Validate inputs and compile a flat features dictionary for model prediction."""
+    assert 1 <= mood_score <= 5, "mood_score must be between 1 and 5"
+    assert 0 <= sleep_hours <= 24, "sleep_hours must be between 0 and 24"
+    assert 1 <= stress_level <= 5, "stress_level must be between 1 and 5"
+    assert 1 <= social_interaction <= 3, "social_interaction must be between 1 and 3"
+
     logs = _recent_logs(user_id, log_date)
     moods = [log.mood_score for log in logs] + [mood_score]
     stresses = [log.stress_level for log in logs] + [stress_level]
@@ -108,9 +123,13 @@ def _log_prediction_fallback(exc):
         current_app.logger.warning("ML predict failed (%s), using rule fallback", exc)
 
 
-def predict_burnout(features):
+def predict_burnout(features: dict[str, float | int]) -> dict[str, str | float]:
+    """Predict burnout risk using the loaded ML model, falling back to rule-based logic on error or missing model."""
     try:
         payload = _model_payload()
+    except FileNotFoundError as exc:
+        _log_prediction_fallback(exc)
+        payload = None
     except Exception as exc:
         _log_prediction_fallback(exc)
         payload = None

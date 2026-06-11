@@ -18,12 +18,22 @@
       {% for log in logs %}
       <tr>
         <td>{{ log.log_date }}</td>
-        <td>{{ log.mood_score }}</td>
+        <td>{{ log.mood_emoji }} {{ log.mood_label }}</td>
         <td>{{ log.sleep_hours }}</td>
         <td>{{ log.stress_level }}</td>
         <td>{{ log.social_interaction }}</td>
         <td>{{ "%.2f"|format(log.sentiment_score) }}</td>
-        <td><span class="badge risk-bg-{{ log.burnout_risk|lower }}">{{ log.burnout_risk }}</span></td>
+        <td>
+          <span class="badge risk-bg-{{ log.burnout_risk|lower }}">
+            {% if log.burnout_risk == 'Low' %}
+              ✓ Low
+            {% elif log.burnout_risk == 'Medium' %}
+              ⚠ Medium
+            {% else %}
+              ✕ High
+            {% endif %}
+          </span>
+        </td>
         <td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="{{ url_for('mood.edit_log', log_id=log.id) }}"><i data-lucide="pencil"></i>Edit</a></td>
       </tr>
       {% else %}
@@ -31,5 +41,34 @@
       {% endfor %}
     </tbody>
   </table>
+
+  {% if pagination and pagination.pages > 1 %}
+  <nav class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top" aria-label="Page navigation">
+    <div class="small text-secondary">
+      Showing page {{ pagination.page }} of {{ pagination.pages }}
+    </div>
+    <ul class="pagination mb-0">
+      <li class="page-item{% if not pagination.has_prev %} disabled{% endif %}">
+        <a class="page-link" href="{{ url_for('mood.history', page=pagination.prev_num) if pagination.has_prev else '#' }}" aria-label="Previous">
+          <span aria-hidden="true">&laquo; Prev</span>
+        </a>
+      </li>
+      {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if page_num %}
+          <li class="page-item{% if page_num == pagination.page %} active{% endif %}">
+            <a class="page-link" href="{{ url_for('mood.history', page=page_num) }}">{{ page_num }}</a>
+          </li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+        {% endif %}
+      {% endfor %}
+      <li class="page-item{% if not pagination.has_next %} disabled{% endif %}">
+        <a class="page-link" href="{{ url_for('mood.history', page=pagination.next_num) if pagination.has_next else '#' }}" aria-label="Next">
+          <span aria-hidden="true">Next &raquo;</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+  {% endif %}
 </div>
 {% endblock %}

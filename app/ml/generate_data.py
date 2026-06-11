@@ -10,6 +10,12 @@ OUTPUT = Path(__file__).resolve().parent / "training_data.csv"
 
 
 def label_row(row):
+    """Determine synthetic burnout risk labels using a heuristic scoring rubric.
+
+    NOTE: The rule fallback in predictor.py intentionally mirrors this logic
+    to ensure academic consistency between heuristic fallback predictions
+    and the training data distribution.
+    """
     score = 0
     score += 2 if row["mood_score"] <= 2 else 0
     score += 2 if row["stress_level"] >= 4 else 0
@@ -25,8 +31,13 @@ def label_row(row):
     return BurnoutRisk.LOW
 
 
-def generate(rows=300):
-    random.seed(42)
+def generate(rows=5000, seed=42):
+    """Generate a synthetic dataset of mood logs with heuristic labels.
+
+    Accepts an optional seed parameter to support stability testing.
+    """
+    if seed is not None:
+        random.seed(seed)
     data = []
     for _ in range(rows):
         mood = random.randint(1, 5)

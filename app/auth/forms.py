@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import IntegerField, PasswordField, SelectField, StringField, SubmitField
+from wtforms import BooleanField, IntegerField, PasswordField, SelectField, StringField, SubmitField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, NumberRange, Optional
 
 
@@ -21,6 +21,7 @@ class RegistrationForm(FlaskForm):
         "Preferred Activity",
         choices=[("Walk", "Walk"), ("Yoga", "Yoga"), ("Music", "Music"), ("Reading", "Reading")],
     )
+    daily_reminder = BooleanField("Send daily check-in email reminder")
     admin_code = StringField("Admin Invite Code", validators=[Optional(), Length(max=100)])
     submit = SubmitField("Create account")
 
@@ -28,4 +29,5 @@ class RegistrationForm(FlaskForm):
 class LoginForm(FlaskForm):
     email = StringField("Email", validators=[DataRequired(), Email(), Length(max=120)])
     password = PasswordField("Password", validators=[DataRequired()])
+    remember_me = BooleanField("Remember me")
     submit = SubmitField("Sign in")

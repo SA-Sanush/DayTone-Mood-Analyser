@@ -2,7 +2,8 @@ import logging
 import os
 import warnings
 
-from flask import Flask
+from flask import Flask, jsonify
+from flask_talisman import Talisman
 try:
     from flask_migrate import Migrate
 except ImportError:  # pragma: no cover
@@ -12,7 +13,7 @@ except ImportError:  # pragma: no cover
 
 from config import Config
 
-from .extensions import db, limiter, login_manager, mail
+from .extensions import db, limiter, login_manager, mail, cache
 
 
 migrate = Migrate()
@@ -47,14 +48,25 @@ def validate_runtime_config(app):
     admin_code = app.config.get("ADMIN_REGISTRATION_CODE")
     if not admin_code:
         raise RuntimeError("ADMIN_REGISTRATION_CODE must be set when admin routes are enabled.")
-    if len(admin_code) < 12:
-        warnings.warn("ADMIN_REGISTRATION_CODE is too short.", stacklevel=2)
+    if len(admin_code) < 16:
+        raise RuntimeError("ADMIN_REGISTRATION_CODE must be at least 16 characters in production.")
     if admin_code and not app.config.get("ADMIN_ALERT_EMAIL"):
         warnings.warn("ADMIN_ALERT_EMAIL should be set when admin registration is enabled.", stacklevel=2)
 
 
 def create_app(config_object=Config):
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+    if config_object.ENV == "production":
+        from pythonjsonlogger import jsonlogger
+        # Clear default handlers to prevent duplicate logging output
+        for h in logging.getLogger().handlers[:]:
+            logging.getLogger().removeHandler(h)
+        handler = logging.StreamHandler()
+        handler.setFormatter(jsonlogger.JsonFormatter("%(asctime)s %(levelname)s %(name)s %(message)s"))
+        logging.getLogger().addHandler(handler)
+        logging.getLogger().setLevel(logging.INFO)
+    else:
+        logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(config_object)
     validate_runtime_config(app)
@@ -65,6 +77,20 @@ def create_app(config_object=Config):
     login_manager.init_app(app)
     mail.init_app(app)
     limiter.init_app(app)
+    cache.init_app(app)
+
+    # Initialize Talisman with CSP
+    Talisman(
+        app,
+        content_security_policy={
+            "default-src": "'self'",
+            "script-src": ["'self'", "cdn.jsdelivr.net", "unpkg.com", "'unsafe-inline'"],
+            "style-src": ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net", "fonts.googleapis.com"],
+            "font-src": ["'self'", "fonts.gstatic.com"],
+            "img-src": ["'self'", "data:"],
+        },
+        force_https=(config_object.ENV == "production"),
+    )
 
     login_manager.login_view = "auth.login"
     login_manager.login_message_category = "info"
@@ -76,6 +102,10 @@ def create_app(config_object=Config):
     app.register_blueprint(auth_bp)
     app.register_blueprint(mood_bp)
     app.register_blueprint(admin_bp)
+
+    @app.route("/health")
+    def health():
+        return jsonify({"status": "ok"}), 200
 
     @app.cli.command("reload-model")
     def reload_model():

@@ -10,13 +10,22 @@ block content %} {% if data.latest %}
       <h1>Today feels {{ data.latest_orb_state.label|lower }}</h1>
       <p>{{ data.trend_summary.body }}</p>
       <div class="mood-pill-row" role="group" aria-label="Preview orb mood">
-        {% for score in range(1, 6) %}
+        {% set moods = [
+          (1, "Sick", "🤒"),
+          (2, "Sad", "😢"),
+          (3, "Anxious", "😰"),
+          (4, "Calm", "😌"),
+          (5, "Happy", "😊")
+        ] %}
+        {% for score, name, emoji in moods %}
         <button
           class="mood-pill{% if score == data.latest_orb_state.mood %} active{% endif %}"
           type="button"
           data-mood="{{ score }}"
+          title="{{ name }}"
+          aria-label="{{ name }}"
         >
-          <span>{{ score }}</span>
+          <span>{{ emoji }}</span>
         </button>
         {% endfor %}
       </div>
@@ -46,13 +55,13 @@ block content %} {% if data.latest %}
   </section>
 
   <section class="motion-grid" aria-label="Today at a glance">
-    <div class="panel motion-card breath-card">
+    <button class="panel motion-card breath-card" id="breathCardTrigger" type="button" data-bs-toggle="modal" data-bs-target="#breathingModal" aria-label="Start Guided Box Breathing Session" aria-haspopup="dialog" aria-controls="breathingModal">
       <div class="breath-orb" aria-hidden="true">
         <i data-lucide="wind"></i>
       </div>
       <span>Breathing room</span>
       <strong>60 sec</strong>
-    </div>
+    </button>
     <div class="panel motion-card">
       <i data-lucide="flame"></i>
       <span>Day streak</span>
@@ -127,28 +136,28 @@ block content %} {% if data.latest %}
           <i data-lucide="activity"></i>
           <h2>Mood Score</h2>
         </div>
-        <canvas id="moodChart"></canvas>
+        <canvas id="moodChart" aria-label="Mood score over time chart"></canvas>
       </div>
       <div class="panel chart-panel">
         <div class="panel-title">
           <i data-lucide="moon"></i>
           <h2>Sleep Hours</h2>
         </div>
-        <canvas id="sleepChart"></canvas>
+        <canvas id="sleepChart" aria-label="Sleep hours over time chart"></canvas>
       </div>
       <div class="panel chart-panel">
         <div class="panel-title">
           <i data-lucide="zap"></i>
           <h2>Stress Trend</h2>
         </div>
-        <canvas id="stressChart"></canvas>
+        <canvas id="stressChart" aria-label="Stress trend chart"></canvas>
       </div>
       <div class="panel chart-panel">
         <div class="panel-title">
           <i data-lucide="scatter-chart"></i>
           <h2>Sleep vs Mood</h2>
         </div>
-        <canvas id="scatterChart"></canvas>
+        <canvas id="scatterChart" aria-label="Sleep versus mood scatter chart"></canvas>
       </div>
     </div>
     <aside class="analytics-side">
@@ -157,7 +166,7 @@ block content %} {% if data.latest %}
           <i data-lucide="pie-chart"></i>
           <h2>Burnout Distribution</h2>
         </div>
-        <canvas id="burnoutChart"></canvas>
+        <canvas id="burnoutChart" aria-label="Burnout risk distribution chart"></canvas>
       </div>
       <div class="panel suggestions-panel">
         <div class="panel-title">
@@ -184,6 +193,27 @@ block content %} {% if data.latest %}
       </div>
     </aside>
   </section>
+
+  <!-- Guided Box Breathing Modal -->
+  <div class="modal fade" id="breathingModal" tabindex="-1" role="dialog" aria-labelledby="breathingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content panel elevated-panel" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--dt-border);">
+        <div class="modal-header border-0">
+          <h5 class="modal-title" id="breathingModalLabel">Guided Box Breathing</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="closeBreathingModalBtn"></button>
+        </div>
+        <div class="modal-body text-center py-5">
+          <div class="breathing-circle-wrap">
+            <div id="breathingCircle" class="breathing-circle"></div>
+            <div id="breathingPhase" class="breathing-phase-label text-white">Get Ready</div>
+          </div>
+          <div id="breathingTimer" class="breathing-timer text-primary">60s</div>
+          <p class="text-secondary mt-3 px-3">Follow the prompt to inhale, hold, exhale, and hold. Box breathing helps reduce anxiety and lower stress levels.</p>
+          <button type="button" class="btn btn-primary mt-3 px-4" id="startBreathingBtn">Start Session</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 {% else %}
 <div class="empty-state">
@@ -204,4 +234,106 @@ block content %} {% if data.latest %}
 </script>
 <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
 <script src="{{ url_for('static', filename='js/mood-orb-three-shader.js') }}?v=1.0.4"></script>
+<script>
+(function() {
+  const modal = document.getElementById('breathingModal');
+  if (!modal) return;
+  const circle = document.getElementById('breathingCircle');
+  const phaseLabel = document.getElementById('breathingPhase');
+  const timerLabel = document.getElementById('breathingTimer');
+  const startBtn = document.getElementById('startBreathingBtn');
+  
+  let timerInterval = null;
+  let phaseTimeout = null;
+  let secondsLeft = 60;
+  let isRunning = false;
+
+  function resetSession() {
+    isRunning = false;
+    clearInterval(timerInterval);
+    clearTimeout(phaseTimeout);
+    secondsLeft = 60;
+    timerLabel.textContent = "60s";
+    phaseLabel.textContent = "Get Ready";
+    circle.className = "breathing-circle";
+    if (startBtn) {
+      startBtn.style.display = "inline-block";
+      startBtn.textContent = "Start Session";
+    }
+  }
+
+  function startSession() {
+    isRunning = true;
+    if (startBtn) {
+      startBtn.style.display = "none";
+    }
+    secondsLeft = 60;
+    timerLabel.textContent = secondsLeft + "s";
+    
+    timerInterval = setInterval(() => {
+      secondsLeft--;
+      if (secondsLeft <= 0) {
+        endSession();
+      } else {
+        timerLabel.textContent = secondsLeft + "s";
+      }
+    }, 1000);
+
+    runBreathingCycle();
+  }
+
+  function endSession() {
+    clearInterval(timerInterval);
+    clearTimeout(phaseTimeout);
+    isRunning = false;
+    timerLabel.textContent = "0s";
+    phaseLabel.textContent = "Session Complete";
+    circle.className = "breathing-circle";
+    setTimeout(() => {
+      if (!isRunning) {
+        resetSession();
+      }
+    }, 2000);
+  }
+
+  function runBreathingCycle() {
+    if (!isRunning) return;
+
+    const phases = [
+      { name: "Inhale", class: "scale-inhale", duration: 4000 },
+      { name: "Hold", class: "scale-hold-high", duration: 4000 },
+      { name: "Exhale", class: "scale-exhale", duration: 4000 },
+      { name: "Hold", class: "scale-hold-low", duration: 4000 }
+    ];
+
+    let currentPhaseIdx = 0;
+
+    function nextPhase() {
+      if (!isRunning) return;
+      
+      const phase = phases[currentPhaseIdx];
+      phaseLabel.textContent = phase.name;
+      circle.className = "breathing-circle " + phase.class;
+
+      const duration = Math.min(phase.duration, secondsLeft * 1000);
+      
+      phaseTimeout = setTimeout(() => {
+        currentPhaseIdx = (currentPhaseIdx + 1) % phases.length;
+        if (secondsLeft > 0) {
+          nextPhase();
+        }
+      }, duration);
+    }
+
+    nextPhase();
+  }
+
+  if (startBtn) {
+    startBtn.addEventListener('click', startSession);
+  }
+
+  modal.addEventListener('hidden.bs.modal', resetSession);
+  modal.addEventListener('show.bs.modal', resetSession);
+})();
+</script>
 {% endif %} {% endblock %}

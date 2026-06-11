@@ -4,29 +4,30 @@ from sqlalchemy import and_, func
 from sqlalchemy.orm import joinedload
 
 from app.constants import BurnoutRisk
-from app.models import MoodLog, User
+from app.models import MoodLog, User, Suggestion
+from app.extensions import cache
 
 
-def user_logs(user_id, limit=None):
-    query = MoodLog.query.filter_by(user_id=user_id).order_by(MoodLog.log_date.asc())
+def user_logs(user_id: int, limit: int | None = None) -> list[MoodLog]:
+    """Retrieve mood logs for a given user, ordered chronologically.
+
+    If limit is specified, it returns the N most recent logs.
+    """
     if limit:
-        rows = (
+        logs = (
             MoodLog.query.filter_by(user_id=user_id)
             .options(joinedload(MoodLog.suggestions))
             .order_by(MoodLog.log_date.desc())
             .limit(limit)
-            .subquery()
-        )
-        return (
-            MoodLog.query.options(joinedload(MoodLog.suggestions))
-            .join(rows, MoodLog.id == rows.c.id)
-            .order_by(MoodLog.log_date.asc())
             .all()
         )
-    return query.all()
+        logs.reverse()
+        return logs
+    return MoodLog.query.filter_by(user_id=user_id).order_by(MoodLog.log_date.asc()).all()
 
 
-def current_streak(logs, today=None):
+def current_streak(logs: list, today: date | None = None) -> int:
+    """Calculate the consecutive day logging streak ending today or yesterday."""
     if not logs:
         return 0
 
@@ -123,11 +124,11 @@ def orb_state(log):
 
     mood = max(1, min(5, int(log.mood_score)))
     palette = {
-        1: {"primary": "#ef4444", "secondary": "#f97316", "label": "Raw"},
-        2: {"primary": "#f97316", "secondary": "#facc15", "label": "Uneasy"},
-        3: {"primary": "#14b8a6", "secondary": "#60a5fa", "label": "Balanced"},
-        4: {"primary": "#3b82f6", "secondary": "#8b5cf6", "label": "Lifted"},
-        5: {"primary": "#8b5cf6", "secondary": "#ec4899", "label": "Radiant"},
+        1: {"primary": "#ef4444", "secondary": "#f97316", "label": "Sick"},
+        2: {"primary": "#f97316", "secondary": "#facc15", "label": "Sad"},
+        3: {"primary": "#14b8a6", "secondary": "#60a5fa", "label": "Anxious"},
+        4: {"primary": "#3b82f6", "secondary": "#8b5cf6", "label": "Calm"},
+        5: {"primary": "#8b5cf6", "secondary": "#ec4899", "label": "Happy"},
     }
     sharpness = round((6 - mood) / 5, 2)
     calm = round(mood / 5, 2)
@@ -145,23 +146,37 @@ def orb_state(log):
     }
 
 
-def challenge_progress(latest, streak_count):
+def challenge_progress(latest: MoodLog | None, streak_count: int) -> int:
+    """Calculate progress percentage toward the daily wellness challenge.
+
+    Rubric:
+    - Base participation: 20%
+    - Checked in today: +30%
+    - Done physical activity: +20%
+    - Sleep duration >= 7 hours: +15%
+    - Stress level <= 3 (low/medium): +15%
+    - Streak bonus: +2% per streak day (capped at 5 days, i.e., +10%)
+    """
     if not latest:
         return 0
 
-    progress = 20
+    progress = 20  # Base progress for logging historical data
     if latest.log_date == date.today():
-        progress += 30
+        progress += 30  # Active logging today
     if latest.activity_done:
-        progress += 20
+        progress += 20  # Physical activity logged
     if latest.sleep_hours >= 7:
-        progress += 15
+        progress += 15  # Healthy sleep threshold met
     if latest.stress_level <= 3:
-        progress += 15
+        progress += 15  # Controlled stress level threshold met
+
+    # Cap total progress at 100% including streak bonus
     return min(100, progress + min(streak_count, 5) * 2)
 
 
-def dashboard_data(user_id):
+@cache.memoize(timeout=120)
+def dashboard_data(user_id: int) -> dict:
+    """Compile aggregated analytics metrics for the user's dashboard view."""
     logs = user_logs(user_id, limit=30)
     latest = logs[-1] if logs else None
     distribution = {risk: count for risk, count in db_risk_distribution(user_id=user_id, limit=30)}
@@ -213,18 +228,16 @@ def heatmap_data(user_id, year=None):
     return [{"date": log.log_date.isoformat(), "mood": log.mood_score, "risk": log.burnout_risk} for log in logs]
 
 
-def recent_suggestions(user_id, log_limit=3):
-    recent_logs = (
+def recent_suggestions(user_id: int, log_limit: int = 3) -> list[str]:
+    """Retrieve suggestions from the latest mood log that contains suggestions."""
+    latest_log_with_sugg = (
         MoodLog.query.filter_by(user_id=user_id)
-        .options(joinedload(MoodLog.suggestions))
+        .join(Suggestion)
         .order_by(MoodLog.log_date.desc())
-        .limit(log_limit)
-        .all()
+        .first()
     )
-    for log in recent_logs:
-        suggestions = [suggestion.suggestion_text for suggestion in log.suggestions]
-        if suggestions:
-            return suggestions
+    if latest_log_with_sugg:
+        return [s.suggestion_text for s in latest_log_with_sugg.suggestions]
     return []
 
 

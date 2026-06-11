@@ -1,11 +1,11 @@
 import csv
 from io import StringIO
 
-from flask import Response, current_app, flash, jsonify, redirect, render_template, request, send_file, url_for
+from flask import Response, current_app, flash, jsonify, redirect, render_template, request, send_file, url_for, stream_with_context
 from flask_login import current_user, login_required
 
 from app.constants import BurnoutRisk
-from app.extensions import db
+from app.extensions import db, limiter, cache
 from app.ml.predictor import build_features, predict_burnout
 from app.models import BurnoutHistory, MoodLog, Suggestion
 from app.nlp.sentiment import get_sentiment_score
@@ -18,7 +18,7 @@ from . import mood_bp
 from .forms import MoodLogForm
 
 
-def _apply_analysis(log, form):
+def _mutate_log_with_analysis(log, form):
     sentiment = get_sentiment_score(form.notes.data)
     features = build_features(
         current_user.id,
@@ -64,7 +64,7 @@ def log_mood():
     if form.validate_on_submit():
         existing = MoodLog.query.filter_by(user_id=current_user.id, log_date=form.log_date.data).first()
         if existing:
-            flash("You already have a log for that date. Edit support can be added later; for now choose another date.", "warning")
+            flash("You already have a log for that date. Visit History to edit it.", "warning")
             return render_template("mood/log.html", form=form)
 
         log = MoodLog(
@@ -76,7 +76,7 @@ def log_mood():
             activity_done=form.activity_done.data,
             social_interaction=form.social_interaction.data,
         )
-        prediction = _apply_analysis(log, form)
+        prediction = _mutate_log_with_analysis(log, form)
         db.session.add(log)
         db.session.flush()
 
@@ -92,6 +92,9 @@ def log_mood():
         _replace_suggestions(log)
 
         db.session.commit()
+        # Invalidate dashboard cache for the user
+        cache.delete_memoized(dashboard_data, current_user.id)
+
         if log.burnout_risk == BurnoutRisk.HIGH:
             current_app.logger.info("High-risk alert queued user_id=%s log_id=%s", current_user.id, log.id)
             send_high_risk_alert(current_user, log)
@@ -116,7 +119,7 @@ def edit_log(log_id):
             flash("You already have another log for that date.", "warning")
             return render_template("mood/log.html", form=form, editing=True, log=log)
 
-        prediction = _apply_analysis(log, form)
+        prediction = _mutate_log_with_analysis(log, form)
         BurnoutHistory.query.filter_by(log_id=log.id).delete()
         db.session.add(
             BurnoutHistory(
@@ -129,6 +132,9 @@ def edit_log(log_id):
         )
         _replace_suggestions(log)
         db.session.commit()
+        # Invalidate dashboard cache for the user
+        cache.delete_memoized(dashboard_data, current_user.id)
+
         if log.burnout_risk == BurnoutRisk.HIGH:
             current_app.logger.info("High-risk alert queued user_id=%s log_id=%s", current_user.id, log.id)
             send_high_risk_alert(current_user, log)
@@ -164,8 +170,11 @@ def dashboard():
 @mood_bp.route("/history")
 @login_required
 def history():
-    logs = MoodLog.query.filter_by(user_id=current_user.id).order_by(MoodLog.log_date.desc()).all()
-    return render_template("mood/history.html", logs=logs)
+    page = request.args.get('page', 1, type=int)
+    pagination = MoodLog.query.filter_by(user_id=current_user.id) \
+        .order_by(MoodLog.log_date.desc()) \
+        .paginate(page=page, per_page=30, error_out=False)
+    return render_template("mood/history.html", logs=pagination.items, pagination=pagination)
 
 
 @mood_bp.route("/heatmap")
@@ -182,17 +191,19 @@ def heatmap_api():
 
 @mood_bp.route("/report/pdf")
 @login_required
+@limiter.limit("5 per minute")
 def report_pdf():
     pdf = build_pdf_report(current_user)
-    return send_file(pdf, mimetype="application/pdf", as_attachment=True, download_name="daytone-report.pdf")
+    response = send_file(pdf, mimetype="application/pdf", as_attachment=True, download_name="daytone-report.pdf")
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return response
 
 
 @mood_bp.route("/export/csv")
 @login_required
+@limiter.limit("5 per minute")
 def export_csv():
     include_notes = request.args.get("include_notes") == "1"
-    output = StringIO()
-    writer = csv.writer(output)
     headers = [
         "date",
         "mood_score",
@@ -205,24 +216,37 @@ def export_csv():
     ]
     if include_notes:
         headers.append("notes")
-    writer.writerow(headers)
-    logs = MoodLog.query.filter_by(user_id=current_user.id).order_by(MoodLog.log_date.asc()).all()
-    for log in logs:
-        row = [
-            log.log_date,
-            log.mood_score,
-            log.sleep_hours,
-            log.stress_level,
-            log.activity_done,
-            log.social_interaction,
-            log.sentiment_score,
-            log.burnout_risk,
-        ]
-        if include_notes:
-            row.append(log.notes or "")
-        writer.writerow(row)
+
+    def generate():
+        output = StringIO()
+        writer = csv.writer(output)
+        writer.writerow(headers)
+        yield output.getvalue()
+
+        logs = MoodLog.query.filter_by(user_id=current_user.id).order_by(MoodLog.log_date.asc()).all()
+        for log in logs:
+            output = StringIO()
+            writer = csv.writer(output)
+            row = [
+                log.log_date,
+                log.mood_score,
+                log.sleep_hours,
+                log.stress_level,
+                log.activity_done,
+                log.social_interaction,
+                log.sentiment_score,
+                log.burnout_risk,
+            ]
+            if include_notes:
+                row.append(log.notes or "")
+            writer.writerow(row)
+            yield output.getvalue()
+
     return Response(
-        output.getvalue(),
+        stream_with_context(generate()),
         mimetype="text/csv",
-        headers={"Content-Disposition": "attachment; filename=daytone-logs.csv"},
+        headers={
+            "Content-Disposition": "attachment; filename=daytone-logs.csv",
+            "X-Content-Type-Options": "nosniff"
+        },
     )

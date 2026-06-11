@@ -1211,3 +1211,150 @@ body {
     height: 230px !important;
   }
 }
+
+/* Custom premium mood selection styling */
+.mood-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.mood-btn-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.1rem 0.5rem;
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid var(--dt-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.mood-btn-option:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--dt-soft-shadow);
+}
+
+.mood-btn-option.active {
+  transform: translateY(-2px);
+  border-width: 2px;
+  background: white;
+  box-shadow: var(--dt-shadow);
+}
+
+/* Specific active colors matching the orb states */
+.mood-btn-option[data-value="5"].active {
+  border-color: #8b5cf6; /* Happy */
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.1));
+}
+.mood-btn-option[data-value="4"].active {
+  border-color: #3b82f6; /* Calm */
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+}
+.mood-btn-option[data-value="3"].active {
+  border-color: #14b8a6; /* Anxious */
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.1), rgba(96, 165, 250, 0.1));
+}
+.mood-btn-option[data-value="2"].active {
+  border-color: #f97316; /* Sad */
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.1), rgba(250, 204, 21, 0.1));
+}
+.mood-btn-option[data-value="1"].active {
+  border-color: #ef4444; /* Sick */
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(249, 115, 22, 0.1));
+}
+
+.mood-btn-option .mood-emoji {
+  font-size: 2rem;
+  margin-bottom: 0.35rem;
+  transition: transform 200ms ease;
+}
+
+.mood-btn-option:hover .mood-emoji {
+  transform: scale(1.15);
+}
+
+.mood-btn-option .mood-label {
+  font-size: 0.85rem;
+  font-weight: 750;
+  color: var(--dt-muted);
+}
+
+.mood-btn-option.active .mood-label {
+  color: var(--dt-text);
+}
+
+@media (max-width: 576px) {
+  .mood-selection-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .mood-selection-grid .mood-btn-option:last-child {
+    grid-column: span 2;
+  }
+}
+
+/* Breathing Room Guided Meditation CSS */
+.breath-card {
+  cursor: pointer;
+}
+.breathing-circle-wrap {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.breathing-circle {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(95, 212, 196, 0.8) 0%, rgba(37, 99, 235, 0.4) 100%);
+  box-shadow: 0 0 35px rgba(95, 212, 196, 0.5);
+  transition: transform 4s linear;
+  transform: scale(0.65);
+}
+.breathing-phase-label {
+  position: relative;
+  z-index: 10;
+  font-size: 1.35rem;
+  font-weight: 750;
+  letter-spacing: 1.5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+.breathing-timer {
+  font-size: 2.25rem;
+  font-weight: 800;
+  margin-top: 1rem;
+}
+.breathing-circle.scale-inhale {
+  transform: scale(1.15);
+}
+.breathing-circle.scale-hold-high {
+  transform: scale(1.15);
+}
+.breathing-circle.scale-exhale {
+  transform: scale(0.65);
+}
+.breathing-circle.scale-hold-low {
+  transform: scale(0.65);
+}
+.orb-error-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.05);
+}
+.orb-fallback-text {
+  color: var(--dt-muted);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 1rem;
+}
+

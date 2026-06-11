@@ -89,15 +89,16 @@
       this.canvas = canvasEl;
 
       this.moodColors = {
-        1: new THREE.Color("#ff3b30"), // Raw (Red)
-        2: new THREE.Color("#ff9500"), // Uneasy (Orange)
-        3: new THREE.Color("#ffcc00"), // Balanced (Yellow)
-        4: new THREE.Color("#34c759"), // Lifted (Green)
-        5: new THREE.Color("#00a86b"), // Radiant (Dark Green)
+        1: { primary: "#ef4444", secondary: "#f97316" }, // Sick
+        2: { primary: "#f97316", secondary: "#facc15" }, // Sad
+        3: { primary: "#14b8a6", secondary: "#60a5fa" }, // Anxious
+        4: { primary: "#3b82f6", secondary: "#8b5cf6" }, // Calm
+        5: { primary: "#8b5cf6", secondary: "#ec4899" }, // Happy
       };
 
       const initialMood = Number(dashboard.orb?.mood || 3);
-      this.targetColor = this.moodColors[initialMood].clone();
+      const palette = this.moodColors[initialMood] || this.moodColors[3];
+      this.targetColor = new THREE.Color(palette.primary);
       this.currentColor = this.targetColor.clone();
       this.targetColorIndex = initialMood;
 
@@ -227,7 +228,8 @@
 
     setMood(moodId) {
       if (!this.moodColors[moodId]) return;
-      this.targetColor.copy(this.moodColors[moodId]);
+      const palette = this.moodColors[moodId];
+      this.targetColor.copy(new THREE.Color(palette.primary));
       this.targetColorIndex = moodId;
 
       const label = document.getElementById("orbLabel");
@@ -236,17 +238,16 @@
       const pills = Array.from(document.querySelectorAll(".mood-pill"));
 
       const labels = {
-        1: "Raw",
-        2: "Uneasy",
-        3: "Balanced",
-        4: "Lifted",
-        5: "Radiant",
+        1: "Sick",
+        2: "Sad",
+        3: "Anxious",
+        4: "Calm",
+        5: "Happy",
       };
 
-      const colorHex = "#" + this.targetColor.getHexString();
       if (cockpit) {
-        cockpit.style.setProperty("--orb-primary", colorHex);
-        cockpit.style.setProperty("--orb-secondary", colorHex);
+        cockpit.style.setProperty("--orb-primary", palette.primary);
+        cockpit.style.setProperty("--orb-secondary", palette.secondary);
       }
 
       pills.forEach((pill) => {
@@ -255,12 +256,32 @@
 
       if (label && labels[moodId]) label.textContent = labels[moodId];
       if (score) score.textContent = `${moodId}/5`;
+
+      if (prefersReducedMotion && this.renderer && this.scene && this.camera) {
+        this.currentColor.copy(this.targetColor);
+        this.material.uniforms.uColor.value = this.currentColor;
+        this.renderer.render(this.scene, this.camera);
+      }
     }
 
     animate() {
+      if (prefersReducedMotion) {
+        this.currentColor.copy(this.targetColor);
+        this.material.uniforms.uColor.value = this.currentColor;
+        this.material.uniforms.uTime.value = 0.0;
+        if (this.orb) {
+          this.orb.rotation.y = 0;
+          this.orb.rotation.x = 0;
+        }
+        if (this.particles) {
+          this.particles.rotation.y = 0;
+        }
+        this.renderer.render(this.scene, this.camera);
+        return;
+      }
+
       requestAnimationFrame(() => this.animate());
 
-      // Robust dynamic resize check to handle initial layout and container size changes
       const w = this.canvas.clientWidth;
       const h = this.canvas.clientHeight;
       if (w > 0 && h > 0 && (this.canvas.width !== w || this.canvas.height !== h)) {
@@ -270,9 +291,7 @@
       }
 
       const elapsedTime = this.clock.getElapsedTime();
-      this.material.uniforms.uTime.value = prefersReducedMotion
-        ? elapsedTime * 0.15
-        : elapsedTime;
+      this.material.uniforms.uTime.value = elapsedTime;
 
       this.currentColor.lerp(this.targetColor, 0.05);
       this.material.uniforms.uColor.value = this.currentColor;
@@ -290,5 +309,17 @@
     }
   }
 
-  new SlushyMoodOrb(canvas);
+  try {
+    new SlushyMoodOrb(canvas);
+  } catch (err) {
+    console.error("Three.js Orb initialization failed:", err);
+    const orbContainer = document.querySelector(".orb-stage-wrap");
+    if (orbContainer) {
+      orbContainer.classList.add("orb-error-state");
+      const fallbackDiv = document.createElement("div");
+      fallbackDiv.className = "orb-fallback-text";
+      fallbackDiv.textContent = "Interactive 3D orb could not load.";
+      orbContainer.appendChild(fallbackDiv);
+    }
+  }
 })();

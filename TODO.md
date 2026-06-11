@@ -1,0 +1,5 @@
+- [x] Replace `app/static/js/mood-orb-three-shader.js` with the provided exact SlushyMoodOrb implementation
+  - [x] Preserve integration points: canvas#(moodOrb), .mood-pill click handlers, window.DAYTONE_DASHBOARD.orb.mood initialization
+  - [x] Preserve resize handling and particle background
+  - [x] Preserve reduced-motion behavior if present
+- [x] Run backend tests (`pytest`) to ensure no regressions

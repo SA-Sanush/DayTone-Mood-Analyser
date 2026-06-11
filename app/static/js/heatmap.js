@@ -2,11 +2,20 @@
   const target = document.getElementById('heatmap');
   if (!target) return;
 
-  const response = await fetch('/api/heatmap');
-  const rows = await response.json();
-  const byDate = new Map(rows.map((row) => [row.date, row]));
+  let rows = [];
   const now = new Date();
   const year = now.getFullYear();
+  try {
+    const response = await fetch('/api/heatmap');
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    rows = await response.json();
+  } catch (err) {
+    console.error("Failed to load heatmap data:", err);
+    target.textContent = "Could not load heatmap data. Please try again later.";
+    return;
+  }
+
+  const byDate = new Map(rows.map((row) => [row.date, row]));
   const start = new Date(year, 0, 1);
   const end = new Date(year, 11, 31);
   const cell = 14;
@@ -15,7 +24,10 @@
   const height = 7 * (cell + gap) + 24;
   const colors = ['#e5e7eb', '#fee2e2', '#fed7aa', '#fef3c7', '#bbf7d0', '#86efac'];
 
-  const svg = d3.select(target).append('svg').attr('viewBox', `0 0 ${width} ${height}`);
+  const svg = d3.select(target).append('svg')
+    .attr('viewBox', `0 0 ${width} ${height}`)
+    .attr('role', 'img')
+    .attr('aria-label', `Mood heatmap for the year ${year}`);
   const days = d3.timeDays(start, d3.timeDay.offset(end, 1));
 
   svg.selectAll('rect')

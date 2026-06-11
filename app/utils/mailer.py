@@ -16,7 +16,7 @@ def send_high_risk_alert(user, log):
         recipients=[current_app.config["ADMIN_ALERT_EMAIL"]],
         body=(
             f"{user.name} ({user.email}) has a High burnout risk entry on {log.log_date}.\n"
-            f"Mood: {log.mood_score}, Stress: {log.stress_level}, Sleep: {log.sleep_hours}"
+            f"Mood: {log.mood_label} ({log.mood_score}), Stress: {log.stress_level}, Sleep: {log.sleep_hours}"
         ),
     )
     mail.send(msg)

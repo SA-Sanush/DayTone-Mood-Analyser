@@ -10,40 +10,77 @@
   <div class="row g-3">
     <div class="col-md-6">
       <label class="form-label">{{ form.name.label }}</label>
-      {{ form.name(class="form-control") }}
+      {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+      {% for error in form.name.errors %}
+        <span class="invalid-feedback d-block" role="alert">{{ error }}</span>
+      {% endfor %}
     </div>
     <div class="col-md-6">
       <label class="form-label">{{ form.email.label }}</label>
-      {{ form.email(class="form-control") }}
+      {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+      {% for error in form.email.errors %}
+        <span class="invalid-feedback d-block" role="alert">{{ error }}</span>
+      {% endfor %}
     </div>
     <div class="col-md-6">
       <label class="form-label">{{ form.password.label }}</label>
-      {{ form.password(class="form-control") }}
+      {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else "")) }}
+      {% for error in form.password.errors %}
+        <span class="invalid-feedback d-block" role="alert">{{ error }}</span>
+      {% endfor %}
     </div>
     <div class="col-md-6">
       <label class="form-label">{{ form.confirm_password.label }}</label>
-      {{ form.confirm_password(class="form-control") }}
+      {{ form.confirm_password(class="form-control" + (" is-invalid" if form.confirm_password.errors else "")) }}
+      {% for error in form.confirm_password.errors %}
+        <span class="invalid-feedback d-block" role="alert">{{ error }}</span>
+      {% endfor %}
     </div>
     <div class="col-md-3">
       <label class="form-label">{{ form.age.label }}</label>
-      {{ form.age(class="form-control") }}
+      {{ form.age(class="form-control" + (" is-invalid" if form.age.errors else "")) }}
+      {% for error in form.age.errors %}
+        <span class="invalid-feedback d-block" role="alert">{{ error }}</span>
+      {% endfor %}
     </div>
     <div class="col-md-3">
       <label class="form-label">{{ form.gender.label }}</label>
-      {{ form.gender(class="form-select") }}
+      {{ form.gender(class="form-select" + (" is-invalid" if form.gender.errors else "")) }}
+      {% for error in form.gender.errors %}
+        <span class="invalid-feedback d-block" role="alert">{{ error }}</span>
+      {% endfor %}
     </div>
     <div class="col-md-3">
       <label class="form-label">{{ form.occupation.label }}</label>
-      {{ form.occupation(class="form-control") }}
+      {{ form.occupation(class="form-control" + (" is-invalid" if form.occupation.errors else "")) }}
+      {% for error in form.occupation.errors %}
+        <span class="invalid-feedback d-block" role="alert">{{ error }}</span>
+      {% endfor %}
     </div>
     <div class="col-md-3">
       <label class="form-label">{{ form.preferred_activity.label }}</label>
-      {{ form.preferred_activity(class="form-select") }}
+      {{ form.preferred_activity(class="form-select" + (" is-invalid" if form.preferred_activity.errors else "")) }}
+      {% for error in form.preferred_activity.errors %}
+        <span class="invalid-feedback d-block" role="alert">{{ error }}</span>
+      {% endfor %}
     </div>
-    <div class="col-md-6">
+    <div class="col-12 mt-3">
+      <div class="form-check">
+        {{ form.daily_reminder(class="form-check-input") }}
+        <label class="form-check-label" for="daily_reminder">
+          {{ form.daily_reminder.label.text }}
+        </label>
+      </div>
+    </div>
+    {% if show_admin %}
+    <div class="col-md-6 mt-3">
       <label class="form-label">{{ form.admin_code.label }}</label>
-      {{ form.admin_code(class="form-control", placeholder="Optional") }}
+      {{ form.admin_code(class="form-control" + (" is-invalid" if form.admin_code.errors else ""), placeholder="Enter admin code") }}
+      {% for error in form.admin_code.errors %}
+        <span class="invalid-feedback d-block" role="alert">{{ error }}</span>
+      {% endfor %}
     </div>
+    {% endif %}
   </div>
   <button class="btn btn-primary mt-4" type="submit"><i data-lucide="sparkles"></i>Create account</button>
 </form>

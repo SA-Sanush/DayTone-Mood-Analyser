@@ -1,0 +1,56 @@
+================================================================================
+DAYTONE - COMPREHENSIVE IMPROVEMENTS & CHANGES COMPARISON
+================================================================================
+Category               | Previous State                            | Current State (Improved)
+-----------------------|-------------------------------------------|-------------------------------------------------------
+1. Security            | - No security headers (No Talisman)       | + Talisman integrated with a strict Content Security
+                       | - No Content-Security-Policy (CSP)        |   Policy (CSP) matching loaded CDN assets.
+                       | - Session lifetime unset                  | + Permanent session lifetime set to 8 hours.
+                       | - Remember-me cookie lifetime unset       | + Remember-me cookie lifetime configured to 14 days.
+                       | - No file upload size limits              | + Max request payload size capped to 2MB.
+                       | - Open redirect vulnerability via         | + Strict urlparse validation blocking external domains
+                       |   `next` parameter (allowed relative     |   and protocol-relative redirects (e.g., `//`).
+                       |   protocols like `//`).                   | + Enforced 16-character minimum for admin codes.
+                       |                                           | + production checks raise RuntimeError on sqlite/memory.
+-----------------------|-------------------------------------------|-------------------------------------------------------
+2. Database &          | - Missing weekly reminder preference flag | + Added `daily_reminder` preference to `UserProfile`.
+   Migrations          | - Missing timestamps on database entries  | + Added timezone-aware `updated_at` to `MoodLog`.
+                       | - Nullable float without defaults on ML   | + Constrained `BurnoutHistory.confidence` to be non-
+                       |   outputs (`BurnoutHistory.confidence`).  |   nullable with a default value of `0.0`.
+                       | - No database indices on historical scans | + Added composite index on `(user_id, log_date DESC)`.
+                       | - No migration schema tracker             | + Initialized, migrated, and upgraded schema with Alembic.
+-----------------------|-------------------------------------------|-------------------------------------------------------
+3. Backend & CLI       | - Rate limiters not set on critical paths | + Added rate limits (10/hr on register, 5/min exports).
+                       | - Admin signup code visible to everyone   | + Admin code field hidden unless `?admin=1` is passed.
+                       | - Large file exports buffered in memory   | + Streamed CSV exports with `stream_with_context`.
+                       | - Stale/confusing flash messages          | + Corrected duplicate log date flash instructions.
+                       | - Mutating methods implicitly named       | + Renamed `_apply_analysis` to `_mutate_log_with_analysis`.
+                       | - Cache memory never invalidated on edit  | + Automatic cache invalidation upon saving or editing logs.
+                       | - Reminders sent manually or missing      | + Added `flask send-reminders` CLI cron task.
+-----------------------|-------------------------------------------|-------------------------------------------------------
+4. Analytics & ML      | - SQLite subquery JOIN causing anomalies  | + Replaced subquery JOIN with python list reverse.
+                       | - N+1 query loop fetching suggestions     | + Unified into a single JOIN query for suggestions.
+                       | - Undocumented scoring magic numbers      | + Fully commented and documented scoring ranges.
+                       | - predictor: lru_cache stored None on     | + Raises FileNotFoundError instead of caching None.
+                       |   missing files                           | + Added input boundary checks to `build_features()`.
+                       | - Synthetic ML training data had 100 rows | + Increased synthetic training data to 5,000 rows.
+                       | - Model trained without cross-validation  | + Implemented StratifiedKFold cross-validation, logging,
+                       |                                           |   and backup timestamped model rollbacks.
+-----------------------|-------------------------------------------|-------------------------------------------------------
+5. Frontend &          | - Unpinned CDN dependencies (ThreeJS, D3) | + Upgraded Three.js to r166, Lucide to stable version
+   Accessibility       | - Static script imports on unrelated pages| + Moved D3 scripts exclusively to the heatmap template.
+                       | - Hardcoded single colors in JS (ThreeJS  | + Aligned mood colors with backend Tailwind gradient pairs
+                       |   orb) mismatching backend colors         |   and dynamically set CSS variable values.
+                       | - Script exceptions blocked page loads    | + Wrapped visual JS initializations in try-catch guards.
+                       | - Static breathing card with placeholder  | + Replaced breathing card with dynamic button trigger.
+                       | - No breathing modal or timer             | + Integrated 60s guided breathing modal with breathing
+                       |                                           |   expander animations (inhale/hold/exhale/hold).
+                       | - Risk badges relied on color alone       | + Appended text prefixes (✓, ⚠, ✕) to risk badges.
+-----------------------|-------------------------------------------|-------------------------------------------------------
+6. Testing & QA        | - 11 basic tests in total                 | + Expanded coverage to 19 tests.
+                       | - Repetitive registration/login steps     | + Refactored setups into a DRY `logged_in_client` fixture.
+                       | - PDF structures unverified               | + Asserted PDF content-type, nosniff header, and structure.
+                       | - CLI command untested                    | + Verified CLI runner output and mail alerts.
+                       | - Redirection safety untested             | + Tested `safe_next_url()` edge cases.
+                       | - Admin user detail routes untested       | + Checked authorization, data payload, and 404 views.
+================================================================================
