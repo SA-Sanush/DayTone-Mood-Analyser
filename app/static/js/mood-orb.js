@@ -7,11 +7,11 @@
 
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const moodStates = {
-    1: { label: 'Sick', primary: '#ef4444', secondary: '#f97316', sharpness: 1, calm: 0.2 },
-    2: { label: 'Sad', primary: '#f97316', secondary: '#facc15', sharpness: 0.8, calm: 0.4 },
-    3: { label: 'Anxious', primary: '#14b8a6', secondary: '#60a5fa', sharpness: 0.6, calm: 0.6 },
-    4: { label: 'Calm', primary: '#3b82f6', secondary: '#8b5cf6', sharpness: 0.4, calm: 0.8 },
-    5: { label: 'Happy', primary: '#8b5cf6', secondary: '#ec4899', sharpness: 0.2, calm: 1 }
+    1: { label: 'Sick', primary: '#ef4444', secondary: '#ea580c', sharpness: 1, calm: 0.2 },
+    2: { label: 'Sad', primary: '#f97316', secondary: '#d97706', sharpness: 0.8, calm: 0.4 },
+    3: { label: 'Anxious', primary: '#eab308', secondary: '#ca8a04', sharpness: 0.6, calm: 0.6 },
+    4: { label: 'Calm', primary: '#10b981', secondary: '#34d399', sharpness: 0.4, calm: 0.8 },
+    5: { label: 'Happy', primary: '#22c55e', secondary: '#16a34a', sharpness: 0.2, calm: 1 }
   };
 
   const scene = new THREE.Scene();

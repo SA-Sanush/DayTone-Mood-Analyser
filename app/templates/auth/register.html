@@ -24,14 +24,24 @@
     </div>
     <div class="col-md-6">
       <label class="form-label">{{ form.password.label }}</label>
-      {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else "")) }}
+      <div class="password-field-container position-relative">
+        {{ form.password(class="form-control pe-5" + (" is-invalid" if form.password.errors else "")) }}
+        <button type="button" class="btn password-toggle-btn position-absolute end-0 top-0 h-100" id="togglePassword" aria-label="Toggle password visibility">
+          <i data-lucide="eye"></i>
+        </button>
+      </div>
       {% for error in form.password.errors %}
         <span class="invalid-feedback d-block" role="alert">{{ error }}</span>
       {% endfor %}
     </div>
     <div class="col-md-6">
       <label class="form-label">{{ form.confirm_password.label }}</label>
-      {{ form.confirm_password(class="form-control" + (" is-invalid" if form.confirm_password.errors else "")) }}
+      <div class="password-field-container position-relative">
+        {{ form.confirm_password(class="form-control pe-5" + (" is-invalid" if form.confirm_password.errors else "")) }}
+        <button type="button" class="btn password-toggle-btn position-absolute end-0 top-0 h-100" id="toggleConfirmPassword" aria-label="Toggle password visibility">
+          <i data-lucide="eye"></i>
+        </button>
+      </div>
       {% for error in form.confirm_password.errors %}
         <span class="invalid-feedback d-block" role="alert">{{ error }}</span>
       {% endfor %}
@@ -84,4 +94,34 @@
   </div>
   <button class="btn btn-primary mt-4" type="submit"><i data-lucide="sparkles"></i>Create account</button>
 </form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  function setupPasswordToggle(btnId, inputId) {
+    const toggleBtn = document.getElementById(btnId);
+    const passwordInput = document.getElementById(inputId);
+    
+    if (toggleBtn && passwordInput) {
+      toggleBtn.addEventListener('click', function() {
+        const icon = toggleBtn.querySelector('i');
+        if (passwordInput.type === 'password') {
+          passwordInput.type = 'text';
+          icon.setAttribute('data-lucide', 'eye-off');
+        } else {
+          passwordInput.type = 'password';
+          icon.setAttribute('data-lucide', 'eye');
+        }
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
+      });
+    }
+  }
+  
+  setupPasswordToggle('togglePassword', 'password');
+  setupPasswordToggle('toggleConfirmPassword', 'confirm_password');
+});
+</script>
 {% endblock %}

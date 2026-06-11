@@ -89,11 +89,11 @@
       this.canvas = canvasEl;
 
       this.moodColors = {
-        1: { primary: "#ef4444", secondary: "#f97316" }, // Sick
-        2: { primary: "#f97316", secondary: "#facc15" }, // Sad
-        3: { primary: "#14b8a6", secondary: "#60a5fa" }, // Anxious
-        4: { primary: "#3b82f6", secondary: "#8b5cf6" }, // Calm
-        5: { primary: "#8b5cf6", secondary: "#ec4899" }, // Happy
+        1: { primary: "#ef4444", secondary: "#ea580c" }, // Sick (Red)
+        2: { primary: "#f97316", secondary: "#d97706" }, // Sad (Orange)
+        3: { primary: "#eab308", secondary: "#ca8a04" }, // Anxious (Yellow)
+        4: { primary: "#10b981", secondary: "#34d399" }, // Calm (Light Green)
+        5: { primary: "#22c55e", secondary: "#16a34a" }, // Happy (Green)
       };
 
       const initialMood = Number(dashboard.orb?.mood || 3);

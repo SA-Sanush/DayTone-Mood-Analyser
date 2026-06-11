@@ -5,10 +5,10 @@
   <div class="auth-visual">
     <canvas id="toneField" data-scene="auth"></canvas>
     <div class="hero-copy">
-      <span class="eyebrow">AI wellness monitor</span>
-      <h1>DayTone</h1>
-      <p>Track mood, sleep, stress, and burnout signals with one calm daily check-in.</p>
-      <div class="hero-metrics">
+      <span class="eyebrow animate-fade-in-up">AI wellness monitor</span>
+      <h1 class="animate-fade-in-up delay-1">DayTone</h1>
+      <p class="animate-fade-in-up delay-2">Track mood, sleep, stress, and burnout signals with one calm daily check-in.</p>
+      <div class="hero-metrics animate-fade-in-up delay-3">
         <span><strong>5</strong> insight charts</span>
         <span><strong>12</strong> ML features</span>
         <span><strong>PDF</strong> reports</span>
@@ -17,29 +17,72 @@
   </div>
   <form method="post" class="panel auth-panel elevated-panel">
     {{ form.hidden_tag() }}
-    <span class="eyebrow">Welcome back</span>
-    <h2>Sign in</h2>
-    <label class="form-label">{{ form.email.label }}</label>
-    {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
-    {% for error in form.email.errors %}
-      <span class="invalid-feedback d-block mb-3" role="alert">{{ error }}</span>
-    {% endfor %}
-    {% if not form.email.errors %}<div class="mb-3"></div>{% endif %}
-
-    <label class="form-label">{{ form.password.label }}</label>
-    {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else "")) }}
-    {% for error in form.password.errors %}
-      <span class="invalid-feedback d-block mb-3" role="alert">{{ error }}</span>
-    {% endfor %}
-    {% if not form.password.errors %}<div class="mb-3"></div>{% endif %}
-
-    <div class="form-check mb-3">
-      {{ form.remember_me(class="form-check-input") }}
-      <label class="form-check-label" for="remember_me">{{ form.remember_me.label.text }}</label>
+    <div class="animate-fade-in-up">
+      <span class="eyebrow">Welcome back</span>
+      <h2>Sign in</h2>
+    </div>
+    
+    <div class="animate-fade-in-up delay-1">
+      <label class="form-label mt-2">{{ form.email.label }}</label>
+      {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+      {% for error in form.email.errors %}
+        <span class="invalid-feedback d-block mb-3" role="alert">{{ error }}</span>
+      {% endfor %}
+      {% if not form.email.errors %}<div class="mb-3"></div>{% endif %}
     </div>
 
-    <button class="btn btn-primary w-100" type="submit"><i data-lucide="log-in"></i>Sign in</button>
-    <p class="mt-3 mb-0 small">New here? <a href="{{ url_for('auth.register') }}">Create an account</a></p>
+    <div class="animate-fade-in-up delay-2">
+      <label class="form-label">{{ form.password.label }}</label>
+      <div class="password-field-container position-relative">
+        {{ form.password(class="form-control pe-5" + (" is-invalid" if form.password.errors else "")) }}
+        <button type="button" class="btn password-toggle-btn position-absolute end-0 top-0 h-100" id="togglePassword" aria-label="Toggle password visibility">
+          <i data-lucide="eye"></i>
+        </button>
+      </div>
+      {% for error in form.password.errors %}
+        <span class="invalid-feedback d-block mb-3" role="alert">{{ error }}</span>
+      {% endfor %}
+      {% if not form.password.errors %}<div class="mb-3"></div>{% endif %}
+    </div>
+
+    <div class="animate-fade-in-up delay-3">
+      <div class="form-check mb-3">
+        {{ form.remember_me(class="form-check-input") }}
+        <label class="form-check-label" for="remember_me">{{ form.remember_me.label.text }}</label>
+      </div>
+
+      <button class="btn btn-primary w-100" type="submit"><i data-lucide="log-in"></i>Sign in</button>
+    </div>
+    
+    <div class="animate-fade-in-up delay-4">
+      <div class="auth-divider my-3"><span class="small text-muted text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.05em;">New to DayTone?</span></div>
+      <a href="{{ url_for('auth.register') }}" class="btn btn-glass w-100 justify-content-center"><i data-lucide="user-plus"></i>Create an account</a>
+    </div>
   </form>
 </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const toggleBtn = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    
+    if (toggleBtn && passwordInput) {
+      toggleBtn.addEventListener('click', function() {
+        const icon = toggleBtn.querySelector('i');
+        if (passwordInput.type === 'password') {
+          passwordInput.type = 'text';
+          icon.setAttribute('data-lucide', 'eye-off');
+        } else {
+          passwordInput.type = 'password';
+          icon.setAttribute('data-lucide', 'eye');
+        }
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
+      });
+    }
+  });
+</script>
 {% endblock %}
