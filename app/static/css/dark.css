@@ -13,6 +13,10 @@ html[data-theme="dark"] {
   --dt-good: #4ade80;
   --dt-warn: #fbbf24;
   --dt-bad: #fb7185;
+  --dt-glass-modal-bg: rgba(18, 28, 43, 0.95);
+  --dt-glass-tooltip-bg: rgba(18, 28, 43, 0.96);
+  --dt-glass-filter-bg: rgba(18, 28, 43, 0.45);
+  --dt-glass-card-bg: rgba(11, 18, 32, 0.72);
 }
 
 html[data-theme="dark"] body {

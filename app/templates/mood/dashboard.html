@@ -1,5 +1,39 @@
 {% extends "base.html" %} {% block title %}Dashboard - DayTone{% endblock %} {%
 block content %} {% if data.latest %}
+
+{# ── High-Risk Compassionate Intervention Card (shown before all other content when risk is HIGH) ── #}
+{% if data.latest.burnout_risk == 'High' %}
+<div class="intervention-card" role="alert" aria-live="polite" id="interventionCard">
+  <div class="intervention-inner">
+    <div class="intervention-icon" aria-hidden="true">💛</div>
+    <div class="intervention-body">
+      <h2 class="intervention-title">We're here with you</h2>
+      <p class="intervention-text">
+        DayTone has detected elevated stress signals. This isn't a diagnosis — it's a prompt to be kind to yourself today.
+        Take a breath, reach out to someone you trust, or use the resources below.
+      </p>
+      <div class="intervention-actions">
+        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#breathingModal" id="interventionBreathBtn">
+          <i data-lucide="wind"></i> 60-sec breathing
+        </button>
+        <button class="btn btn-sm btn-outline-secondary" id="interventionDismiss">
+          <i data-lucide="x"></i> Dismiss
+        </button>
+      </div>
+      <details class="intervention-crisis mt-2">
+        <summary class="text-secondary" style="cursor:pointer;font-size:0.82rem">🆘 Crisis support resources</summary>
+        <ul class="crisis-list mt-2">
+          <li><strong>Global:</strong> <a href="https://findahelpline.com" target="_blank" rel="noopener">findahelpline.com</a></li>
+          <li><strong>US:</strong> Call or text <strong>988</strong> (Suicide &amp; Crisis Lifeline)</li>
+          <li><strong>UK:</strong> Samaritans <strong>116 123</strong></li>
+          <li><strong>India:</strong> iCall <strong>9152987821</strong></li>
+        </ul>
+        <p class="text-secondary mt-1" style="font-size:0.75rem;font-style:italic">DayTone is not a medical service. These resources connect you to trained humans.</p>
+      </details>
+    </div>
+  </div>
+</div>
+{% endif %}
 <div class="dashboard-shell">
   <section
     class="orb-cockpit"
@@ -54,7 +88,86 @@ block content %} {% if data.latest %}
     </aside>
   </section>
 
-  <section class="motion-grid" aria-label="Today at a glance">
+  {# ── Explainability Driver Cards ── #}
+  {% if dashboard_state.drivers %}
+  <section class="driver-section" aria-label="Why this prediction?">
+    <div class="driver-section-header">
+      <i data-lucide="search" style="width:18px;height:18px;color:var(--dt-primary)"></i>
+      <h2>Why am I {{ data.latest.burnout_risk|lower }}-risk?</h2>
+    </div>
+    <div class="driver-cards">
+      {% for driver in dashboard_state.drivers %}
+      <div class="driver-card">
+        <i data-lucide="{% if 'sleep' in driver|lower %}moon{% elif 'stress' in driver|lower %}zap{% elif 'mood' in driver|lower %}activity{% elif 'sentiment' in driver|lower %}message-square{% elif 'social' in driver|lower %}users{% else %}alert-circle{% endif %}" class="driver-card-icon"></i>
+        <span class="driver-card-text">{{ driver }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    <p class="driver-disclaimer">These signals are the top contributing factors in today's assessment. They are not a medical diagnosis.</p>
+  </section>
+  {% endif %}
+
+  {# ── Prediction Feedback Widget ── #}
+  {% if data.latest_history %}
+  <div class="feedback-widget panel" id="feedbackWidget" data-history-id="{{ data.latest_history.id }}">
+    <div class="feedback-prompt">
+      <i data-lucide="message-square-heart" style="width:18px;height:18px;color:var(--dt-primary)"></i>
+      <span>Does the <strong>{{ data.latest.burnout_risk }}</strong> risk prediction match how you actually feel?</span>
+    </div>
+    <div class="feedback-btns" id="feedbackBtns">
+      <button class="btn btn-sm btn-outline-success" id="feedbackYes" type="button">
+        <i data-lucide="thumbs-up"></i> Yes, accurate
+      </button>
+      <button class="btn btn-sm btn-outline-danger" id="feedbackNo" type="button">
+        <i data-lucide="thumbs-down"></i> Not quite
+      </button>
+    </div>
+    <span class="feedback-thanks d-none" id="feedbackThanks" aria-live="polite">
+      <i data-lucide="check-circle" style="color:var(--dt-good)"></i> Thanks for your feedback!
+    </span>
+  </div>
+  {% endif %}
+
+  {# ── Correlation Insight Card ── #}
+  {% if dashboard_state.correlation_insight %}
+  <div class="panel correlation-insight-card">
+    <i data-lucide="trending-up" class="corr-icon"></i>
+    <div>
+      <span class="corr-label">Pattern insight</span>
+      <p class="corr-text mb-0">{{ dashboard_state.correlation_insight.text }}</p>
+    </div>
+  </div>
+  {% endif %}
+
+  {# ── Active Goals Progress ── #}
+  {% if goals_with_progress %}
+  <section class="goals-section" aria-label="Your active goals">
+    <div class="goals-section-header">
+      <i data-lucide="target" style="width:18px;height:18px;color:var(--dt-primary)"></i>
+      <h2>Active Goals</h2>
+      <a href="{{ url_for('mood.goals') }}" class="btn btn-sm btn-outline-primary ms-auto"><i data-lucide="settings-2"></i> Manage</a>
+    </div>
+    <div class="goals-grid">
+      {% for goal, progress in goals_with_progress %}
+      <div class="goal-card panel">
+        <div class="goal-card-header">
+          <span class="goal-name">{{ goal.display_name }}</span>
+          <span class="goal-status status-{{ progress.status }}">{{ progress.status|replace('_',' ')|title }}</span>
+        </div>
+        <div class="goal-bar-wrap">
+          <div class="goal-bar" style="--goal-pct:{{ progress.pct }}%"></div>
+        </div>
+        <div class="goal-card-footer">
+          <span class="goal-current">{{ progress.current_value }} {{ goal.unit }}</span>
+          <span class="goal-target">Goal: {{ goal.target_value }} {{ goal.unit }}</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="dashboard-grid" aria-label="Today at a glance">
     <button class="panel motion-card breath-card" id="breathCardTrigger" type="button" data-bs-toggle="modal" data-bs-target="#breathingModal" aria-label="Start Guided Box Breathing Session" aria-haspopup="dialog" aria-controls="breathingModal">
       <div class="motion-orb breath-orb" aria-hidden="true">
         <i data-lucide="wind"></i>
@@ -233,7 +346,7 @@ block content %} {% if data.latest %}
             ><i data-lucide="file-down"></i>PDF report</a
           >
           <a
-            class="btn btn-outline-secondary"
+            class="btn btn-outline-primary"
             href="{{ url_for('mood.export_csv') }}"
             ><i data-lucide="download"></i>CSV export</a
           >
@@ -245,7 +358,7 @@ block content %} {% if data.latest %}
   <!-- Guided Box Breathing Modal -->
   <div class="modal fade" id="breathingModal" tabindex="-1" role="dialog" aria-labelledby="breathingModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
-      <div class="modal-content panel elevated-panel" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--dt-border);">
+      <div class="modal-content panel elevated-panel" style="background: var(--dt-glass-modal-bg); backdrop-filter: blur(20px); border: 1px solid var(--dt-border);">
         <div class="modal-header border-0">
           <h5 class="modal-title" id="breathingModalLabel">Guided Box Breathing</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="closeBreathingModalBtn"></button>
@@ -264,16 +377,53 @@ block content %} {% if data.latest %}
   </div>
 </div>
 {% else %}
-<div class="empty-state">
-  <i data-lucide="line-chart"></i>
-  <h2>No logs yet</h2>
-  <p class="text-secondary">
-    Create your first daily check-in to unlock the mood orb, streaks, badges,
-    and burnout insights.
-  </p>
-  <a class="btn btn-primary" href="{{ url_for('mood.log_mood') }}"
-    ><i data-lucide="plus"></i>Log today</a
-  >
+<div class="onboarding-empty">
+  <div class="onboarding-hero">
+    <div class="onboarding-orb-placeholder" aria-hidden="true">
+      <div class="onb-orb-ring"></div>
+      <span class="onb-orb-emoji">🌀</span>
+    </div>
+    <div class="onboarding-copy">
+      <h1>Welcome to DayTone</h1>
+      <p>Your AI-powered mental wellness companion. Log your mood, sleep, and stress daily — DayTone will detect patterns, flag burnout risk, and deliver personalised recovery nudges.</p>
+    </div>
+  </div>
+  <div class="onboarding-steps">
+    <div class="onb-step">
+      <span class="onb-step-num">1</span>
+      <div>
+        <strong>Log your first check-in</strong>
+        <p class="text-secondary mb-0">Takes about 60 seconds. Include your mood, sleep hours, stress level, and an optional journal note.</p>
+      </div>
+    </div>
+    <div class="onb-step">
+      <span class="onb-step-num">2</span>
+      <div>
+        <strong>Get your AI burnout risk score</strong>
+        <p class="text-secondary mb-0">DayTone uses a trained ML model to classify your risk as Low, Medium, or High — with a plain-English explanation of why.</p>
+      </div>
+    </div>
+    <div class="onb-step">
+      <span class="onb-step-num">3</span>
+      <div>
+        <strong>Receive personalised nudges</strong>
+        <p class="text-secondary mb-0">Rule-based suggestions covering sleep hygiene, stress relief, and activity. Built for your specific pattern — not generic advice.</p>
+      </div>
+    </div>
+    <div class="onb-step">
+      <span class="onb-step-num">4</span>
+      <div>
+        <strong>Track streaks, earn badges, set goals</strong>
+        <p class="text-secondary mb-0">Build consistency with daily streaks and visual achievement badges. Set personal targets for sleep, mood, and activity.</p>
+      </div>
+    </div>
+  </div>
+  <a class="btn btn-primary btn-lg" href="{{ url_for('mood.log_mood') }}">
+    <i data-lucide="plus"></i> Log your first check-in
+  </a>
+  <a class="btn btn-outline-secondary ms-2" href="{{ url_for('mood.goals') }}">
+    <i data-lucide="target"></i> Set a goal first
+  </a>
 </div>
 {% endif %} {% endblock %} {% block scripts %} {% if data.latest %}
 <script>
@@ -281,7 +431,9 @@ block content %} {% if data.latest %}
   window.DAYTONE_DASHBOARD = {{ dashboard_state|tojson }};
 </script>
 <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+{% if not dashboard_state.calm_mode %}
 <script src="{{ url_for('static', filename='js/mood-orb-three-shader.js') }}?v=1.0.5"></script>
+{% endif %}
 <script>
 (function() {
   const modal = document.getElementById('breathingModal');
@@ -388,7 +540,7 @@ block content %} {% if data.latest %}
 <!-- Daily Challenge Checklist Modal -->
 <div class="modal fade" id="challengeModal" tabindex="-1" role="dialog" aria-labelledby="challengeModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content panel elevated-panel" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--dt-border);">
+    <div class="modal-content panel elevated-panel" style="background: var(--dt-glass-modal-bg); backdrop-filter: blur(20px); border: 1px solid var(--dt-border);">
       <div class="modal-header border-0 pb-0">
         <h5 class="modal-title d-flex align-items-center gap-2" id="challengeModalLabel">
           <i data-lucide="target" class="text-accent" style="color: var(--dt-accent); width:20px; height:20px;"></i>
@@ -504,7 +656,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     const toastHtml = `
-      <div id="${id}" class="custom-toast animate-slide-in d-flex align-items-center gap-2 p-3 mb-2 rounded shadow elevated-panel" style="background: rgba(255, 255, 255, 0.95); border: 1px solid var(--dt-border); border-left: 4px solid ${borderStyle}; min-width: 280px; backdrop-filter: blur(15px);">
+      <div id="${id}" class="custom-toast animate-slide-in d-flex align-items-center gap-2 p-3 mb-2 rounded shadow elevated-panel" style="background: var(--dt-glass-modal-bg); border: 1px solid var(--dt-border); border-left: 4px solid ${borderStyle}; min-width: 280px; backdrop-filter: blur(15px);">
         <i data-lucide="${iconName}" style="color: ${borderStyle}; width: 20px; height: 20px; flex-shrink: 0;"></i>
         <span class="fw-bold flex-grow-1" style="font-size: 0.85rem; color: var(--dt-text);">${message}</span>
         <button type="button" class="btn-close ms-2" style="font-size: 0.75rem; background-size: 0.5rem; flex-shrink: 0;" aria-label="Close"></button>
@@ -621,7 +773,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- Badges Unlocked Smooth Scroll and Pulse ---
+  // --- Badges Unlocked Smooth Scroll ---
   const badgesGridCard = document.querySelector('.badges-orb')?.closest('.panel');
   if (badgesGridCard) {
     badgesGridCard.style.cursor = 'pointer';
@@ -629,10 +781,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const section = document.querySelector('.badge-panel');
       if (section) {
         section.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        section.classList.add('pulse-highlight');
-        setTimeout(() => {
-          section.classList.remove('pulse-highlight');
-        }, 1500);
+        
+        // Viewport repaint trick: micro-scrolls force the compositor to redraw dropped layers
+        const forceRepaint = () => {
+          window.scrollBy(0, 1);
+          window.scrollBy(0, -1);
+        };
+        setTimeout(forceRepaint, 150);
+        setTimeout(forceRepaint, 450);
+        setTimeout(forceRepaint, 750);
       }
     });
   }
@@ -731,6 +888,67 @@ document.addEventListener('DOMContentLoaded', () => {
       if (modalChallengeText) modalChallengeText.textContent = dynamicChallengeVal + '%';
     });
   });
+
+  // --- Prediction Feedback Widget ---
+  const feedbackWidget = document.getElementById('feedbackWidget');
+  if (feedbackWidget) {
+    const historyId = feedbackWidget.dataset.historyId;
+    const btns = document.getElementById('feedbackBtns');
+    const thanks = document.getElementById('feedbackThanks');
+
+    function submitFeedback(accurate) {
+      fetch(`/api/feedback/${historyId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.content || '' },
+        body: JSON.stringify({ accurate }),
+        credentials: 'same-origin',
+      })
+      .then(r => r.ok ? r.json() : null)
+      .then(() => {
+        if (btns) btns.classList.add('d-none');
+        if (thanks) thanks.classList.remove('d-none');
+        if (window.lucide) window.lucide.createIcons();
+      })
+      .catch(() => {
+        if (btns) btns.classList.add('d-none');
+        if (thanks) thanks.classList.remove('d-none');
+      });
+    }
+
+    const yesBtn = document.getElementById('feedbackYes');
+    const noBtn = document.getElementById('feedbackNo');
+    if (yesBtn) yesBtn.addEventListener('click', () => submitFeedback(true));
+    if (noBtn) noBtn.addEventListener('click', () => submitFeedback(false));
+  }
+
+  // --- Intervention Card Dismiss ---
+  const dismissBtn = document.getElementById('interventionDismiss');
+  if (dismissBtn) {
+    dismissBtn.addEventListener('click', () => {
+      const card = document.getElementById('interventionCard');
+      if (card) {
+        card.style.transition = 'opacity 0.4s, transform 0.4s';
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(-10px)';
+        setTimeout(() => card.remove(), 420);
+      }
+    });
+  }
+
+  // --- Calm Mode: hide orb canvas when enabled ---
+  {% if dashboard_state.calm_mode %}
+  const orbCanvas = document.getElementById('moodOrb');
+  if (orbCanvas) {
+    orbCanvas.style.display = 'none';
+    const readout = document.querySelector('.orb-readout');
+    if (readout) {
+      const placeholder = document.createElement('div');
+      placeholder.className = 'orb-calm-placeholder';
+      placeholder.textContent = '{{ data.latest_orb_state.mood }}/5';
+      orbCanvas.parentNode.replaceChild(placeholder, orbCanvas);
+    }
+  }
+  {% endif %}
 });
 </script>
 {% endif %} {% endblock %}

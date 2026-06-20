@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block title %}Wellness Goals — DayTone{% endblock %}
+{% block content %}
+<div class="goals-shell">
+  <div class="goals-page-header">
+    <div>
+      <h1 class="mb-1"><i data-lucide="target" style="width:28px;height:28px;color:var(--dt-primary);vertical-align:middle"></i> Wellness Goals</h1>
+      <p class="text-secondary mb-0">Set personal targets and watch your progress grow day by day.</p>
+    </div>
+    <a href="{{ url_for('mood.dashboard') }}" class="btn btn-sm btn-outline-secondary">
+      <i data-lucide="arrow-left"></i> Back to Dashboard
+    </a>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show mt-3" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <div class="goals-layout">
+
+    <!-- ── Create New Goal ─────────────────────────────────────────────────── -->
+    <div class="panel create-goal-panel">
+      <div class="panel-title mb-3">
+        <i data-lucide="plus-circle"></i>
+        <h2>Create a Goal</h2>
+      </div>
+      <form method="post" action="{{ url_for('mood.goals') }}" id="createGoalForm">
+        <input type="hidden" name="action" value="create">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="mb-3">
+          <label for="target_type" class="form-label">Goal Type</label>
+          <select name="target_type" id="target_type" class="form-select dt-select" required>
+            <option value="" disabled selected>Select a goal type…</option>
+            <option value="sleep">Sleep Duration (avg hrs/night)</option>
+            <option value="mood">Average Mood Score (/5)</option>
+            <option value="active_days">Active Days per Week</option>
+            <option value="journal_days">Journaling Days per Week</option>
+            <option value="stress">Maximum Average Stress (/5)</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label for="target_value" class="form-label" id="targetValueLabel">Target Value</label>
+          <input type="number" name="target_value" id="target_value" class="form-control dt-input"
+                 step="0.1" min="0" max="24" required placeholder="e.g. 7.5">
+          <small class="text-secondary" id="targetValueHint">Set your desired level.</small>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">
+          <i data-lucide="plus"></i> Set Goal
+        </button>
+      </form>
+    </div>
+
+    <!-- ── Active Goals ─────────────────────────────────────────────────────── -->
+    <div class="active-goals-section">
+      <h2 class="goals-section-title">Active Goals</h2>
+      {% if goals_with_progress %}
+      <div class="goals-cards-grid">
+        {% for goal, progress in goals_with_progress %}
+        <div class="goal-page-card panel {% if progress.status == 'achieved' %}goal-achieved{% endif %}">
+          <div class="goal-page-card-top">
+            <span class="goal-type-label">{{ goal.display_name }}</span>
+            <span class="goal-status-badge status-{{ progress.status }}">
+              {{ progress.status|replace('_',' ')|title }}
+            </span>
+          </div>
+
+          <!-- Progress bar -->
+          <div class="goal-progress-track">
+            <div class="goal-progress-fill" style="--goal-pct: {{ progress.pct }}%"></div>
+          </div>
+          <div class="goal-progress-labels">
+            <span>{{ progress.current_value }} {{ goal.unit }}</span>
+            <span class="text-secondary">{{ progress.pct }}%</span>
+            <span>{{ goal.target_value }} {{ goal.unit }}</span>
+          </div>
+
+          <div class="goal-card-actions">
+            <small class="text-secondary">Started {{ goal.start_date.strftime('%b %d') }}</small>
+            <div class="d-flex gap-2">
+              <form method="post" action="{{ url_for('mood.goals') }}" style="display:inline">
+                <input type="hidden" name="action" value="complete">
+                <input type="hidden" name="goal_id" value="{{ goal.id }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-xs btn-outline-success" title="Mark as completed">
+                  <i data-lucide="check"></i>
+                </button>
+              </form>
+              <form method="post" action="{{ url_for('mood.goals') }}" style="display:inline">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="goal_id" value="{{ goal.id }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-xs btn-outline-danger" title="Remove goal"
+                        onclick="return confirm('Remove this goal?')">
+                  <i data-lucide="trash-2"></i>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="goals-empty">
+        <i data-lucide="target" style="width:40px;height:40px;opacity:0.3"></i>
+        <p class="text-secondary">No active goals yet. Create your first goal above.</p>
+      </div>
+      {% endif %}
+
+      <!-- ── Completed Goals ────────────────────────────────────────────────── -->
+      {% if completed_goals %}
+      <h2 class="goals-section-title mt-4">Completed Goals</h2>
+      <div class="goals-cards-grid">
+        {% for goal in completed_goals %}
+        <div class="goal-page-card panel goal-completed-card">
+          <div class="goal-page-card-top">
+            <span class="goal-type-label" style="text-decoration:line-through;opacity:0.6">{{ goal.display_name }}</span>
+            <span class="goal-status-badge status-achieved">
+              <i data-lucide="check-circle" style="width:12px;height:12px"></i> Done
+            </span>
+          </div>
+          <small class="text-secondary">Completed · Target was {{ goal.target_value }} {{ goal.unit }}</small>
+          <div class="mt-2">
+            <form method="post" action="{{ url_for('mood.goals') }}" style="display:inline">
+              <input type="hidden" name="action" value="delete">
+              <input type="hidden" name="goal_id" value="{{ goal.id }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-xs btn-outline-secondary" title="Remove"
+                      onclick="return confirm('Remove this completed goal?')">
+                <i data-lucide="trash-2"></i> Remove
+              </button>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+  </div><!-- /.goals-layout -->
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const typeSelect = document.getElementById('target_type');
+  const valueInput = document.getElementById('target_value');
+  const valueLabel = document.getElementById('targetValueLabel');
+  const valueHint = document.getElementById('targetValueHint');
+
+  const typeConfig = {
+    sleep:       { label: 'Target Sleep Hours', hint: 'e.g. 7.5 hrs/night', min: 4, max: 12, step: 0.5, placeholder: '7.5' },
+    mood:        { label: 'Target Average Mood', hint: 'e.g. 4 = Calm, 5 = Happy (/5)', min: 1, max: 5, step: 0.5, placeholder: '4' },
+    active_days: { label: 'Target Active Days per Week', hint: 'e.g. 5 days/week', min: 1, max: 7, step: 1, placeholder: '5' },
+    journal_days:{ label: 'Target Journaling Days per Week', hint: 'e.g. 5 days/week', min: 1, max: 7, step: 1, placeholder: '5' },
+    stress:      { label: 'Maximum Average Stress (/5)', hint: 'e.g. 3 = keep avg stress at or below 3', min: 1, max: 5, step: 0.5, placeholder: '3' },
+  };
+
+  if (typeSelect && valueInput) {
+    typeSelect.addEventListener('change', () => {
+      const cfg = typeConfig[typeSelect.value];
+      if (cfg) {
+        if (valueLabel) valueLabel.textContent = cfg.label;
+        if (valueHint) valueHint.textContent = cfg.hint;
+        valueInput.min = cfg.min;
+        valueInput.max = cfg.max;
+        valueInput.step = cfg.step;
+        valueInput.placeholder = cfg.placeholder;
+        valueInput.value = '';
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

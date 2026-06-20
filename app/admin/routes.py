@@ -1,4 +1,6 @@
+import json
 from functools import wraps
+from pathlib import Path
 
 from flask import abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, logout_user
@@ -7,11 +9,13 @@ from app.extensions import db, cache
 from app.models import BurnoutHistory, MoodLog, User, UserProfile, Suggestion
 from app.utils.analytics import dashboard_data, platform_stats
 from app.ml.predictor import build_features, predict_burnout
-from app.nlp.sentiment import get_sentiment_score
+from app.nlp.sentiment import get_sentiment_score, get_sentiment_backend
 from app.utils.suggestions import get_suggestions
 from app.admin.forms import AdminUserProfileForm, AdminMoodLogForm
 
 from . import admin_bp
+
+_ML_DIR = Path(__file__).resolve().parents[1] / "ml"
 
 
 def admin_required(view):
@@ -227,3 +231,35 @@ def delete_user_log(user_id, log_id):
     
     flash("Mood log has been deleted.", "danger")
     return redirect(url_for("admin.user_detail", user_id=user.id))
+
+
+@admin_bp.route("/model")
+@admin_required
+def model_diagnostics():
+    """ML diagnostics page: confusion matrix, per-class metrics, and known limitations."""
+    metrics = {}
+    meta = {}
+    error = None
+
+    try:
+        metrics_path = _ML_DIR / "model_metrics.json"
+        meta_path = _ML_DIR / "model_meta.json"
+        if metrics_path.exists():
+            metrics = json.loads(metrics_path.read_text())
+        if meta_path.exists():
+            meta = json.loads(meta_path.read_text())
+    except Exception as exc:
+        error = str(exc)
+
+    classes = ["High", "Low", "Medium"]
+    sentiment_backend = get_sentiment_backend()
+
+    return render_template(
+        "admin/model.html",
+        metrics=metrics,
+        meta=meta,
+        classes=classes,
+        sentiment_backend=sentiment_backend,
+        error=error,
+        stats=platform_stats(),
+    )

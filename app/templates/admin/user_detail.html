@@ -18,6 +18,7 @@
   </div>
   <div class="admin-hero-actions">
     <form method="post" action="{{ url_for('admin.toggle_role', user_id=user.id) }}" style="display:inline;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button type="submit" class="btn {{ 'btn-outline-warning' if user.is_admin else 'btn-outline-primary' }}"
               onclick="return confirm('{% if user.id == current_user.id %}WARNING: You are about to change your own role. Demoting yourself to User will revoke your admin privileges immediately. {% endif %}Change {{ user.name }}\'s role?')">
         <i data-lucide="{{ 'shield-off' if user.is_admin else 'shield-check' }}"></i>
@@ -25,6 +26,7 @@
       </button>
     </form>
     <form method="post" action="{{ url_for('admin.delete_user', user_id=user.id) }}" style="display:inline;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button type="submit" class="btn btn-outline-danger"
               onclick="return confirm('{% if user.id == current_user.id %}WARNING: You are about to permanently delete your own account! You will be logged out immediately. {% endif %}Permanently delete {{ user.name }}? This cannot be undone.')">
         <i data-lucide="trash-2"></i> Delete User
@@ -117,6 +119,7 @@
                   <i data-lucide="edit-3" style="width: 13px; height: 13px;"></i>
                 </a>
                 <form method="post" action="{{ url_for('admin.delete_user_log', user_id=user.id, log_id=log.id) }}" style="display:inline;" onsubmit="return confirm('Delete this log permanently?')">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button type="submit" class="btn btn-sm btn-outline-danger admin-action-btn" title="Delete log">
                     <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i>
                   </button>

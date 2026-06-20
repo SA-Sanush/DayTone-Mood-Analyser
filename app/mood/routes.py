@@ -1,4 +1,5 @@
 import csv
+from datetime import date
 from io import StringIO
 
 from flask import Response, current_app, flash, jsonify, redirect, render_template, request, send_file, url_for, stream_with_context
@@ -7,9 +8,9 @@ from flask_login import current_user, login_required
 from app.constants import BurnoutRisk
 from app.extensions import db, limiter, cache
 from app.ml.predictor import build_features, predict_burnout
-from app.models import BurnoutHistory, MoodLog, Suggestion
+from app.models import BurnoutHistory, Goal, MoodLog, Suggestion
 from app.nlp.sentiment import get_sentiment_score
-from app.utils.analytics import dashboard_data, heatmap_data
+from app.utils.analytics import dashboard_data, heatmap_data, goal_progress
 from app.utils.mailer import send_high_risk_alert
 from app.utils.pdf_report import build_pdf_report
 from app.utils.suggestions import get_suggestions
@@ -63,7 +64,6 @@ def log_mood():
     form = MoodLogForm()
     if request.method == "GET" and request.args.get("date"):
         try:
-            from datetime import date
             form.log_date.data = date.fromisoformat(request.args.get("date"))
         except Exception:
             pass
@@ -115,6 +115,9 @@ def log_mood():
 def edit_log(log_id):
     log = MoodLog.query.filter_by(id=log_id, user_id=current_user.id).first_or_404()
     form = MoodLogForm(obj=log)
+    # Pre-populate the notes field from the decrypted property
+    if request.method == "GET":
+        form.notes.data = log.notes
     if form.validate_on_submit():
         existing = (
             MoodLog.query.filter_by(user_id=current_user.id, log_date=form.log_date.data)
@@ -154,6 +157,7 @@ def edit_log(log_id):
 @login_required
 def dashboard():
     data = dashboard_data(current_user.id)
+    calm_mode = current_user.profile.calm_mode if current_user.profile else False
     chart_data = {
         "labels": data["labels"],
         "mood": data["mood"],
@@ -169,8 +173,19 @@ def dashboard():
         "badges": data["badges"],
         "trend_summary": data["trend_summary"],
         "insight_bars": data["insight_bars"],
+        "calm_mode": calm_mode,
+        "drivers": data.get("drivers", []),
+        "correlation_insight": data.get("correlation_insight"),
     }
-    return render_template("mood/dashboard.html", data=data, chart_data=chart_data, dashboard_state=dashboard_state)
+    user_goals = Goal.query.filter_by(user_id=current_user.id, completed=False).all()
+    goals_with_progress = [(g, goal_progress(g, current_user.id)) for g in user_goals]
+    return render_template(
+        "mood/dashboard.html",
+        data=data,
+        chart_data=chart_data,
+        dashboard_state=dashboard_state,
+        goals_with_progress=goals_with_progress,
+    )
 
 
 @mood_bp.route("/history")
@@ -196,6 +211,82 @@ def heatmap():
 def heatmap_api():
     year = request.args.get("year", type=int)
     return jsonify(heatmap_data(current_user.id, year=year))
+
+
+@mood_bp.route("/api/feedback/<int:history_id>", methods=["POST"])
+@login_required
+@limiter.limit("30 per minute")
+def prediction_feedback(history_id):
+    """Record whether the user found the burnout prediction accurate.
+
+    Accepts JSON body: {"accurate": true|false}
+    Returns JSON: {"success": true, "history_id": <int>}
+    """
+    history = BurnoutHistory.query.filter_by(id=history_id, user_id=current_user.id).first_or_404()
+    data = request.get_json(silent=True) or {}
+    accurate_value = data.get("accurate")
+    if accurate_value is None:
+        return jsonify({"error": "Missing 'accurate' field (true/false)"}), 400
+    history.is_accurate = bool(accurate_value)
+    db.session.commit()
+    return jsonify({"success": True, "history_id": history_id})
+
+
+@mood_bp.route("/goals", methods=["GET", "POST"])
+@login_required
+def goals():
+    """Goal management page: create and view personal wellness goals."""
+    if request.method == "POST":
+        action = request.form.get("action", "create")
+        if action == "create":
+            target_type = request.form.get("target_type", "")
+            target_value_raw = request.form.get("target_value", "")
+            valid_types = {"sleep", "mood", "active_days", "journal_days", "stress"}
+            if target_type not in valid_types:
+                flash("Invalid goal type.", "danger")
+            else:
+                try:
+                    target_value = float(target_value_raw)
+                    goal = Goal(
+                        user_id=current_user.id,
+                        target_type=target_type,
+                        target_value=target_value,
+                    )
+                    db.session.add(goal)
+                    db.session.commit()
+                    cache.delete_memoized(dashboard_data, current_user.id)
+                    flash(f"Goal '{goal.display_name}' created!", "success")
+                except (ValueError, TypeError):
+                    flash("Invalid target value.", "danger")
+
+        elif action == "complete":
+            goal_id = request.form.get("goal_id", type=int)
+            if goal_id:
+                goal = Goal.query.filter_by(id=goal_id, user_id=current_user.id).first()
+                if goal:
+                    goal.completed = True
+                    db.session.commit()
+                    flash("Goal marked as completed!", "success")
+
+        elif action == "delete":
+            goal_id = request.form.get("goal_id", type=int)
+            if goal_id:
+                goal = Goal.query.filter_by(id=goal_id, user_id=current_user.id).first()
+                if goal:
+                    db.session.delete(goal)
+                    db.session.commit()
+                    flash("Goal removed.", "info")
+
+        return redirect(url_for("mood.goals"))
+
+    active_goals = Goal.query.filter_by(user_id=current_user.id, completed=False).all()
+    completed_goals = Goal.query.filter_by(user_id=current_user.id, completed=True).all()
+    goals_with_progress = [(g, goal_progress(g, current_user.id)) for g in active_goals]
+    return render_template(
+        "mood/goals.html",
+        goals_with_progress=goals_with_progress,
+        completed_goals=completed_goals,
+    )
 
 
 @mood_bp.route("/report/pdf")

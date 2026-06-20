@@ -73,6 +73,7 @@
                 <i data-lucide="eye"></i>
               </a>
               <form method="post" action="{{ url_for('admin.toggle_role', user_id=user.id) }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-sm {{ 'btn-outline-warning' if user.is_admin else 'btn-outline-primary' }} admin-action-btn"
                         title="{{ 'Demote to User' if user.is_admin else 'Promote to Admin' }}"
                         onclick="return confirm('{% if user.id == current_user.id %}WARNING: You are about to change your own role. Demoting yourself will revoke admin access. {% endif %}Change {{ user.name }}\'s role?')">
@@ -80,6 +81,7 @@
                 </button>
               </form>
               <form method="post" action="{{ url_for('admin.delete_user', user_id=user.id) }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-sm btn-outline-danger admin-action-btn"
                         title="Delete user"
                         onclick="return confirm('{% if user.id == current_user.id %}WARNING: You are about to permanently delete your own account! {% endif %}Permanently delete {{ user.name }}? This cannot be undone.')">

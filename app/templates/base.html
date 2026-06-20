@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{% block title %}DayTone{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,15 +35,18 @@
           <li class="nav-item"><a class="nav-link{% if request.endpoint == 'mood.dashboard' %} active{% endif %}" href="{{ url_for('mood.dashboard') }}"><i data-lucide="layout-dashboard"></i>Dashboard</a></li>
           <li class="nav-item"><a class="nav-link{% if request.endpoint == 'mood.history' %} active{% endif %}" href="{{ url_for('mood.history') }}"><i data-lucide="history"></i>History</a></li>
           <li class="nav-item"><a class="nav-link{% if request.endpoint == 'mood.heatmap' %} active{% endif %}" href="{{ url_for('mood.heatmap') }}"><i data-lucide="calendar-days"></i>Heatmap</a></li>
+          <li class="nav-item"><a class="nav-link{% if request.endpoint == 'mood.goals' %} active{% endif %}" href="{{ url_for('mood.goals') }}"><i data-lucide="target"></i>Goals</a></li>
           {% if current_user.is_admin %}
-          <li class="nav-item"><a class="nav-link{% if request.endpoint and request.endpoint.startswith('admin.') %} active{% endif %}" href="{{ url_for('admin.dashboard') }}"><i data-lucide="shield-check"></i>Admin</a></li>
+          <li class="nav-item"><a class="nav-link{% if request.endpoint == 'admin.dashboard' %} active{% endif %}" href="{{ url_for('admin.dashboard') }}"><i data-lucide="shield-check"></i>Admin</a></li>
+          <li class="nav-item"><a class="nav-link{% if request.endpoint == 'admin.model_diagnostics' %} active{% endif %}" href="{{ url_for('admin.model_diagnostics') }}"><i data-lucide="cpu"></i>ML</a></li>
           {% endif %}
           {% endif %}
         </ul>
         <div class="nav-actions">
           <button class="btn btn-sm btn-glass icon-btn" id="darkToggle" type="button" title="Toggle dark mode"><i data-lucide="moon"></i></button>
           {% if current_user.is_authenticated %}
-          <span class="user-chip"><i data-lucide="user-round"></i>{{ current_user.name }}</span>
+          <a class="user-chip" href="{{ url_for('auth.profile') }}" title="Settings" style="text-decoration:none"><i data-lucide="user-round"></i>{{ current_user.name }}</a>
+          <a class="btn btn-sm btn-glass icon-btn" href="{{ url_for('auth.profile') }}" title="Settings" aria-label="Settings"><i data-lucide="settings"></i></a>
           <a class="btn btn-sm btn-outline-danger" href="{{ url_for('auth.logout') }}"><i data-lucide="log-out"></i>Logout</a>
           {% else %}
           <a class="btn btn-sm btn-outline-primary" href="{{ url_for('auth.login') }}">Login</a>

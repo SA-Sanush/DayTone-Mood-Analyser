@@ -280,7 +280,10 @@ def test_missing_model_artifact_uses_rule_fallback(monkeypatch, app):
     }
     with app.app_context():
         result = predictor.predict_burnout(features)
-    assert result == {"prediction": BurnoutRisk.HIGH, "confidence": 0.78, "algorithm": "Rules"}
+    assert result["prediction"] == BurnoutRisk.HIGH
+    assert result["confidence"] == 0.78
+    assert result["algorithm"] == "Rules"
+    assert len(result["drivers"]) > 0
     predictor._model_payload.cache_clear()
 
 
@@ -588,4 +591,214 @@ def test_admin_management_actions(client, app):
     assert res.status_code == 302 # redirect to register
     with app.app_context():
         assert User.query.get(another_id) is None
+
+
+def test_notes_encryption_at_rest(app, monkeypatch):
+    from app.models import encrypt_text, decrypt_text, MoodLog
+    from cryptography.fernet import Fernet
+    import app.models as models
+    
+    key = Fernet.generate_key()
+    cipher = Fernet(key)
+    monkeypatch.setattr(models, "_fernet", cipher)
+    
+    raw_note = "Highly confidential note about mood."
+    enc = encrypt_text(raw_note)
+    assert enc != raw_note
+    assert decrypt_text(enc) == raw_note
+    
+    with app.app_context():
+        log = MoodLog(
+            user_id=1,
+            mood_score=3,
+            sleep_hours=7.0,
+            stress_level=3,
+            social_interaction=2,
+            activity_done=True,
+            notes=raw_note
+        )
+        assert log._notes_encrypted != raw_note
+        assert log.notes == raw_note
+
+
+def test_notes_encryption_fallback(app, monkeypatch):
+    from app.models import encrypt_text, decrypt_text, MoodLog
+    import app.models as models
+    
+    monkeypatch.setattr(models, "_fernet", None)
+    
+    raw_note = "Fall back to plain text note."
+    enc = encrypt_text(raw_note)
+    assert enc == raw_note
+    assert decrypt_text(enc) == raw_note
+    
+    with app.app_context():
+        log = MoodLog(
+            user_id=1,
+            mood_score=3,
+            sleep_hours=7.0,
+            stress_level=3,
+            social_interaction=2,
+            activity_done=True,
+            notes=raw_note
+        )
+        assert log._notes_encrypted == raw_note
+        assert log.notes == raw_note
+
+
+def test_gdpr_account_deletion_cascade(client, app):
+    from app.models import User, UserProfile, MoodLog, Goal, Suggestion, BurnoutHistory
+    register(client, email="gdpr-delete@example.com")
+    login(client, email="gdpr-delete@example.com")
+    
+    with app.app_context():
+        user = User.query.filter_by(email="gdpr-delete@example.com").first()
+        user_id = user.id
+        
+        assert user.profile is not None
+        
+        goal = Goal(user_id=user_id, target_type="sleep", target_value=8.0)
+        db.session.add(goal)
+        
+        log = MoodLog(
+            user_id=user_id,
+            mood_score=3,
+            sleep_hours=7.0,
+            stress_level=3,
+            social_interaction=2,
+            activity_done=True,
+            notes="Notes to be deleted."
+        )
+        db.session.add(log)
+        db.session.flush()
+        
+        sugg = Suggestion(user_id=user_id, log_id=log.id, suggestion_text="Do a walk")
+        hist = BurnoutHistory(user_id=user_id, log_id=log.id, prediction="Low", confidence=0.7)
+        db.session.add(sugg)
+        db.session.add(hist)
+        db.session.commit()
+        
+        db.session.delete(user)
+        db.session.commit()
+        
+        assert User.query.get(user_id) is None
+        assert UserProfile.query.filter_by(user_id=user_id).first() is None
+        assert Goal.query.filter_by(user_id=user_id).first() is None
+        assert MoodLog.query.filter_by(user_id=user_id).first() is None
+        assert Suggestion.query.filter_by(user_id=user_id).first() is None
+        assert BurnoutHistory.query.filter_by(user_id=user_id).first() is None
+
+
+def test_prediction_feedback_endpoint(logged_in_client, app):
+    from app.models import User, BurnoutHistory, MoodLog
+    with app.app_context():
+        user = User.query.filter_by(email="user@example.com").first()
+        log = MoodLog.query.filter_by(user_id=user.id).first()
+        if not log:
+            log = MoodLog(
+                user_id=user.id,
+                mood_score=3,
+                sleep_hours=7.0,
+                stress_level=3,
+                social_interaction=2,
+                activity_done=True,
+            )
+            db.session.add(log)
+            db.session.flush()
+        
+        history = BurnoutHistory(
+            user_id=user.id,
+            log_id=log.id,
+            prediction="Low",
+            confidence=0.75,
+            algorithm_used="Rules"
+        )
+        db.session.add(history)
+        db.session.commit()
+        history_id = history.id
+        
+    res = logged_in_client.post(
+        f"/api/feedback/{history_id}",
+        json={"accurate": True}
+    )
+    assert res.status_code == 200
+    assert res.get_json()["success"] is True
+    
+    with app.app_context():
+        updated_history = BurnoutHistory.query.get(history_id)
+        assert updated_history.is_accurate is True
+        
+    res = logged_in_client.post(
+        f"/api/feedback/{history_id}",
+        json={"accurate": False}
+    )
+    assert res.status_code == 200
+    with app.app_context():
+        updated_history = BurnoutHistory.query.get(history_id)
+        assert updated_history.is_accurate is False
+        
+    res = logged_in_client.post(
+        f"/api/feedback/{history_id}",
+        json={}
+    )
+    assert res.status_code == 400
+
+
+def test_explainability_driver_generation():
+    from app.ml.predictor import explain_prediction
+    
+    features = {
+        "mood_score": 1,
+        "sleep_hours": 8.0,
+        "stress_level": 2,
+        "activity_done": 1,
+        "social_interaction": 3,
+        "sentiment_score": 0.5,
+        "avg_mood_7d": 4.0,
+        "avg_stress_7d": 2.0,
+        "avg_sleep_7d": 8.0,
+        "consecutive_bad_days": 1,
+        "mood_variability": 0.1,
+        "is_weekend": 0,
+    }
+    drivers = explain_prediction(features, "High")
+    assert any("mood score" in d for d in drivers)
+    assert any("mood is 75% below" in d for d in drivers)
+    
+    features = {
+        "mood_score": 4,
+        "sleep_hours": 5.0,
+        "stress_level": 5,
+        "activity_done": 1,
+        "social_interaction": 3,
+        "sentiment_score": 0.5,
+        "avg_mood_7d": 4.0,
+        "avg_stress_7d": 2.0,
+        "avg_sleep_7d": 8.0,
+        "consecutive_bad_days": 0,
+        "mood_variability": 0.1,
+        "is_weekend": 0,
+    }
+    drivers = explain_prediction(features, "Medium")
+    assert any("Stress level" in d for d in drivers)
+    assert any("Sleep duration" in d for d in drivers)
+    assert any("Sleep is 3.0h below" in d for d in drivers)
+    
+    features = {
+        "mood_score": 4,
+        "sleep_hours": 8.0,
+        "stress_level": 2,
+        "activity_done": 1,
+        "social_interaction": 3,
+        "sentiment_score": -0.5,
+        "avg_mood_7d": 4.0,
+        "avg_stress_7d": 2.0,
+        "avg_sleep_7d": 8.0,
+        "consecutive_bad_days": 0,
+        "mood_variability": 0.1,
+        "is_weekend": 0,
+    }
+    drivers = explain_prediction(features, "Medium")
+    assert any("emotional tone" in d for d in drivers)
+
 

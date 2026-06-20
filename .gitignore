@@ -12,3 +12,5 @@ app/ml/models/
 app/ml/training_data.csv
 app/ml/model_metrics.json
 app/ml/*_meta.json
+app/ml/model_*.pkl
+

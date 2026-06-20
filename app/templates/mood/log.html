@@ -1,7 +1,31 @@
 {% extends "base.html" %}
 {% block title %}Log Mood - DayTone{% endblock %}
 {% block content %}
-<form method="post" class="panel form-panel elevated-panel checkin-panel">
+<style>
+  .error-ring {
+    outline: 2px solid #ef4444 !important;
+    outline-offset: 4px;
+    border-radius: 12px;
+    animation: fieldShake 0.4s ease;
+  }
+  .field-error-msg {
+    color: #ef4444;
+    font-size: 0.82rem;
+    margin-top: 0.4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  @keyframes fieldShake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+  .mood-selection-grid.error-ring { border-radius: 14px; }
+</style>
+<form method="post" id="checkinForm" class="panel form-panel elevated-panel checkin-panel" novalidate>
   {{ form.hidden_tag() }}
   <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 animate-fade-in-up">
     <div class="form-heading">
@@ -11,7 +35,7 @@
     {{ form.log_date(class="form-control date-input") }}
   </div>
   <div class="row g-3">
-    <div class="col-12 mb-3 animate-fade-in-up delay-1">
+    <div class="col-12 mb-3 animate-fade-in-up delay-1" id="mood-field-container">
       <label class="form-label d-block mb-3">How are you feeling today?</label>
       <div class="mood-selection-grid">
         <input type="hidden" name="mood_score" id="mood_score" value="{{ form.mood_score.data or '' }}">
@@ -37,12 +61,14 @@
         </button>
       </div>
       {% if form.mood_score.errors %}
-        <div class="text-danger small mt-2">
+        <div class="field-error-msg">
+          <span>⚠</span>
           {% for error in form.mood_score.errors %}
-            <span>{{ error }}</span>
+            <span>Please select how you're feeling today.</span>
           {% endfor %}
         </div>
       {% endif %}
+      <div id="mood-error" class="field-error-msg" style="display:none">⚠ Please select your mood before saving.</div>
     </div>
 
     <div class="col-md-4 animate-fade-in-up delay-2">
@@ -52,8 +78,15 @@
       </div>
       <input type="range" class="form-range" id="sleep_slider" min="3" max="12" step="0.5" value="8">
       {{ form.sleep_hours(class="d-none") }}
+      {% if form.sleep_hours.errors %}
+        <div class="text-danger small mt-2">
+          {% for error in form.sleep_hours.errors %}
+            <span>{{ error }}</span>
+          {% endfor %}
+        </div>
+      {% endif %}
     </div>
-    <div class="col-md-4 animate-fade-in-up delay-2">
+    <div class="col-md-4 animate-fade-in-up delay-2" id="stress-field-container">
       <label class="form-label mb-2">{{ form.stress_level.label }}</label>
       <div class="interactive-btn-group stress-btn-group">
         <button type="button" class="option-btn" data-value="1" title="Very Low">1</button>
@@ -63,8 +96,17 @@
         <button type="button" class="option-btn" data-value="5" title="Extreme">5</button>
       </div>
       {{ form.stress_level(class="d-none") }}
+      {% if form.stress_level.errors %}
+        <div class="field-error-msg">
+          <span>⚠</span>
+          {% for error in form.stress_level.errors %}
+            <span>Please select your stress level.</span>
+          {% endfor %}
+        </div>
+      {% endif %}
+      <div id="stress-error" class="field-error-msg" style="display:none">⚠ Please select your stress level before saving.</div>
     </div>
-    <div class="col-md-4 animate-fade-in-up delay-2">
+    <div class="col-md-4 animate-fade-in-up delay-2" id="social-field-container">
       <label class="form-label mb-2">{{ form.social_interaction.label }}</label>
       <div class="interactive-btn-group social-btn-group">
         <button type="button" class="option-btn" data-value="1" title="Alone">👤 Alone</button>
@@ -72,6 +114,15 @@
         <button type="button" class="option-btn" data-value="3" title="Social">🗣️ Social</button>
       </div>
       {{ form.social_interaction(class="d-none") }}
+      {% if form.social_interaction.errors %}
+        <div class="field-error-msg">
+          <span>⚠</span>
+          {% for error in form.social_interaction.errors %}
+            <span>Please select your social interaction level.</span>
+          {% endfor %}
+        </div>
+      {% endif %}
+      <div id="social-error" class="field-error-msg" style="display:none">⚠ Please select your social interaction before saving.</div>
     </div>
     <div class="col-12 animate-fade-in-up delay-3">
       <div class="form-check switch-card d-flex align-items-center gap-3" id="activity_card">
@@ -81,12 +132,12 @@
       </div>
     </div>
     <div class="col-12 animate-fade-in-up delay-4">
-      <label class="form-label">{{ form.notes.label }}</label>
+      <label class="form-label mb-0 d-block mb-1">{{ form.notes.label }}</label>
       {{ form.notes(class="form-control", rows="5", maxlength="1000", id="notes") }}
       <div class="small text-secondary mt-1"><span id="noteCount">0</span>/1000</div>
     </div>
   <div class="d-flex align-items-center gap-2 mt-4 animate-fade-in-up delay-5">
-    <button class="btn btn-primary" type="submit">
+    <button class="btn btn-primary" type="submit" id="submitLogBtn">
       <i data-lucide="save"></i>{{ "Update log" if editing else "Save log" }}
     </button>
     <a class="btn btn-outline-secondary btn-glass d-inline-flex align-items-center justify-content-center" href="{{ url_for('mood.history') if editing else url_for('mood.dashboard') }}">
@@ -98,6 +149,72 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+  // Shared input references (used by validation AND button click handlers)
+  const moodInput   = document.getElementById('mood_score');
+  const stressInput = document.getElementById('stress_level');
+  const socialInput = document.getElementById('social_interaction');
+
+  // ── CLIENT-SIDE PRE-SUBMIT VALIDATION ──────────────────────────────────────
+  const form = document.getElementById('checkinForm');
+  if (form) {
+    form.addEventListener('submit', (e) => {
+      let firstError = null;
+      let hasError = false;
+
+      // Helper: mark a container as invalid
+      function markError(containerId, errorId) {
+        const container = document.getElementById(containerId) || document.querySelector(containerId);
+        const errEl = document.getElementById(errorId);
+        if (container) {
+          container.classList.add('error-ring');
+          // Remove ring after 3s
+          setTimeout(() => container.classList.remove('error-ring'), 3000);
+        }
+        if (errEl) errEl.style.display = 'flex';
+        if (!firstError && container) firstError = container;
+        hasError = true;
+      }
+
+      // Helper: clear error
+      function clearError(containerId, errorId) {
+        const container = document.getElementById(containerId) || document.querySelector(containerId);
+        const errEl = document.getElementById(errorId);
+        if (container) container.classList.remove('error-ring');
+        if (errEl) errEl.style.display = 'none';
+      }
+
+      // Check mood
+      if (!moodInput || !moodInput.value || moodInput.value === '') {
+        markError('mood-field-container', 'mood-error');
+      } else {
+        clearError('mood-field-container', 'mood-error');
+      }
+
+      // Check stress
+      if (!stressInput || !stressInput.value || stressInput.value === '') {
+        markError('stress-field-container', 'stress-error');
+      } else {
+        clearError('stress-field-container', 'stress-error');
+      }
+
+      // Check social
+      if (!socialInput || !socialInput.value || socialInput.value === '') {
+        markError('social-field-container', 'social-error');
+      } else {
+        clearError('social-field-container', 'social-error');
+      }
+
+      if (hasError) {
+        e.preventDefault();
+        if (firstError) {
+          firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return false;
+      }
+    });
+  }
+
+  // ── REST OF FORM LOGIC ─────────────────────────────────────────────────────
   // Character counter for notes
   const notes = document.getElementById('notes');
   const count = document.getElementById('noteCount');
@@ -109,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Mood selection grid
   const moodButtons = document.querySelectorAll('.mood-btn-option');
-  const moodInput = document.getElementById('mood_score');
+  // moodInput already declared in validation block above
   
   moodButtons.forEach(button => {
     button.addEventListener('click', () => {
@@ -146,7 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Stress Level button selection
-  const stressInput = document.getElementById('stress_level');
+  // stressInput already declared in validation block above
   const stressBtns = document.querySelectorAll('.stress-btn-group .option-btn');
   
   if (stressInput && stressBtns.length) {
@@ -165,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Social Interaction button selection
-  const socialInput = document.getElementById('social_interaction');
+  // socialInput already declared in validation block above
   const socialBtns = document.querySelectorAll('.social-btn-group .option-btn');
   
   if (socialInput && socialBtns.length) {
@@ -204,6 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
 });
 </script>
 {% endblock %}

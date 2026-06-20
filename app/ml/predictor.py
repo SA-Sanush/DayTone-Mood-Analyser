@@ -30,6 +30,13 @@ BAD_DAY_WINDOW = 7
 
 MODEL_PATH = Path(__file__).resolve().parent / "model.pkl"
 
+# Thresholds used for explainability driver analysis
+_SLEEP_LOW_THRESHOLD = 6.0
+_STRESS_HIGH_THRESHOLD = 4
+_MOOD_LOW_THRESHOLD = 2
+_BAD_DAYS_THRESHOLD = 3
+_SENTIMENT_LOW_THRESHOLD = -0.2
+
 
 @lru_cache(maxsize=1)
 def _model_payload():
@@ -118,13 +125,84 @@ def _rule_prediction(features):
     return BurnoutRisk.LOW, 0.72
 
 
+def explain_prediction(features: dict[str, float | int], risk: str) -> list[str]:
+    """Generate human-readable explanations for why a risk level was flagged.
+
+    Returns a list of up to 4 short explanation strings identifying the top
+    contributing factors. Only generated for Medium and High risk predictions.
+    Empty list is returned for Low risk (no flags triggered).
+
+    Each explanation is phrased as a natural-language insight that can be
+    displayed directly in the UI (e.g., as a card or tooltip).
+    """
+    if risk == BurnoutRisk.LOW:
+        return []
+
+    drivers = []
+
+    # ── Mood signals ────────────────────────────────────────────────────────
+    if features["mood_score"] <= _MOOD_LOW_THRESHOLD:
+        drivers.append(f"Today's mood score ({features['mood_score']}/5) is in the low range.")
+
+    if features["consecutive_bad_days"] >= _BAD_DAYS_THRESHOLD:
+        drivers.append(
+            f"{features['consecutive_bad_days']} consecutive low-mood days detected this week."
+        )
+
+    avg_mood = features.get("avg_mood_7d", 0)
+    if avg_mood > 0 and features["mood_score"] < avg_mood - 0.7:
+        drop_pct = round((avg_mood - features["mood_score"]) / avg_mood * 100)
+        drivers.append(
+            f"Today's mood is {drop_pct}% below your 7-day average ({avg_mood:.1f}/5)."
+        )
+
+    # ── Stress signals ───────────────────────────────────────────────────────
+    if features["stress_level"] >= _STRESS_HIGH_THRESHOLD:
+        drivers.append(f"Stress level ({features['stress_level']}/5) is elevated.")
+
+    avg_stress = features.get("avg_stress_7d", 0)
+    if avg_stress > 0 and features["stress_level"] > avg_stress + 0.8:
+        drivers.append(
+            f"Stress is higher than your recent average ({avg_stress:.1f}/5 this week)."
+        )
+
+    # ── Sleep signals ────────────────────────────────────────────────────────
+    if features["sleep_hours"] < _SLEEP_LOW_THRESHOLD:
+        drivers.append(f"Sleep duration ({features['sleep_hours']:.1f}h) is below the 6h threshold.")
+
+    avg_sleep = features.get("avg_sleep_7d", 0)
+    if avg_sleep > 0 and features["sleep_hours"] < avg_sleep - 1.0:
+        drop_h = round(avg_sleep - features["sleep_hours"], 1)
+        drivers.append(
+            f"Sleep is {drop_h}h below your 7-day average ({avg_sleep:.1f}h)."
+        )
+
+    # ── Sentiment signal ─────────────────────────────────────────────────────
+    if features["sentiment_score"] < _SENTIMENT_LOW_THRESHOLD:
+        drivers.append("Journal notes carry a negative emotional tone.")
+
+    # ── Social signal ────────────────────────────────────────────────────────
+    if features["social_interaction"] == 1:
+        drivers.append("Low social interaction recorded today (isolated).")
+
+    # Return top 4 most impactful drivers (prioritised by order above)
+    return drivers[:4]
+
+
 def _log_prediction_fallback(exc):
     if has_app_context():
         current_app.logger.warning("ML predict failed (%s), using rule fallback", exc)
 
 
 def predict_burnout(features: dict[str, float | int]) -> dict[str, str | float]:
-    """Predict burnout risk using the loaded ML model, falling back to rule-based logic on error or missing model."""
+    """Predict burnout risk using the loaded ML model, falling back to rule-based logic on error or missing model.
+
+    Returns a dict with:
+      - prediction: BurnoutRisk string (Low / Medium / High)
+      - confidence: float probability (0.0–1.0)
+      - algorithm: name of algorithm used
+      - drivers: list of human-readable explanation strings (empty for Low risk)
+    """
     try:
         payload = _model_payload()
     except FileNotFoundError as exc:
@@ -136,7 +214,8 @@ def predict_burnout(features: dict[str, float | int]) -> dict[str, str | float]:
 
     if payload is None:
         prediction, confidence = _rule_prediction(features)
-        return {"prediction": prediction, "confidence": confidence, "algorithm": "Rules"}
+        drivers = explain_prediction(features, prediction)
+        return {"prediction": prediction, "confidence": confidence, "algorithm": "Rules", "drivers": drivers}
 
     try:
         artifact_features = payload.get("features")
@@ -149,11 +228,13 @@ def predict_burnout(features: dict[str, float | int]) -> dict[str, str | float]:
         if hasattr(model, "predict_proba"):
             probabilities = model.predict_proba(values)[0]
             confidence = float(max(probabilities))
-        return {"prediction": prediction, "confidence": confidence, "algorithm": payload.get("name", "ML")}
+        drivers = explain_prediction(features, prediction)
+        return {"prediction": prediction, "confidence": confidence, "algorithm": payload.get("name", "ML"), "drivers": drivers}
     except Exception as exc:
         _log_prediction_fallback(exc)
         prediction, confidence = _rule_prediction(features)
-        return {"prediction": prediction, "confidence": confidence, "algorithm": "Rules"}
+        drivers = explain_prediction(features, prediction)
+        return {"prediction": prediction, "confidence": confidence, "algorithm": "Rules", "drivers": drivers}
 
 
 def latest_burnout_subquery():

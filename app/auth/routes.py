@@ -1,12 +1,15 @@
 import hashlib
+import json
+from datetime import datetime, timezone
+from io import StringIO
 from urllib.parse import urlparse
 
-from flask import current_app, flash, redirect, render_template, request, url_for
-from flask_login import current_user, login_user, logout_user
+from flask import Response, current_app, flash, redirect, render_template, request, stream_with_context, url_for
+from flask_login import current_user, login_required, login_user, logout_user
 from flask_limiter.util import get_remote_address
 
 from app.extensions import db, limiter
-from app.models import User, UserProfile
+from app.models import BurnoutHistory, Goal, MoodLog, Suggestion, User, UserProfile
 
 from . import auth_bp
 from .forms import LoginForm, RegistrationForm
@@ -99,3 +102,123 @@ def logout():
     logout_user()
     flash("You have been signed out.", "info")
     return redirect(url_for("auth.login"))
+
+
+@auth_bp.route("/profile", methods=["GET", "POST"])
+@login_required
+def profile():
+    """User settings page: preferences, Calm Mode, GDPR export, and account deletion."""
+    profile = current_user.profile
+    if not profile:
+        profile = UserProfile(user_id=current_user.id)
+        db.session.add(profile)
+        db.session.commit()
+
+    if request.method == "POST":
+        action = request.form.get("action", "")
+
+        if action == "update_preferences":
+            profile.preferred_activity = request.form.get("preferred_activity", profile.preferred_activity)
+            profile.daily_reminder = bool(request.form.get("daily_reminder"))
+            profile.calm_mode = bool(request.form.get("calm_mode"))
+            occupation = (request.form.get("occupation") or "").strip()
+            profile.occupation = occupation or profile.occupation
+            db.session.commit()
+            flash("Preferences saved successfully.", "success")
+
+        elif action == "change_name":
+            new_name = (request.form.get("name") or "").strip()
+            if new_name:
+                current_user.name = new_name
+                db.session.commit()
+                flash("Display name updated.", "success")
+            else:
+                flash("Name cannot be empty.", "danger")
+
+    return render_template("auth/profile.html", user=current_user, profile=profile)
+
+
+@auth_bp.route("/profile/delete", methods=["POST"])
+@login_required
+@limiter.limit("3 per hour")
+def delete_account():
+    """GDPR Right to be Forgotten: permanently delete this user and all their data."""
+    confirm = request.form.get("confirm_delete", "")
+    if confirm != "DELETE":
+        flash("Please type DELETE to confirm account deletion.", "danger")
+        return redirect(url_for("auth.profile"))
+
+    user = current_user._get_current_object()
+    logout_user()
+    db.session.delete(user)
+    db.session.commit()
+    flash("Your account and all associated data have been permanently deleted.", "info")
+    return redirect(url_for("auth.register"))
+
+
+@auth_bp.route("/profile/export/json")
+@login_required
+@limiter.limit("5 per minute")
+def export_data_json():
+    """GDPR Data Portability: export all user data as a structured JSON file."""
+    user = current_user._get_current_object()
+    logs = MoodLog.query.filter_by(user_id=user.id).order_by(MoodLog.log_date.asc()).all()
+    goals = Goal.query.filter_by(user_id=user.id).all()
+
+    export = {
+        "exported_at": datetime.now(timezone.utc).isoformat(),
+        "user": {
+            "name": user.name,
+            "email": user.email,
+            "role": user.role,
+            "registered": user.created_at.isoformat() if user.created_at else None,
+        },
+        "profile": {
+            "age": user.profile.age if user.profile else None,
+            "gender": user.profile.gender if user.profile else None,
+            "occupation": user.profile.occupation if user.profile else None,
+            "preferred_activity": user.profile.preferred_activity if user.profile else None,
+            "daily_reminder": user.profile.daily_reminder if user.profile else False,
+            "calm_mode": user.profile.calm_mode if user.profile else False,
+        },
+        "mood_logs": [
+            {
+                "date": log.log_date.isoformat(),
+                "mood_score": log.mood_score,
+                "mood_label": log.mood_label,
+                "sleep_hours": log.sleep_hours,
+                "stress_level": log.stress_level,
+                "activity_done": log.activity_done,
+                "social_interaction": log.social_interaction,
+                "notes": log.notes,
+                "sentiment_score": log.sentiment_score,
+                "burnout_risk": log.burnout_risk,
+                "created_at": log.created_at.isoformat() if log.created_at else None,
+            }
+            for log in logs
+        ],
+        "goals": [
+            {
+                "type": goal.target_type,
+                "display_name": goal.display_name,
+                "target_value": goal.target_value,
+                "unit": goal.unit,
+                "start_date": goal.start_date.isoformat(),
+                "end_date": goal.end_date.isoformat() if goal.end_date else None,
+                "completed": goal.completed,
+            }
+            for goal in goals
+        ],
+    }
+
+    def generate():
+        yield json.dumps(export, indent=2, ensure_ascii=False)
+
+    return Response(
+        stream_with_context(generate()),
+        mimetype="application/json",
+        headers={
+            "Content-Disposition": f"attachment; filename=daytone-data-export-{user.id}.json",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )

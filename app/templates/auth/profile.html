@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block title %}Settings — DayTone{% endblock %}
+{% block content %}
+<div class="profile-shell">
+  <div class="profile-header">
+    <div class="profile-avatar">
+      <i data-lucide="user-round" style="width:40px;height:40px;color:var(--dt-primary)"></i>
+    </div>
+    <div>
+      <h1 class="mb-0">{{ user.name }}</h1>
+      <p class="text-secondary mb-0" style="font-size:0.9rem">{{ user.email }} · {{ user.role|title }}</p>
+    </div>
+  </div>
+
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <div class="settings-grid">
+
+    <!-- ── Preferences Card ─────────────────────────────────────────────── -->
+    <div class="panel settings-card">
+      <div class="panel-title">
+        <i data-lucide="sliders-horizontal"></i>
+        <h2>Preferences</h2>
+      </div>
+      <form method="post" action="{{ url_for('auth.profile') }}">
+        <input type="hidden" name="action" value="update_preferences">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="settings-field">
+          <label for="preferred_activity" class="settings-label">Preferred Wellness Activity</label>
+          <select name="preferred_activity" id="preferred_activity" class="form-select dt-select">
+            {% for activity in ["Walk", "Yoga", "Music", "Reading"] %}
+            <option value="{{ activity }}" {% if profile.preferred_activity == activity %}selected{% endif %}>{{ activity }}</option>
+            {% endfor %}
+          </select>
+          <small class="text-secondary">Used to personalise daily wellness suggestions.</small>
+        </div>
+
+        <div class="settings-field">
+          <label for="occupation" class="settings-label">Occupation (optional)</label>
+          <input type="text" id="occupation" name="occupation" class="form-control dt-input"
+                 value="{{ profile.occupation or '' }}" maxlength="100" placeholder="e.g. Student, Engineer">
+        </div>
+
+        <div class="settings-toggle-row">
+          <div>
+            <span class="settings-label">Daily Check-in Reminder</span>
+            <small class="d-block text-secondary">Get an email if you haven't logged by evening.</small>
+          </div>
+          <label class="dt-toggle" aria-label="Toggle daily reminder">
+            <input type="checkbox" name="daily_reminder" id="daily_reminder"
+                   {% if profile.daily_reminder %}checked{% endif %}>
+            <span class="dt-toggle-track"></span>
+          </label>
+        </div>
+
+        <div class="settings-toggle-row" style="border-top: 1px solid var(--dt-border); padding-top:1rem; margin-top:0.5rem;">
+          <div>
+            <span class="settings-label" style="display:flex;align-items:center;gap:0.4rem;">
+              <i data-lucide="leaf" style="width:16px;height:16px;color:var(--dt-good)"></i>
+              Calm / Reduced-Motion Mode
+            </span>
+            <small class="d-block text-secondary">Disables 3D Orb animation and chart transitions. Useful for motion sensitivity.</small>
+          </div>
+          <label class="dt-toggle" aria-label="Toggle calm mode">
+            <input type="checkbox" name="calm_mode" id="calm_mode"
+                   {% if profile.calm_mode %}checked{% endif %}>
+            <span class="dt-toggle-track calm-track"></span>
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-3 w-100">
+          <i data-lucide="save"></i> Save Preferences
+        </button>
+      </form>
+    </div>
+
+    <!-- ── Display Name Card ────────────────────────────────────────────── -->
+    <div class="panel settings-card">
+      <div class="panel-title">
+        <i data-lucide="pencil"></i>
+        <h2>Display Name</h2>
+      </div>
+      <form method="post" action="{{ url_for('auth.profile') }}">
+        <input type="hidden" name="action" value="change_name">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="settings-field">
+          <label for="name" class="settings-label">Full Name</label>
+          <input type="text" id="name" name="name" class="form-control dt-input"
+                 value="{{ user.name }}" maxlength="100" required>
+        </div>
+        <button type="submit" class="btn btn-outline-primary w-100">
+          <i data-lucide="user-check"></i> Update Name
+        </button>
+      </form>
+    </div>
+
+    <!-- ── Data Export Card ─────────────────────────────────────────────── -->
+    <div class="panel settings-card">
+      <div class="panel-title">
+        <i data-lucide="database"></i>
+        <h2>Data Portability</h2>
+      </div>
+      <p class="text-secondary" style="font-size:0.88rem">
+        Download a copy of all your DayTone data including mood logs, journal notes, goals, and profile information in open formats.
+      </p>
+      <div class="d-flex flex-column gap-2">
+        <a href="{{ url_for('mood.export_csv') }}?include_notes=1" class="btn btn-outline-primary">
+          <i data-lucide="file-spreadsheet"></i> Export CSV (with notes)
+        </a>
+        <a href="{{ url_for('auth.export_data_json') }}" class="btn btn-outline-primary">
+          <i data-lucide="braces"></i> Export Full JSON (GDPR)
+        </a>
+        <a href="{{ url_for('mood.report_pdf') }}" class="btn btn-outline-primary">
+          <i data-lucide="file-down"></i> Download PDF Report
+        </a>
+      </div>
+    </div>
+
+    <!-- ── Security Card ────────────────────────────────────────────────── -->
+    <div class="panel settings-card">
+      <div class="panel-title" style="color:var(--dt-danger, #ef4444)">
+        <i data-lucide="shield-alert" style="color:var(--dt-danger, #ef4444)"></i>
+        <h2 style="color:var(--dt-danger, #ef4444)">Danger Zone</h2>
+      </div>
+      <div class="danger-zone-card">
+        <div>
+          <strong>Delete Account</strong>
+          <p class="text-secondary mb-0" style="font-size:0.85rem">
+            Permanently deletes your account and all associated mood logs, journal notes, and goals. This action is irreversible.
+          </p>
+        </div>
+        <button type="button" class="btn btn-danger btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#deleteModal"
+                id="openDeleteModalBtn">
+          <i data-lucide="trash-2"></i> Delete My Account
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /.settings-grid -->
+</div>
+
+<!-- ── Delete Confirmation Modal ────────────────────────────────────────── -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-modal="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content panel" style="border:1px solid var(--dt-danger, #ef4444);">
+      <div class="modal-header border-0">
+        <h5 class="modal-title d-flex align-items-center gap-2" id="deleteModalLabel">
+          <i data-lucide="alert-triangle" style="color:var(--dt-danger,#ef4444);width:20px;height:20px"></i>
+          <span style="color:var(--dt-danger,#ef4444);font-weight:800">Permanently Delete Account</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-danger mb-3" style="font-size:0.875rem">
+          <strong>This cannot be undone.</strong> All your mood logs, journal entries, wellness goals, and account data will be permanently erased from our servers.
+        </div>
+        <p class="text-secondary" style="font-size:0.88rem">
+          To confirm, type <strong>DELETE</strong> in the box below:
+        </p>
+        <form method="post" action="{{ url_for('auth.delete_account') }}" id="deleteAccountForm">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="text" name="confirm_delete" id="deleteConfirmInput"
+                 class="form-control dt-input mb-3" placeholder="Type DELETE to confirm" autocomplete="off">
+          <button type="submit" class="btn btn-danger w-100" id="confirmDeleteBtn" disabled>
+            <i data-lucide="trash-2"></i> Delete My Account Forever
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const deleteInput = document.getElementById('deleteConfirmInput');
+  const confirmBtn = document.getElementById('confirmDeleteBtn');
+  if (deleteInput && confirmBtn) {
+    deleteInput.addEventListener('input', () => {
+      confirmBtn.disabled = deleteInput.value.trim() !== 'DELETE';
+    });
+  }
+</script>
+{% endblock %}

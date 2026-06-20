@@ -1,5 +1,4 @@
-- [x] Replace `app/static/js/mood-orb-three-shader.js` with the provided exact SlushyMoodOrb implementation
-  - [x] Preserve integration points: canvas#(moodOrb), .mood-pill click handlers, window.DAYTONE_DASHBOARD.orb.mood initialization
-  - [x] Preserve resize handling and particle background
-  - [x] Preserve reduced-motion behavior if present
-- [x] Run backend tests (`pytest`) to ensure no regressions
+- [x] Inspect auth/user schema and current DB configuration
+- [x] Delete all user accounts from DB (wipe `user`)
+- [x] Purge remaining auth-related dependent tables (wipe `user_profile`, `mood_log`, `burnout_history`, `suggestion`) to remove leftover rows
+- [x] Force logout for everyone by rotating `SECRET_KEY` and restarting the app

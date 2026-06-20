@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+{% block title %}ML Diagnostics — DayTone Admin{% endblock %}
+{% block content %}
+<div class="admin-shell">
+  <div class="d-flex align-items-center gap-2 mb-4">
+    <i data-lucide="cpu" style="width:28px;height:28px;color:var(--dt-primary)"></i>
+    <h1 class="mb-0" style="font-size:1.6rem;font-weight:800">ML &amp; AI Diagnostics</h1>
+    <span class="ms-auto">
+      <a href="{{ url_for('admin.dashboard') }}" class="btn btn-sm btn-outline-secondary">
+        <i data-lucide="arrow-left"></i> Back to Admin
+      </a>
+    </span>
+  </div>
+
+  {% if error %}
+  <div class="alert alert-danger">
+    <i data-lucide="alert-circle"></i> Failed to load metrics: {{ error }}
+  </div>
+  {% endif %}
+
+  <!-- ── Meta summary row ────────────────────────────────────────────────── -->
+  {% if meta %}
+  <div class="model-meta-grid mb-4">
+    <div class="panel model-meta-card">
+      <span class="meta-label">Best Algorithm</span>
+      <strong class="meta-value text-primary">{{ meta.get("algorithm", "—") }}</strong>
+    </div>
+    <div class="panel model-meta-card">
+      <span class="meta-label">Holdout Accuracy</span>
+      <strong class="meta-value text-success">{{ "%.1f%%"|format(meta.get("accuracy", 0) * 100) }}</strong>
+    </div>
+    <div class="panel model-meta-card">
+      <span class="meta-label">Training Samples</span>
+      <strong class="meta-value">{{ meta.get("n_samples", "—") }}</strong>
+    </div>
+    <div class="panel model-meta-card">
+      <span class="meta-label">Validation Samples</span>
+      <strong class="meta-value">{{ meta.get("validation_n_samples", "—") }}</strong>
+    </div>
+    <div class="panel model-meta-card">
+      <span class="meta-label">Sentiment Backend</span>
+      <strong class="meta-value">{{ sentiment_backend }}</strong>
+    </div>
+    <div class="panel model-meta-card">
+      <span class="meta-label">Trained At</span>
+      <strong class="meta-value" style="font-size:0.8rem">{{ meta.get("trained_at", "—")[:19].replace("T"," ") if meta.get("trained_at") else "—" }}</strong>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="model-diag-grid">
+
+    <!-- ── Per-model metrics table ─────────────────────────────────────── -->
+    {% if metrics and metrics.get("models") %}
+    {% set best_algo = metrics.get("best", "") %}
+    <div class="panel" style="grid-column: 1 / -1;">
+      <div class="panel-title mb-3">
+        <i data-lucide="bar-chart-2"></i>
+        <h2>Model Comparison (Synthetic Holdout Set)</h2>
+      </div>
+      <div class="table-responsive">
+        <table class="table dt-table align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Algorithm</th>
+              <th>Accuracy</th>
+              <th>CV Mean ± Std</th>
+              <th class="text-center" colspan="3">Per-class Precision / Recall / F1</th>
+            </tr>
+            <tr style="font-size:0.78rem;color:var(--dt-text-muted)">
+              <th colspan="3"></th>
+              <th class="text-center">High</th>
+              <th class="text-center">Medium</th>
+              <th class="text-center">Low</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for algo, data in metrics.models.items() %}
+            {% set report = data.get("report", {}) %}
+            <tr class="{% if algo == best_algo %}best-model-row{% endif %}">
+              <td>
+                <strong>{{ algo }}</strong>
+                {% if algo == best_algo %}<span class="badge bg-success ms-1" style="font-size:0.68rem">ACTIVE</span>{% endif %}
+              </td>
+              <td><strong>{{ "%.1f%%"|format(data.accuracy * 100) }}</strong></td>
+              <td style="font-size:0.85rem">
+                {{ "%.1f%%"|format(data.get("cv_mean", 0) * 100) }}
+                <span class="text-secondary">±{{ "%.1f%%"|format(data.get("cv_std", 0) * 100) }}</span>
+              </td>
+              {% for cls in ["High", "Medium", "Low"] %}
+              {% set cls_data = report.get(cls, {}) %}
+              <td class="text-center" style="font-size:0.8rem">
+                <span title="Precision">P: {{ "%.0f%%"|format(cls_data.get("precision", 0) * 100) }}</span>
+                <span class="text-secondary mx-1">·</span>
+                <span title="Recall">R: {{ "%.0f%%"|format(cls_data.get("recall", 0) * 100) }}</span>
+                <span class="text-secondary mx-1">·</span>
+                <span title="F1">F1: {{ "%.0f%%"|format(cls_data.get("f1-score", 0) * 100) }}</span>
+              </td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Confusion matrices for best model ─────────────────────────── -->
+    {% set best_data = metrics.models.get(best_algo, {}) %}
+    {% set val_data = best_data.get("validation", {}) %}
+    {% if val_data.get("confusion_matrix") %}
+    <div class="panel">
+      <div class="panel-title mb-3">
+        <i data-lucide="grid-2x2"></i>
+        <h2>Confusion Matrix <small class="text-secondary" style="font-weight:400;font-size:0.75rem">Semi-real Validation Set · {{ best_algo }}</small></h2>
+      </div>
+      <p class="text-secondary" style="font-size:0.82rem;margin-bottom:1rem">
+        Rows = Actual class, Columns = Predicted class. On-diagonal cells are correct predictions.
+        Validated on <strong>{{ val_data.get("n_samples", "?") }}</strong> samples with physiologically-realistic correlations.
+      </p>
+      <div class="confusion-matrix-wrap">
+        <table class="confusion-matrix">
+          <thead>
+            <tr>
+              <th class="cm-axis-label">Actual ↓ / Pred →</th>
+              {% for cls in classes %}<th class="cm-pred-header">{{ cls }}</th>{% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% set cm = val_data.confusion_matrix %}
+            {% for actual in classes %}
+            <tr>
+              <td class="cm-actual-label">{{ actual }}</td>
+              {% set row_total = cm[actual].values()|sum %}
+              {% for pred in classes %}
+              {% set count = cm[actual][pred] %}
+              {% set is_diag = (actual == pred) %}
+              {% set heat = (count / row_total * 100)|int if row_total > 0 else 0 %}
+              <td class="cm-cell {% if is_diag %}cm-diag{% endif %}" style="--heat:{{ heat }}%">
+                <span class="cm-count">{{ count }}</span>
+                <span class="cm-pct">{{ heat }}%</span>
+              </td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if val_data.get("note") %}
+      <p class="text-secondary mt-3" style="font-size:0.78rem;font-style:italic">
+        <i data-lucide="info" style="width:13px;height:13px;vertical-align:middle"></i>
+        {{ val_data.note }}
+      </p>
+      {% endif %}
+    </div>
+
+    <!-- ── Validation per-class metrics for best ──────────────────────── -->
+    {% set val_report = val_data.get("report", {}) %}
+    <div class="panel">
+      <div class="panel-title mb-3">
+        <i data-lucide="target"></i>
+        <h2>Validation Metrics <small class="text-secondary" style="font-weight:400;font-size:0.75rem">{{ best_algo }}</small></h2>
+      </div>
+      <p class="text-secondary" style="font-size:0.82rem;margin-bottom:1rem">
+        Overall accuracy on validation set:
+        <strong>{{ "%.1f%%"|format(val_data.get("accuracy", 0) * 100) }}</strong>
+      </p>
+      <div class="val-metrics-grid">
+        {% for cls in ["High", "Low", "Medium"] %}
+        {% set cls_data = val_report.get(cls, {}) %}
+        <div class="val-metric-card risk-border-{{ cls|lower }}">
+          <span class="val-cls-name risk-{{ cls|lower }}">{{ cls }} Risk</span>
+          <div class="val-metric-rows">
+            <div class="val-metric-row">
+              <span>Precision</span>
+              <div class="val-bar-wrap">
+                <div class="val-bar" style="--val:{{ (cls_data.get('precision',0)*100)|int }}%"></div>
+              </div>
+              <strong>{{ "%.0f%%"|format(cls_data.get("precision", 0) * 100) }}</strong>
+            </div>
+            <div class="val-metric-row">
+              <span>Recall</span>
+              <div class="val-bar-wrap">
+                <div class="val-bar val-bar-recall" style="--val:{{ (cls_data.get('recall',0)*100)|int }}%"></div>
+              </div>
+              <strong>{{ "%.0f%%"|format(cls_data.get("recall", 0) * 100) }}</strong>
+            </div>
+            <div class="val-metric-row">
+              <span>F1-Score</span>
+              <div class="val-bar-wrap">
+                <div class="val-bar val-bar-f1" style="--val:{{ (cls_data.get('f1-score',0)*100)|int }}%"></div>
+              </div>
+              <strong>{{ "%.0f%%"|format(cls_data.get("f1-score", 0) * 100) }}</strong>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <!-- ── Platform feedback stats ────────────────────────────────────── -->
+    <div class="panel">
+      <div class="panel-title mb-3">
+        <i data-lucide="message-square-heart"></i>
+        <h2>User Prediction Feedback</h2>
+      </div>
+      {% if stats.feedback_accuracy is not none %}
+      <div class="feedback-stat-row">
+        <span class="fs-2 fw-bold text-primary">{{ stats.feedback_accuracy }}%</span>
+        <span class="text-secondary">user agreement rate</span>
+      </div>
+      <p class="text-secondary" style="font-size:0.82rem">
+        Based on <strong>{{ stats.total_feedback_responses }}</strong> user response{{ 's' if stats.total_feedback_responses != 1 else '' }}. Users rated whether the burnout prediction matched their actual state.
+      </p>
+      {% else %}
+      <p class="text-secondary" style="font-size:0.88rem">No prediction feedback collected yet. The &ldquo;Does this match your state?&rdquo; widget on the dashboard will populate this metric.</p>
+      {% endif %}
+    </div>
+
+    <!-- ── Known Limitations ──────────────────────────────────────────── -->
+    {% if meta and meta.get("known_limitations") %}
+    <div class="panel">
+      <div class="panel-title mb-3">
+        <i data-lucide="alert-triangle" style="color:var(--dt-warn,#f59e0b)"></i>
+        <h2 style="color:var(--dt-warn,#f59e0b)">Known Limitations</h2>
+      </div>
+      <ul class="limitations-list">
+        {% for limit in meta.known_limitations %}
+        <li>{{ limit }}</li>
+        {% endfor %}
+      </ul>
+      <p class="text-secondary mt-3" style="font-size:0.8rem;font-style:italic">
+        These limitations are documented for academic transparency. Addressing them is the recommended path to clinical-grade validation.
+      </p>
+    </div>
+    {% endif %}
+
+  </div><!-- /.model-diag-grid -->
+</div>
+{% endblock %}

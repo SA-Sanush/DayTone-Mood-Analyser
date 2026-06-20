@@ -13,7 +13,7 @@ except ImportError:  # pragma: no cover
 
 from config import Config
 
-from .extensions import db, limiter, login_manager, mail, cache
+from .extensions import db, limiter, login_manager, mail, cache, csrf
 
 
 migrate = Migrate()
@@ -78,6 +78,7 @@ def create_app(config_object=Config):
     mail.init_app(app)
     limiter.init_app(app)
     cache.init_app(app)
+    csrf.init_app(app)
 
     # Initialize Talisman with CSP
     Talisman(
