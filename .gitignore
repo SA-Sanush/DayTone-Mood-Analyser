@@ -14,4 +14,6 @@ app/ml/training_data.csv
 app/ml/model_metrics.json
 app/ml/*_meta.json
 app/ml/model_*.pkl
+app/ml/drift_report.json
+
 
