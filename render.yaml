@@ -31,6 +31,7 @@ services:
     name: daytone-redis
     plan: free
     maxmemoryPolicy: allkeys-lru
+    ipAllowList: []
 
 databases:
   - name: daytone-db
