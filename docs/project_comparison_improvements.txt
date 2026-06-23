@@ -25,6 +25,7 @@ fully polished, secure, and deployed production application.
 | Model Operations | Simple scikit-learn tree saved; no bias or drift tracking. | Bias audit scripts, prediction drift monitor, and an official ML Model Card. |
 | Training Data Source | Model trained strictly on a static synthetic dataset (`generate_data.py`). | Supports compiling real user database entries using `export_db_to_training.py` (merge or replace modes). |
 | Wellness Activities | Mismatch between frontend choices and backend/DB constraints causing errors. | Consistent list of 8 activities supported across forms, template, and String(50) column database. |
+| Footer & Layout | Stretched across full screen width; floated high on pages with short content. | Flexbox sticky footer layout centered and constrained to 1240px grid; rests at bottom of screen. |
 | CI/CD & Code Quality | Duplicate, failing GitHub Action tests. PEP 8 violations in 18 files. | Zero flake8 warnings, black formatted, automated pytest and gitleaks scans in CI. |
 | Deployment & Hosting | Manual local running only. | Infrastructure-as-code Render Blueprint. Private Redis, PostgreSQL, and Flask running live. |
 
@@ -78,6 +79,9 @@ D. DATABASE COMPATIBILITY & DEPLOYMENT AUTOMATION
   * Render Blueprints: Automated the entire provisioning process in render.yaml.
   * Start Command Migration: Shifted migrations to startCommand, allowing free-tier
     deploys to build and upgrade successfully.
+  * Sticky Footer & Grid Alignment: Constrained footer width to 1240px and implemented 
+    flexbox vertical column layout on the body and main containers to ensure the footer 
+    always aligns with the grid and sits at the bottom of viewports on short-content pages.
 
 E. MACHINE LEARNING & PIPELINE EVOLUTION
 - Initial: The ML model was trained statically on synthetic data, with no way to inject 

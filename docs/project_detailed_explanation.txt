@@ -118,6 +118,10 @@ F. PWA & WEB STANDARDS
 - Performance: Decohesion of heavy packages (THREE.js and Chart.js load only on 
   necessary pages), async Google Fonts integration, and custom CSS minification 
   helped improve Lighthouse speed scores.
+- Sticky Footer Layout: Implemented a Flexbox-based sticky footer layout on the body 
+  (display: flex; flex-direction: column) and main content area (flex: 1 0 auto). 
+  Bounded the footer container width to 1240px and centered it using auto-margins 
+  to align with the core page grid.
 
 --------------------------------------------------------------------------------
 4. CODEBASE DIRECTORY STRUCTURE

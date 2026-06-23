@@ -106,6 +106,9 @@ PHASE 7: PERFORMANCE & ACCESSIBILITY POLISH
   * Placed early inline script theme checks in the head to prevent dark-mode flash.
 - Accessibility Standards: Refined focus-ring keyboard navigation, added navbar 
   toggle ARIA labels, and structured landmark tags to achieve a 100/100 WCAG score.
+- Sticky Footer Layout: Implemented a Flexbox-based sticky footer layout. Bounded 
+  the footer container width to 1240px and styled it with auto-margins to align 
+  with the main layout grid, resolving the floating-footer bug on short content pages.
 - CI/CD Pipelines: Created .github/workflows/ci.yml with pytest, flake8 PEP-8 
   validation, and automated security scanning.
 
