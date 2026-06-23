@@ -5,7 +5,10 @@ from app.extensions import mail
 
 
 def _mail_ready():
-    return bool(current_app.config.get("MAIL_USERNAME") and current_app.config.get("MAIL_PASSWORD"))
+    return bool(
+        current_app.config.get("MAIL_USERNAME")
+        and current_app.config.get("MAIL_PASSWORD")
+    )
 
 
 def send_high_risk_alert(user, log):

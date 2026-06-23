@@ -26,6 +26,7 @@ def admin_required(view):
         if not current_user.is_admin:
             abort(403)
         return view(*args, **kwargs)
+
     return wrapped
 
 
@@ -97,22 +98,28 @@ def users():
     if role_filter in ("admin", "user"):
         query = query.filter(User.role == role_filter)
     all_users = query.order_by(User.created_at.desc()).all()
-    return render_template("admin/users.html", users=all_users, q=q, role_filter=role_filter)
+    return render_template(
+        "admin/users.html", users=all_users, q=q, role_filter=role_filter
+    )
 
 
 @admin_bp.route("/user/<int:user_id>")
 @admin_required
 def user_detail(user_id):
     user = User.query.get_or_404(user_id)
-    logs = MoodLog.query.filter_by(user_id=user.id).order_by(MoodLog.log_date.desc()).all()
-    return render_template("admin/user_detail.html", user=user, logs=logs, data=dashboard_data(user.id))
+    logs = (
+        MoodLog.query.filter_by(user_id=user.id).order_by(MoodLog.log_date.desc()).all()
+    )
+    return render_template(
+        "admin/user_detail.html", user=user, logs=logs, data=dashboard_data(user.id)
+    )
 
 
 @admin_bp.route("/user/<int:user_id>/toggle-role", methods=["POST"])
 @admin_required
 def toggle_role(user_id):
     user = User.query.get_or_404(user_id)
-    is_self = (user.id == current_user.id)
+    is_self = user.id == current_user.id
     old_role = user.role
     user.role = "user" if user.role == "admin" else "admin"
 
@@ -138,7 +145,7 @@ def toggle_role(user_id):
 @admin_required
 def delete_user(user_id):
     user = User.query.get_or_404(user_id)
-    is_self = (user.id == current_user.id)
+    is_self = user.id == current_user.id
 
     log_admin_action(
         admin_id=current_user.id,
@@ -168,7 +175,7 @@ def edit_user_profile(user_id):
         profile = UserProfile(user_id=user.id)
         db.session.add(profile)
         db.session.flush()
-        
+
     form = AdminUserProfileForm()
     if request.method == "GET":
         form.name.data = user.name
@@ -179,36 +186,40 @@ def edit_user_profile(user_id):
         form.occupation.data = profile.occupation
         form.preferred_activity.data = profile.preferred_activity
         form.daily_reminder.data = profile.daily_reminder
-        
+
     if form.validate_on_submit():
         existing = User.query.filter_by(email=form.email.data.lower().strip()).first()
         if existing and existing.id != user.id:
             flash("An account with that email already exists.", "danger")
             return render_template("admin/edit_profile.html", user=user, form=form)
-            
+
         user.name = form.name.data.strip()
         user.email = form.email.data.lower().strip()
-        
-        role_changed_self = (user.id == current_user.id and form.role.data == "user")
+
+        role_changed_self = user.id == current_user.id and form.role.data == "user"
         user.role = form.role.data
-        
+
         profile.age = form.age.data
         profile.gender = form.gender.data
-        profile.occupation = form.occupation.data.strip() if form.occupation.data else None
+        profile.occupation = (
+            form.occupation.data.strip() if form.occupation.data else None
+        )
         profile.preferred_activity = form.preferred_activity.data
         profile.daily_reminder = form.daily_reminder.data
-        
+
         db.session.commit()
         cache.delete_memoized(dashboard_data, user.id)
-        
+
         if role_changed_self:
             logout_user()
-            flash("You have demoted yourself. You no longer have admin access.", "warning")
+            flash(
+                "You have demoted yourself. You no longer have admin access.", "warning"
+            )
             return redirect(url_for("auth.login"))
-            
+
         flash(f"Profile for {user.name} has been updated.", "success")
         return redirect(url_for("admin.user_detail", user_id=user.id))
-        
+
     return render_template("admin/edit_profile.html", user=user, form=form)
 
 
@@ -218,20 +229,24 @@ def edit_user_log(user_id, log_id):
     user = User.query.get_or_404(user_id)
     log = MoodLog.query.filter_by(id=log_id, user_id=user.id).first_or_404()
     form = AdminMoodLogForm(obj=log)
-    
+
     if form.validate_on_submit():
-        existing = MoodLog.query.filter_by(user_id=user.id, log_date=form.log_date.data).filter(MoodLog.id != log.id).first()
+        existing = (
+            MoodLog.query.filter_by(user_id=user.id, log_date=form.log_date.data)
+            .filter(MoodLog.id != log.id)
+            .first()
+        )
         if existing:
             flash(f"{user.name} already has a log for {form.log_date.data}.", "warning")
             return render_template("admin/edit_log.html", user=user, log=log, form=form)
-            
+
         update_log_analysis(user.id, log, form)
         db.session.commit()
         cache.delete_memoized(dashboard_data, user.id)
-        
+
         flash(f"Mood log for {user.name} updated.", "success")
         return redirect(url_for("admin.user_detail", user_id=user.id))
-        
+
     return render_template("admin/edit_log.html", user=user, log=log, form=form)
 
 
@@ -321,5 +336,6 @@ def bias_audit():
 def audit_log():
     """View recent admin audit log entries."""
     from app.models import AuditLog
+
     entries = AuditLog.query.order_by(AuditLog.performed_at.desc()).limit(200).all()
     return render_template("admin/audit_log.html", entries=entries)

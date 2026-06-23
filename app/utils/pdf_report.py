@@ -32,21 +32,53 @@ def build_pdf_report(user):
             ["Latest Burnout Risk", latest.burnout_risk if latest else "No logs"],
         ]
     )
-    summary.setStyle(TableStyle([("GRID", (0, 0), (-1, -1), 0.5, colors.grey), ("BACKGROUND", (0, 0), (0, -1), colors.whitesmoke)]))
-    story.extend([summary, Spacer(1, 18), Paragraph("Burnout Risk Breakdown", styles["Heading2"])])
+    summary.setStyle(
+        TableStyle(
+            [
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+                ("BACKGROUND", (0, 0), (0, -1), colors.whitesmoke),
+            ]
+        )
+    )
+    story.extend(
+        [
+            summary,
+            Spacer(1, 18),
+            Paragraph("Burnout Risk Breakdown", styles["Heading2"]),
+        ]
+    )
 
     dist = data["burnout_distribution"]
-    risk_table = Table([["Low", dist["Low"]], ["Medium", dist["Medium"]], ["High", dist["High"]]])
+    risk_table = Table(
+        [["Low", dist["Low"]], ["Medium", dist["Medium"]], ["High", dist["High"]]]
+    )
     risk_table.setStyle(TableStyle([("GRID", (0, 0), (-1, -1), 0.5, colors.grey)]))
-    story.extend([risk_table, Spacer(1, 18), Paragraph("Recent Mood Trend", styles["Heading2"])])
+    story.extend(
+        [risk_table, Spacer(1, 18), Paragraph("Recent Mood Trend", styles["Heading2"])]
+    )
 
     rows = [["Date", "Mood", "Sleep", "Stress", "Risk"]]
-    logs = list(zip(data["labels"], data["mood"], data["sleep"], data["stress"], data["burnout_risk_trend"]))
+    logs = list(
+        zip(
+            data["labels"],
+            data["mood"],
+            data["sleep"],
+            data["stress"],
+            data["burnout_risk_trend"],
+        )
+    )
     mood_labels = {1: "Sick", 2: "Sad", 3: "Anxious", 4: "Calm", 5: "Happy"}
     for label, mood, sleep, stress, risk in logs[-10:]:
         rows.append([label, mood_labels.get(mood, str(mood)), sleep, stress, risk])
     trend = Table(rows)
-    trend.setStyle(TableStyle([("GRID", (0, 0), (-1, -1), 0.5, colors.grey), ("BACKGROUND", (0, 0), (-1, 0), colors.whitesmoke)]))
+    trend.setStyle(
+        TableStyle(
+            [
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+                ("BACKGROUND", (0, 0), (-1, 0), colors.whitesmoke),
+            ]
+        )
+    )
     story.append(trend)
 
     story.extend([Spacer(1, 18), Paragraph("Top Suggestions", styles["Heading2"])])

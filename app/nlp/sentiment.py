@@ -33,6 +33,7 @@ except (ImportError, LookupError, OSError):  # pragma: no cover
 # Optional: lightweight BERT-based sentiment (graceful fallback to VADER)
 try:
     from transformers import pipeline as hf_pipeline
+
     _HF_AVAILABLE = True
 except ImportError:  # pragma: no cover
     _HF_AVAILABLE = False

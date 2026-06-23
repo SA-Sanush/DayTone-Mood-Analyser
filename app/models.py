@@ -11,8 +11,6 @@ Encryption at Rest (notes field):
   - Encryption is transparent: reading `log.notes` always returns plain text;
     writing `log.notes = value` encrypts automatically via the hybrid property.
 """
-
-import base64
 import logging
 import os
 import warnings
@@ -21,7 +19,6 @@ from datetime import date, datetime, timezone
 from flask_login import UserMixin
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from .constants import BurnoutRisk
 from .extensions import db, login_manager
 
 logger = logging.getLogger(__name__)
@@ -30,6 +27,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Fernet encryption helper (graceful fallback if library unavailable)
 # ---------------------------------------------------------------------------
+
 
 def _build_fernet():
     """Attempt to instantiate a Fernet cipher using ENCRYPTION_KEY env var.
@@ -40,6 +38,7 @@ def _build_fernet():
     """
     try:
         from cryptography.fernet import Fernet, InvalidToken  # noqa: F401
+
         raw_key = os.environ.get("ENCRYPTION_KEY", "")
         if raw_key:
             try:
@@ -48,7 +47,7 @@ def _build_fernet():
                 warnings.warn(
                     "ENCRYPTION_KEY is set but is not a valid Fernet key. "
                     "Notes will be stored in plain text. "
-                    "Generate a key with: python -c \"from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())\"",
+                    'Generate a key with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"',
                     stacklevel=2,
                 )
                 return None
@@ -102,6 +101,7 @@ def utcnow():
 # Models
 # ---------------------------------------------------------------------------
 
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -110,8 +110,15 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(20), nullable=False, default="user")
     created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
 
-    profile = db.relationship("UserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
-    mood_logs = db.relationship("MoodLog", back_populates="user", cascade="all, delete-orphan")
+    profile = db.relationship(
+        "UserProfile",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+    mood_logs = db.relationship(
+        "MoodLog", back_populates="user", cascade="all, delete-orphan"
+    )
     goals = db.relationship("Goal", back_populates="user", cascade="all, delete-orphan")
 
     def set_password(self, password):
@@ -127,7 +134,12 @@ class User(UserMixin, db.Model):
 
 class UserProfile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), unique=True, nullable=False)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id", ondelete="CASCADE"),
+        unique=True,
+        nullable=False,
+    )
     age = db.Column(db.Integer)
     gender = db.Column(db.String(20))
     occupation = db.Column(db.String(100))
@@ -150,7 +162,12 @@ class MoodLog(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     log_date = db.Column(db.Date, nullable=False, default=date.today, index=True)
     mood_score = db.Column(db.Integer, nullable=False)
     sleep_hours = db.Column(db.Float, nullable=False)
@@ -160,13 +177,21 @@ class MoodLog(db.Model):
     # Stored encrypted at rest when ENCRYPTION_KEY is set. Access via .notes property.
     _notes_encrypted = db.Column("notes", db.Text)
     sentiment_score = db.Column(db.Float, nullable=False, default=0.0)
-    burnout_risk = db.Column(db.Enum("Low", "Medium", "High", name="burnout_risk_enum"), nullable=False, default="Low")
+    burnout_risk = db.Column(
+        db.Enum("Low", "Medium", "High", name="burnout_risk_enum"),
+        nullable=False,
+        default="Low",
+    )
     created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
     updated_at = db.Column(db.DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
     user = db.relationship("User", back_populates="mood_logs")
-    suggestions = db.relationship("Suggestion", back_populates="log", cascade="all, delete-orphan")
-    burnout_history = db.relationship("BurnoutHistory", back_populates="log", cascade="all, delete-orphan")
+    suggestions = db.relationship(
+        "Suggestion", back_populates="log", cascade="all, delete-orphan"
+    )
+    burnout_history = db.relationship(
+        "BurnoutHistory", back_populates="log", cascade="all, delete-orphan"
+    )
 
     @property
     def notes(self):
@@ -180,31 +205,29 @@ class MoodLog(db.Model):
 
     @property
     def mood_label(self):
-        mapping = {
-            1: "Sick",
-            2: "Sad",
-            3: "Anxious",
-            4: "Calm",
-            5: "Happy"
-        }
+        mapping = {1: "Sick", 2: "Sad", 3: "Anxious", 4: "Calm", 5: "Happy"}
         return mapping.get(self.mood_score, str(self.mood_score))
 
     @property
     def mood_emoji(self):
-        mapping = {
-            1: "🤒",
-            2: "😢",
-            3: "😰",
-            4: "😌",
-            5: "😊"
-        }
+        mapping = {1: "🤒", 2: "😢", 3: "😰", 4: "😌", 5: "😊"}
         return mapping.get(self.mood_score, "")
 
 
 class BurnoutHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
-    log_id = db.Column(db.Integer, db.ForeignKey("mood_log.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    log_id = db.Column(
+        db.Integer,
+        db.ForeignKey("mood_log.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     prediction = db.Column(db.String(10), nullable=False)
     confidence = db.Column(db.Float, nullable=False, default=0.0)
     algorithm_used = db.Column(db.String(50), nullable=False, default="Rules")
@@ -219,8 +242,18 @@ class BurnoutHistory(db.Model):
 
 class Suggestion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
-    log_id = db.Column(db.Integer, db.ForeignKey("mood_log.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    log_id = db.Column(
+        db.Integer,
+        db.ForeignKey("mood_log.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     suggestion_text = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
 
@@ -230,11 +263,19 @@ class Suggestion(db.Model):
 
 class Goal(db.Model):
     """User-defined personal wellness targets for sleep, mood, or activity frequency."""
+
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     # target_type: 'sleep' | 'mood' | 'active_days' | 'journal_days' | 'stress'
     target_type = db.Column(db.String(30), nullable=False)
-    target_value = db.Column(db.Float, nullable=False)  # e.g. 7.0 hours, mood score 4, 5 days
+    target_value = db.Column(
+        db.Float, nullable=False
+    )  # e.g. 7.0 hours, mood score 4, 5 days
     start_date = db.Column(db.Date, nullable=False, default=date.today)
     end_date = db.Column(db.Date, nullable=True)  # None = ongoing
     completed = db.Column(db.Boolean, default=False, nullable=False)
@@ -267,16 +308,23 @@ class Goal(db.Model):
 
 class AuditLog(db.Model):
     """Records admin actions for compliance and accountability."""
+
     __tablename__ = "audit_log"
 
     id = db.Column(db.Integer, primary_key=True)
-    admin_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="SET NULL"), nullable=True)
-    action = db.Column(db.String(100), nullable=False)    # e.g. 'delete_user', 'toggle_role'
+    admin_id = db.Column(
+        db.Integer, db.ForeignKey("user.id", ondelete="SET NULL"), nullable=True
+    )
+    action = db.Column(
+        db.String(100), nullable=False
+    )  # e.g. 'delete_user', 'toggle_role'
     target_type = db.Column(db.String(50), nullable=True)  # e.g. 'User', 'MoodLog'
     target_id = db.Column(db.Integer, nullable=True)
-    detail = db.Column(db.Text, nullable=True)             # Free text or JSON snippet
+    detail = db.Column(db.Text, nullable=True)  # Free text or JSON snippet
     ip_address = db.Column(db.String(45), nullable=True)
-    performed_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False, index=True)
+    performed_at = db.Column(
+        db.DateTime(timezone=True), default=utcnow, nullable=False, index=True
+    )
 
     admin = db.relationship("User", foreign_keys=[admin_id])
 

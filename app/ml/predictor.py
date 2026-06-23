@@ -50,7 +50,11 @@ def _model_payload():
 def _recent_logs(user_id, log_date):
     start_date = log_date - timedelta(days=BAD_DAY_WINDOW - 1)
     return (
-        MoodLog.query.filter(MoodLog.user_id == user_id, MoodLog.log_date >= start_date, MoodLog.log_date <= log_date)
+        MoodLog.query.filter(
+            MoodLog.user_id == user_id,
+            MoodLog.log_date >= start_date,
+            MoodLog.log_date <= log_date,
+        )
         .order_by(MoodLog.log_date.asc())
         .all()
     )
@@ -142,7 +146,9 @@ def explain_prediction(features: dict[str, float | int], risk: str) -> list[str]
 
     # ── Mood signals ────────────────────────────────────────────────────────
     if features["mood_score"] <= _MOOD_LOW_THRESHOLD:
-        drivers.append(f"Today's mood score ({features['mood_score']}/5) is in the low range.")
+        drivers.append(
+            f"Today's mood score ({features['mood_score']}/5) is in the low range."
+        )
 
     if features["consecutive_bad_days"] >= _BAD_DAYS_THRESHOLD:
         drivers.append(
@@ -168,7 +174,9 @@ def explain_prediction(features: dict[str, float | int], risk: str) -> list[str]
 
     # ── Sleep signals ────────────────────────────────────────────────────────
     if features["sleep_hours"] < _SLEEP_LOW_THRESHOLD:
-        drivers.append(f"Sleep duration ({features['sleep_hours']:.1f}h) is below the 6h threshold.")
+        drivers.append(
+            f"Sleep duration ({features['sleep_hours']:.1f}h) is below the 6h threshold."
+        )
 
     avg_sleep = features.get("avg_sleep_7d", 0)
     if avg_sleep > 0 and features["sleep_hours"] < avg_sleep - 1.0:
@@ -215,31 +223,50 @@ def predict_burnout(features: dict[str, float | int]) -> dict[str, str | float]:
     if payload is None:
         prediction, confidence = _rule_prediction(features)
         drivers = explain_prediction(features, prediction)
-        return {"prediction": prediction, "confidence": confidence, "algorithm": "Rules", "drivers": drivers}
+        return {
+            "prediction": prediction,
+            "confidence": confidence,
+            "algorithm": "Rules",
+            "drivers": drivers,
+        }
 
     try:
         artifact_features = payload.get("features")
         if artifact_features and list(artifact_features) != FEATURE_NAMES:
             raise RuntimeError("Model feature list does not match inference features.")
         model = payload["model"]
-        values = pd.DataFrame([[features[name] for name in FEATURE_NAMES]], columns=FEATURE_NAMES)
+        values = pd.DataFrame(
+            [[features[name] for name in FEATURE_NAMES]], columns=FEATURE_NAMES
+        )
         prediction = model.predict(values)[0]
         confidence = None
         if hasattr(model, "predict_proba"):
             probabilities = model.predict_proba(values)[0]
             confidence = float(max(probabilities))
         drivers = explain_prediction(features, prediction)
-        return {"prediction": prediction, "confidence": confidence, "algorithm": payload.get("name", "ML"), "drivers": drivers}
+        return {
+            "prediction": prediction,
+            "confidence": confidence,
+            "algorithm": payload.get("name", "ML"),
+            "drivers": drivers,
+        }
     except Exception as exc:
         _log_prediction_fallback(exc)
         prediction, confidence = _rule_prediction(features)
         drivers = explain_prediction(features, prediction)
-        return {"prediction": prediction, "confidence": confidence, "algorithm": "Rules", "drivers": drivers}
+        return {
+            "prediction": prediction,
+            "confidence": confidence,
+            "algorithm": "Rules",
+            "drivers": drivers,
+        }
 
 
 def latest_burnout_subquery():
     return (
-        MoodLog.query.with_entities(MoodLog.user_id, func.max(MoodLog.log_date).label("latest_date"))
+        MoodLog.query.with_entities(
+            MoodLog.user_id, func.max(MoodLog.log_date).label("latest_date")
+        )
         .group_by(MoodLog.user_id)
         .subquery()
     )

@@ -2,7 +2,18 @@ import csv
 from datetime import date
 from io import StringIO
 
-from flask import Response, current_app, flash, jsonify, redirect, render_template, request, send_file, url_for, stream_with_context
+from flask import (
+    Response,
+    current_app,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    url_for,
+    stream_with_context,
+)
 from flask_login import current_user, login_required
 
 from app.constants import BurnoutRisk
@@ -46,7 +57,9 @@ def _mutate_log_with_analysis(log, form):
 
 def _replace_suggestions(log):
     Suggestion.query.filter_by(log_id=log.id).delete()
-    preferred = current_user.profile.preferred_activity if current_user.profile else "Walk"
+    preferred = (
+        current_user.profile.preferred_activity if current_user.profile else "Walk"
+    )
     for text in get_suggestions(
         log.burnout_risk,
         log.sleep_hours,
@@ -55,7 +68,9 @@ def _replace_suggestions(log):
         log.activity_done,
         preferred,
     ):
-        db.session.add(Suggestion(user_id=current_user.id, log_id=log.id, suggestion_text=text))
+        db.session.add(
+            Suggestion(user_id=current_user.id, log_id=log.id, suggestion_text=text)
+        )
 
 
 @mood_bp.route("/log", methods=["GET", "POST"])
@@ -68,9 +83,14 @@ def log_mood():
         except Exception:
             pass
     if form.validate_on_submit():
-        existing = MoodLog.query.filter_by(user_id=current_user.id, log_date=form.log_date.data).first()
+        existing = MoodLog.query.filter_by(
+            user_id=current_user.id, log_date=form.log_date.data
+        ).first()
         if existing:
-            flash("You already have a log for that date. Visit History to edit it.", "warning")
+            flash(
+                "You already have a log for that date. Visit History to edit it.",
+                "warning",
+            )
             return render_template("mood/log.html", form=form)
 
         log = MoodLog(
@@ -102,7 +122,9 @@ def log_mood():
         cache.delete_memoized(dashboard_data, current_user.id)
 
         if log.burnout_risk == BurnoutRisk.HIGH:
-            current_app.logger.info("High-risk alert queued user_id=%s log_id=%s", current_user.id, log.id)
+            current_app.logger.info(
+                "High-risk alert queued user_id=%s log_id=%s", current_user.id, log.id
+            )
             send_high_risk_alert(current_user, log)
         flash("Mood log saved with DayTone burnout analysis.", "success")
         return redirect(url_for("mood.dashboard"))
@@ -120,7 +142,9 @@ def edit_log(log_id):
         form.notes.data = log.notes
     if form.validate_on_submit():
         existing = (
-            MoodLog.query.filter_by(user_id=current_user.id, log_date=form.log_date.data)
+            MoodLog.query.filter_by(
+                user_id=current_user.id, log_date=form.log_date.data
+            )
             .filter(MoodLog.id != log.id)
             .first()
         )
@@ -145,7 +169,9 @@ def edit_log(log_id):
         cache.delete_memoized(dashboard_data, current_user.id)
 
         if log.burnout_risk == BurnoutRisk.HIGH:
-            current_app.logger.info("High-risk alert queued user_id=%s log_id=%s", current_user.id, log.id)
+            current_app.logger.info(
+                "High-risk alert queued user_id=%s log_id=%s", current_user.id, log.id
+            )
             send_high_risk_alert(current_user, log)
         flash("Mood log updated with fresh DayTone analysis.", "success")
         return redirect(url_for("mood.history"))
@@ -192,12 +218,17 @@ def dashboard():
 @login_required
 def history():
     from sqlalchemy.orm import joinedload
-    page = request.args.get('page', 1, type=int)
-    pagination = MoodLog.query.filter_by(user_id=current_user.id) \
-        .options(joinedload(MoodLog.suggestions), joinedload(MoodLog.burnout_history)) \
-        .order_by(MoodLog.log_date.desc()) \
+
+    page = request.args.get("page", 1, type=int)
+    pagination = (
+        MoodLog.query.filter_by(user_id=current_user.id)
+        .options(joinedload(MoodLog.suggestions), joinedload(MoodLog.burnout_history))
+        .order_by(MoodLog.log_date.desc())
         .paginate(page=page, per_page=30, error_out=False)
-    return render_template("mood/history.html", logs=pagination.items, pagination=pagination)
+    )
+    return render_template(
+        "mood/history.html", logs=pagination.items, pagination=pagination
+    )
 
 
 @mood_bp.route("/heatmap")
@@ -222,7 +253,9 @@ def prediction_feedback(history_id):
     Accepts JSON body: {"accurate": true|false}
     Returns JSON: {"success": true, "history_id": <int>}
     """
-    history = BurnoutHistory.query.filter_by(id=history_id, user_id=current_user.id).first_or_404()
+    history = BurnoutHistory.query.filter_by(
+        id=history_id, user_id=current_user.id
+    ).first_or_404()
     data = request.get_json(silent=True) or {}
     accurate_value = data.get("accurate")
     if accurate_value is None:
@@ -280,7 +313,9 @@ def goals():
         return redirect(url_for("mood.goals"))
 
     active_goals = Goal.query.filter_by(user_id=current_user.id, completed=False).all()
-    completed_goals = Goal.query.filter_by(user_id=current_user.id, completed=True).all()
+    completed_goals = Goal.query.filter_by(
+        user_id=current_user.id, completed=True
+    ).all()
     goals_with_progress = [(g, goal_progress(g, current_user.id)) for g in active_goals]
     return render_template(
         "mood/goals.html",
@@ -294,7 +329,12 @@ def goals():
 @limiter.limit("5 per minute")
 def report_pdf():
     pdf = build_pdf_report(current_user)
-    response = send_file(pdf, mimetype="application/pdf", as_attachment=True, download_name="daytone-report.pdf")
+    response = send_file(
+        pdf,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name="daytone-report.pdf",
+    )
     response.headers["X-Content-Type-Options"] = "nosniff"
     return response
 
@@ -323,7 +363,11 @@ def export_csv():
         writer.writerow(headers)
         yield output.getvalue()
 
-        logs = MoodLog.query.filter_by(user_id=current_user.id).order_by(MoodLog.log_date.asc()).all()
+        logs = (
+            MoodLog.query.filter_by(user_id=current_user.id)
+            .order_by(MoodLog.log_date.asc())
+            .all()
+        )
         for log in logs:
             output = StringIO()
             writer = csv.writer(output)
@@ -347,6 +391,6 @@ def export_csv():
         mimetype="text/csv",
         headers={
             "Content-Disposition": "attachment; filename=daytone-logs.csv",
-            "X-Content-Type-Options": "nosniff"
+            "X-Content-Type-Options": "nosniff",
         },
     )

@@ -1,15 +1,23 @@
 import hashlib
 import json
 from datetime import datetime, timezone
-from io import StringIO
 from urllib.parse import urlparse
 
-from flask import Response, current_app, flash, redirect, render_template, request, stream_with_context, url_for
+from flask import (
+    Response,
+    current_app,
+    flash,
+    redirect,
+    render_template,
+    request,
+    stream_with_context,
+    url_for,
+)
 from flask_login import current_user, login_required, login_user, logout_user
 from flask_limiter.util import get_remote_address
 
 from app.extensions import db, limiter
-from app.models import BurnoutHistory, Goal, MoodLog, Suggestion, User, UserProfile
+from app.models import Goal, MoodLog, User, UserProfile
 
 from . import auth_bp
 from .forms import LoginForm, RegistrationForm
@@ -20,7 +28,12 @@ def safe_next_url(next_url):
         return None
 
     parsed = urlparse(next_url)
-    if parsed.scheme or parsed.netloc or not next_url.startswith("/") or next_url.startswith("//"):
+    if (
+        parsed.scheme
+        or parsed.netloc
+        or not next_url.startswith("/")
+        or next_url.startswith("//")
+    ):
         return None
     return next_url
 
@@ -51,10 +64,14 @@ def register():
         existing = User.query.filter_by(email=form.email.data.lower()).first()
         if existing:
             flash("An account with that email already exists.", "danger")
-            return render_template("auth/register.html", form=form, show_admin=show_admin)
+            return render_template(
+                "auth/register.html", form=form, show_admin=show_admin
+            )
 
         admin_code = current_app.config.get("ADMIN_REGISTRATION_CODE")
-        wants_admin = bool(admin_code and form.admin_code.data and form.admin_code.data == admin_code)
+        wants_admin = bool(
+            admin_code and form.admin_code.data and form.admin_code.data == admin_code
+        )
         user = User(
             name=form.name.data.strip(),
             email=form.email.data.lower().strip(),
@@ -90,7 +107,9 @@ def login():
             flash("Signed in successfully.", "success")
             next_url = request.args.get("next")
             return redirect(safe_next_url(next_url) or url_for("mood.dashboard"))
-        email_hash = hashlib.sha256(form.email.data.lower().strip().encode("utf-8")).hexdigest()[:12]
+        email_hash = hashlib.sha256(
+            form.email.data.lower().strip().encode("utf-8")
+        ).hexdigest()[:12]
         current_app.logger.info("Failed login attempt email_hash=%s", email_hash)
         flash("Invalid email or password.", "danger")
 
@@ -118,7 +137,9 @@ def profile():
         action = request.form.get("action", "")
 
         if action == "update_preferences":
-            profile.preferred_activity = request.form.get("preferred_activity", profile.preferred_activity)
+            profile.preferred_activity = request.form.get(
+                "preferred_activity", profile.preferred_activity
+            )
             profile.daily_reminder = bool(request.form.get("daily_reminder"))
             profile.calm_mode = bool(request.form.get("calm_mode"))
             occupation = (request.form.get("occupation") or "").strip()
@@ -162,7 +183,9 @@ def delete_account():
 def export_data_json():
     """GDPR Data Portability: export all user data as a structured JSON file."""
     user = current_user._get_current_object()
-    logs = MoodLog.query.filter_by(user_id=user.id).order_by(MoodLog.log_date.asc()).all()
+    logs = (
+        MoodLog.query.filter_by(user_id=user.id).order_by(MoodLog.log_date.asc()).all()
+    )
     goals = Goal.query.filter_by(user_id=user.id).all()
 
     export = {
@@ -177,7 +200,9 @@ def export_data_json():
             "age": user.profile.age if user.profile else None,
             "gender": user.profile.gender if user.profile else None,
             "occupation": user.profile.occupation if user.profile else None,
-            "preferred_activity": user.profile.preferred_activity if user.profile else None,
+            "preferred_activity": (
+                user.profile.preferred_activity if user.profile else None
+            ),
             "daily_reminder": user.profile.daily_reminder if user.profile else False,
             "calm_mode": user.profile.calm_mode if user.profile else False,
         },
@@ -247,15 +272,17 @@ def contact():
     error = None
 
     if request.method == "POST":
-        name    = (request.form.get("name") or "").strip()
-        email   = (request.form.get("email") or "").strip()
+        name = (request.form.get("name") or "").strip()
+        email = (request.form.get("email") or "").strip()
         subject = (request.form.get("subject") or "DayTone Support Request").strip()
-        body    = (request.form.get("body") or "").strip()
+        body = (request.form.get("body") or "").strip()
 
         if not name or not email or not body:
             error = "Please fill in all required fields."
         else:
-            admin_email = current_app.config.get("ADMIN_ALERT_EMAIL") or current_app.config.get("MAIL_USERNAME")
+            admin_email = current_app.config.get(
+                "ADMIN_ALERT_EMAIL"
+            ) or current_app.config.get("MAIL_USERNAME")
             if admin_email and current_app.config.get("MAIL_USERNAME"):
                 try:
                     msg = Message(
@@ -277,10 +304,11 @@ def contact():
                 # Mail not configured — log it and show success anyway
                 current_app.logger.info(
                     "contact_form name=%r email=%r subject=%r body_len=%d",
-                    name, email, subject, len(body),
+                    name,
+                    email,
+                    subject,
+                    len(body),
                 )
                 sent = True
 
     return render_template("auth/contact.html", sent=sent, error=error)
-
-

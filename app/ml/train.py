@@ -11,7 +11,9 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 from sklearn.model_selection import train_test_split, cross_val_score, StratifiedKFold
 from sklearn.tree import DecisionTreeClassifier
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
 logger = logging.getLogger("train")
 
 try:
@@ -77,7 +79,9 @@ def train():
     x_val = val_df[FEATURE_NAMES]
     y_val = val_df["burnout_risk"]
 
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42, stratify=y)
+    x_train, x_test, y_train, y_test = train_test_split(
+        x, y, test_size=0.2, random_state=42, stratify=y
+    )
 
     models = {
         "DecisionTree": DecisionTreeClassifier(random_state=42),
@@ -93,21 +97,27 @@ def train():
     for name, model in models.items():
         # Cross-validation on synthetic training distribution
         scores = cross_val_score(model, x, y, cv=cv, scoring="accuracy")
-        logger.info(f"{name}: 5-fold cross-validation accuracy = {scores.mean():.2%} ± {scores.std():.2%}")
+        logger.info(
+            f"{name}: 5-fold cross-validation accuracy = {scores.mean():.2%} ± {scores.std():.2%}"
+        )
 
         model.fit(x_train, y_train)
 
         # Synthetic holdout evaluation
         predictions = model.predict(x_test)
         accuracy = accuracy_score(y_test, predictions)
-        report = classification_report(y_test, predictions, output_dict=True, zero_division=0)
+        report = classification_report(
+            y_test, predictions, output_dict=True, zero_division=0
+        )
         logger.info(f"{name} holdout set accuracy: {accuracy:.2%}")
         logger.info(classification_report(y_test, predictions, zero_division=0))
 
         # Semi-real validation evaluation (independent holdout set)
         val_predictions = model.predict(x_val)
         val_accuracy = accuracy_score(y_val, val_predictions)
-        val_report = classification_report(y_val, val_predictions, output_dict=True, zero_division=0)
+        val_report = classification_report(
+            y_val, val_predictions, output_dict=True, zero_division=0
+        )
         val_cm = _build_confusion_matrix(y_val, val_predictions)
         logger.info(f"{name} semi-real validation accuracy: {val_accuracy:.2%}")
         logger.info(f"{name} semi-real validation confusion matrix: {val_cm}")
@@ -147,7 +157,11 @@ def train():
     with backup_path.open("wb") as backup_file:
         pickle.dump(payload, backup_file)
 
-    METRICS_PATH.write_text(json.dumps({"best": best_name, "accuracy": best_acc, "models": results}, indent=2))
+    METRICS_PATH.write_text(
+        json.dumps(
+            {"best": best_name, "accuracy": best_acc, "models": results}, indent=2
+        )
+    )
     META_PATH.write_text(
         json.dumps(
             {

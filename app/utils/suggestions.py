@@ -32,7 +32,6 @@ RULES = [
         "condition": lambda sleep_hours, **_: sleep_hours < 5,
         "tip": lambda **_: "DON'T: Using screens or scrolling for at least 45 minutes before attempting to sleep.",
     },
-    
     # --- Mild Sleep Insufficiency (5 <= sleep < 7 hours) ---
     {
         "condition": lambda sleep_hours, **_: 5 <= sleep_hours < 7,
@@ -42,7 +41,6 @@ RULES = [
         "condition": lambda sleep_hours, **_: 5 <= sleep_hours < 7,
         "tip": lambda **_: "DON'T: Eating heavy meals or doing high-intensity workouts late in the evening.",
     },
-    
     # --- High Stress (>= 4) ---
     {
         "condition": lambda stress_level, **_: stress_level >= 4,
@@ -60,7 +58,6 @@ RULES = [
         "condition": lambda stress_level, **_: stress_level >= 4,
         "tip": lambda **_: "DON'T: Accepting new responsibilities today. Practice saying no gently.",
     },
-    
     # --- Moderate Stress (3) ---
     {
         "condition": lambda stress_level, **_: stress_level == 3,
@@ -70,7 +67,6 @@ RULES = [
         "condition": lambda stress_level, **_: stress_level == 3,
         "tip": lambda **_: "DON'T: Drinking extra coffee or energy drinks; switch to water or herbal tea.",
     },
-
     # --- Isolation / Low Social Contact (social == 1) ---
     {
         "condition": lambda social_interaction, **_: social_interaction == 1,
@@ -80,7 +76,6 @@ RULES = [
         "condition": lambda social_interaction, **_: social_interaction == 1,
         "tip": lambda **_: "DON'T: Isolating yourself completely; even a short chat with a neighbor helps.",
     },
-
     # --- No Physical Activity ---
     {
         "condition": lambda activity_done, **_: not activity_done,
@@ -90,7 +85,6 @@ RULES = [
         "condition": lambda activity_done, **_: not activity_done,
         "tip": lambda **_: "DON'T: Sitting for more than 90 consecutive minutes. Stand up and stretch.",
     },
-
     # --- High Burnout Risk ---
     {
         "condition": lambda burnout_risk, **_: burnout_risk == BurnoutRisk.HIGH,
@@ -110,9 +104,8 @@ RULES = [
     },
     {
         "condition": lambda burnout_risk, **_: burnout_risk == BurnoutRisk.HIGH,
-        "tip": lambda **_: f"DO: If you feel overwhelmed, seek guidance from a doctor or counselor. DayTone is not medical advice.",
+        "tip": lambda **_: "DO: If you feel overwhelmed, seek guidance from a doctor or counselor. DayTone is not medical advice.",
     },
-
     # --- Medium Burnout Risk ---
     {
         "condition": lambda burnout_risk, **_: burnout_risk == BurnoutRisk.MEDIUM,
@@ -122,24 +115,26 @@ RULES = [
         "condition": lambda burnout_risk, **_: burnout_risk == BurnoutRisk.MEDIUM,
         "tip": lambda **_: "DON'T: Packing your to-do list today; limit your focus to 3 key priorities.",
     },
-
     # --- Compound Condition: High Stress & Sleep Deprivation ---
     {
-        "condition": lambda stress_level, sleep_hours, **_: stress_level >= 4 and sleep_hours < 5,
+        "condition": lambda stress_level, sleep_hours, **_: stress_level >= 4
+        and sleep_hours < 5,
         "tip": lambda **_: "DO: Dedicate 10 minutes to progressive muscle relaxation before bed to calm your mind.",
     },
     {
-        "condition": lambda stress_level, sleep_hours, **_: stress_level >= 4 and sleep_hours < 5,
+        "condition": lambda stress_level, sleep_hours, **_: stress_level >= 4
+        and sleep_hours < 5,
         "tip": lambda **_: "DON'T: Working late or using high-sugar snacks to push through your tiredness.",
     },
-
     # --- Compound Condition: High Stress & No Activity ---
     {
-        "condition": lambda stress_level, activity_done, **_: stress_level >= 4 and not activity_done,
+        "condition": lambda stress_level, activity_done, **_: stress_level >= 4
+        and not activity_done,
         "tip": lambda **_: "DO: Take a slow, quiet walk outdoors or practice a gentle yoga sequence to release tension.",
     },
     {
-        "condition": lambda stress_level, activity_done, **_: stress_level >= 4 and not activity_done,
+        "condition": lambda stress_level, activity_done, **_: stress_level >= 4
+        and not activity_done,
         "tip": lambda **_: "DON'T: Staying indoors in a sedentary posture all day; movement is a stress reliever.",
     },
 ]
@@ -172,5 +167,5 @@ def get_suggestions(
 
     return tips or [
         "DO: Maintain your current healthy streaks and check-in daily.",
-        "DON'T: Disrupting your established wellness habits."
+        "DON'T: Disrupting your established wellness habits.",
     ]

@@ -24,7 +24,9 @@ def user_logs(user_id: int, limit: int | None = None) -> list[MoodLog]:
         )
         logs.reverse()
         return logs
-    return MoodLog.query.filter_by(user_id=user_id).order_by(MoodLog.log_date.asc()).all()
+    return (
+        MoodLog.query.filter_by(user_id=user_id).order_by(MoodLog.log_date.asc()).all()
+    )
 
 
 def current_streak(logs: list, today: date | None = None) -> int:
@@ -211,20 +213,24 @@ def compute_correlation_insight(logs: list) -> dict | None:
     if sleep_mood_r is not None and abs(sleep_mood_r) >= 0.3:
         direction = "positively" if sleep_mood_r > 0 else "inversely"
         strength_word = "strongly" if abs(sleep_mood_r) >= 0.6 else "moderately"
-        insights.append({
-            "text": f"Your sleep and mood are {strength_word} {direction} correlated (r={sleep_mood_r:+.2f}) — more sleep tends to {'lift' if sleep_mood_r > 0 else 'lower'} your mood.",
-            "strength": sleep_mood_r,
-            "type": "sleep_mood",
-        })
+        insights.append(
+            {
+                "text": f"Your sleep and mood are {strength_word} {direction} correlated (r={sleep_mood_r:+.2f}) — more sleep tends to {'lift' if sleep_mood_r > 0 else 'lower'} your mood.",
+                "strength": sleep_mood_r,
+                "type": "sleep_mood",
+            }
+        )
 
     if stress_mood_r is not None and abs(stress_mood_r) >= 0.3:
         direction = "inversely" if stress_mood_r < 0 else "positively"
         strength_word = "strongly" if abs(stress_mood_r) >= 0.6 else "moderately"
-        insights.append({
-            "text": f"Your stress and mood are {strength_word} {direction} correlated (r={stress_mood_r:+.2f}) — {'higher stress tends to lower your mood' if stress_mood_r < 0 else 'stress and mood move together'}.",
-            "strength": stress_mood_r,
-            "type": "stress_mood",
-        })
+        insights.append(
+            {
+                "text": f"Your stress and mood are {strength_word} {direction} correlated (r={stress_mood_r:+.2f}) — {'higher stress tends to lower your mood' if stress_mood_r < 0 else 'stress and mood move together'}.",
+                "strength": stress_mood_r,
+                "type": "stress_mood",
+            }
+        )
 
     if not insights:
         return None
@@ -255,13 +261,22 @@ def goal_progress(goal: "Goal", user_id: int) -> dict:
     )
 
     if not recent_logs:
-        return {"current_value": 0.0, "target_value": goal.target_value, "pct": 0, "status": "behind"}
+        return {
+            "current_value": 0.0,
+            "target_value": goal.target_value,
+            "pct": 0,
+            "status": "behind",
+        }
 
     target_type = goal.target_type
     if target_type == "sleep":
-        current_value = round(sum(log.sleep_hours for log in recent_logs) / len(recent_logs), 1)
+        current_value = round(
+            sum(log.sleep_hours for log in recent_logs) / len(recent_logs), 1
+        )
     elif target_type == "mood":
-        current_value = round(sum(log.mood_score for log in recent_logs) / len(recent_logs), 1)
+        current_value = round(
+            sum(log.mood_score for log in recent_logs) / len(recent_logs), 1
+        )
     elif target_type == "active_days":
         # Count distinct active days in the last 7 days
         cutoff = today - timedelta(days=7)
@@ -272,7 +287,9 @@ def goal_progress(goal: "Goal", user_id: int) -> dict:
         week_logs = [log for log in recent_logs if log.log_date >= cutoff]
         current_value = float(len(week_logs))
     elif target_type == "stress":
-        current_value = round(sum(log.stress_level for log in recent_logs) / len(recent_logs), 1)
+        current_value = round(
+            sum(log.stress_level for log in recent_logs) / len(recent_logs), 1
+        )
     else:
         current_value = 0.0
 
@@ -287,7 +304,11 @@ def goal_progress(goal: "Goal", user_id: int) -> dict:
             pct = max(0, round((5 - current_value) / (5 - goal.target_value) * 100))
             status = "behind"
     else:
-        pct = min(100, round(current_value / goal.target_value * 100)) if goal.target_value > 0 else 0
+        pct = (
+            min(100, round(current_value / goal.target_value * 100))
+            if goal.target_value > 0
+            else 0
+        )
         if pct >= 100:
             status = "achieved"
         elif pct >= 70:
@@ -308,19 +329,25 @@ def dashboard_data(user_id: int) -> dict:
     """Compile aggregated analytics metrics for the user's dashboard view."""
     logs = user_logs(user_id, limit=30)
     latest = logs[-1] if logs else None
-    distribution = {risk: count for risk, count in db_risk_distribution(user_id=user_id, limit=30)}
+    distribution = {
+        risk: count for risk, count in db_risk_distribution(user_id=user_id, limit=30)
+    }
     avg_mood = round(sum(log.mood_score for log in logs) / len(logs), 2) if logs else 0
-    avg_sleep = round(sum(log.sleep_hours for log in logs) / len(logs), 2) if logs else 0
-    avg_stress = round(sum(log.stress_level for log in logs) / len(logs), 2) if logs else 0
+    avg_sleep = (
+        round(sum(log.sleep_hours for log in logs) / len(logs), 2) if logs else 0
+    )
+    avg_stress = (
+        round(sum(log.stress_level for log in logs) / len(logs), 2) if logs else 0
+    )
     streak_count = current_streak(logs)
 
     # Compute burnout prediction drivers from the latest log's BurnoutHistory
     drivers = []
     if latest:
-        bh = BurnoutHistory.query.filter_by(log_id=latest.id).order_by(BurnoutHistory.predicted_at.desc()).first()
         # drivers are regenerated at prediction time; fetch from the latest history record
         # (they are not stored — we regenerate them here from the stored features)
         from app.ml.predictor import explain_prediction
+
         synthetic_features = {
             "mood_score": latest.mood_score,
             "sleep_hours": latest.sleep_hours,
@@ -331,7 +358,9 @@ def dashboard_data(user_id: int) -> dict:
             "avg_mood_7d": avg_mood,
             "avg_stress_7d": avg_stress,
             "avg_sleep_7d": avg_sleep,
-            "consecutive_bad_days": sum(1 for log in reversed(logs) if log.mood_score <= 2),
+            "consecutive_bad_days": sum(
+                1 for log in reversed(logs) if log.mood_score <= 2
+            ),
             "mood_variability": 0.0,
             "is_weekend": 1 if latest.log_date.weekday() >= 5 else 0,
         }
@@ -340,7 +369,11 @@ def dashboard_data(user_id: int) -> dict:
     # Latest burnout history entry for the latest log
     latest_history = None
     if latest:
-        latest_history = BurnoutHistory.query.filter_by(log_id=latest.id).order_by(BurnoutHistory.predicted_at.desc()).first()
+        latest_history = (
+            BurnoutHistory.query.filter_by(log_id=latest.id)
+            .order_by(BurnoutHistory.predicted_at.desc())
+            .first()
+        )
 
     return {
         "latest": latest,
@@ -380,12 +413,26 @@ def heatmap_data(user_id, year=None):
     start = date(year, 1, 1)
     end = date(year, 12, 31)
     logs = (
-        MoodLog.query.with_entities(MoodLog.id, MoodLog.log_date, MoodLog.mood_score, MoodLog.burnout_risk)
-        .filter(MoodLog.user_id == user_id, MoodLog.log_date >= start, MoodLog.log_date <= end)
+        MoodLog.query.with_entities(
+            MoodLog.id, MoodLog.log_date, MoodLog.mood_score, MoodLog.burnout_risk
+        )
+        .filter(
+            MoodLog.user_id == user_id,
+            MoodLog.log_date >= start,
+            MoodLog.log_date <= end,
+        )
         .order_by(MoodLog.log_date.asc())
         .all()
     )
-    return [{"id": log.id, "date": log.log_date.isoformat(), "mood": log.mood_score, "risk": log.burnout_risk} for log in logs]
+    return [
+        {
+            "id": log.id,
+            "date": log.log_date.isoformat(),
+            "mood": log.mood_score,
+            "risk": log.burnout_risk,
+        }
+        for log in logs
+    ]
 
 
 def recent_suggestions(user_id: int, log_limit: int = 3) -> list[str]:
@@ -424,30 +471,50 @@ def db_risk_distribution(user_id=None, limit=None):
 def platform_stats():
     cutoff = date.today() - timedelta(days=7)
     total_users = User.query.count()
-    active_users = MoodLog.query.with_entities(MoodLog.user_id).filter(MoodLog.log_date >= cutoff).distinct().count()
+    active_users = (
+        MoodLog.query.with_entities(MoodLog.user_id)
+        .filter(MoodLog.log_date >= cutoff)
+        .distinct()
+        .count()
+    )
     avg_mood = MoodLog.query.with_entities(func.avg(MoodLog.mood_score)).scalar() or 0
     avg_sleep = MoodLog.query.with_entities(func.avg(MoodLog.sleep_hours)).scalar() or 0
 
     latest = (
-        MoodLog.query.with_entities(MoodLog.user_id, func.max(MoodLog.log_date).label("latest_date"))
+        MoodLog.query.with_entities(
+            MoodLog.user_id, func.max(MoodLog.log_date).label("latest_date")
+        )
         .group_by(MoodLog.user_id)
         .subquery()
     )
     distribution = {
         risk: count
-        for risk, count in MoodLog.query.with_entities(MoodLog.burnout_risk, func.count(MoodLog.id))
+        for risk, count in MoodLog.query.with_entities(
+            MoodLog.burnout_risk, func.count(MoodLog.id)
+        )
         .join(
             latest,
-            and_(MoodLog.user_id == latest.c.user_id, MoodLog.log_date == latest.c.latest_date),
+            and_(
+                MoodLog.user_id == latest.c.user_id,
+                MoodLog.log_date == latest.c.latest_date,
+            ),
         )
         .group_by(MoodLog.burnout_risk)
         .all()
     }
 
     # Feedback accuracy rate across all users
-    total_feedback = BurnoutHistory.query.filter(BurnoutHistory.is_accurate.isnot(None)).count()
-    accurate_feedback = BurnoutHistory.query.filter(BurnoutHistory.is_accurate == True).count()  # noqa: E712
-    feedback_accuracy = round(accurate_feedback / total_feedback * 100, 1) if total_feedback > 0 else None
+    total_feedback = BurnoutHistory.query.filter(
+        BurnoutHistory.is_accurate.isnot(None)
+    ).count()
+    accurate_feedback = BurnoutHistory.query.filter(
+        BurnoutHistory.is_accurate.is_(True)
+    ).count()
+    feedback_accuracy = (
+        round(accurate_feedback / total_feedback * 100, 1)
+        if total_feedback > 0
+        else None
+    )
 
     return {
         "total_users": total_users,

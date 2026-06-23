@@ -65,7 +65,9 @@ def get_variant(user_id: int, experiment: str) -> str:
     return variants[bucket]
 
 
-def log_conversion(user_id: int, experiment: str, event: str, variant: str | None = None) -> None:
+def log_conversion(
+    user_id: int, experiment: str, event: str, variant: str | None = None
+) -> None:
     """Log a conversion event for offline analysis.
 
     Writes a structured JSON log line that can be scraped by any log

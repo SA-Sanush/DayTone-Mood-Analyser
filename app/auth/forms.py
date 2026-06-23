@@ -1,6 +1,20 @@
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, IntegerField, PasswordField, SelectField, StringField, SubmitField
-from wtforms.validators import DataRequired, Email, EqualTo, Length, NumberRange, Optional
+from wtforms import (
+    BooleanField,
+    IntegerField,
+    PasswordField,
+    SelectField,
+    StringField,
+    SubmitField,
+)
+from wtforms.validators import (
+    DataRequired,
+    Email,
+    EqualTo,
+    Length,
+    NumberRange,
+    Optional,
+)
 
 
 class RegistrationForm(FlaskForm):
@@ -13,16 +27,28 @@ class RegistrationForm(FlaskForm):
     age = IntegerField("Age", validators=[Optional(), NumberRange(min=10, max=100)])
     gender = SelectField(
         "Gender",
-        choices=[("", "Prefer not to say"), ("female", "Female"), ("male", "Male"), ("other", "Other")],
+        choices=[
+            ("", "Prefer not to say"),
+            ("female", "Female"),
+            ("male", "Male"),
+            ("other", "Other"),
+        ],
         validators=[Optional()],
     )
     occupation = StringField("Occupation", validators=[Optional(), Length(max=100)])
     preferred_activity = SelectField(
         "Preferred Activity",
-        choices=[("Walk", "Walk"), ("Yoga", "Yoga"), ("Music", "Music"), ("Reading", "Reading")],
+        choices=[
+            ("Walk", "Walk"),
+            ("Yoga", "Yoga"),
+            ("Music", "Music"),
+            ("Reading", "Reading"),
+        ],
     )
     daily_reminder = BooleanField("Send daily check-in email reminder")
-    admin_code = StringField("Admin Invite Code", validators=[Optional(), Length(max=100)])
+    admin_code = StringField(
+        "Admin Invite Code", validators=[Optional(), Length(max=100)]
+    )
     submit = SubmitField("Create account")
 
 

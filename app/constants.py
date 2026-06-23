@@ -3,4 +3,3 @@ class BurnoutRisk:
     MEDIUM = "Medium"
     HIGH = "High"
     ALL = {LOW, MEDIUM, HIGH}
-
