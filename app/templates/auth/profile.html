@@ -39,7 +39,7 @@
         <div class="settings-field">
           <label for="preferred_activity" class="settings-label">Preferred Wellness Activity</label>
           <select name="preferred_activity" id="preferred_activity" class="form-select dt-select">
-            {% for activity in ["Walk", "Yoga", "Music", "Reading"] %}
+            {% for activity in ["Walk", "Run", "Cycle", "Yoga", "Gym", "Swim", "Music", "Reading"] %}
             <option value="{{ activity }}" {% if profile.preferred_activity == activity %}selected{% endif %}>{{ activity }}</option>
             {% endfor %}
           </select>

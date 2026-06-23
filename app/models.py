@@ -144,7 +144,7 @@ class UserProfile(db.Model):
     gender = db.Column(db.String(20))
     occupation = db.Column(db.String(100))
     preferred_activity = db.Column(
-        db.Enum("Walk", "Yoga", "Music", "Reading", name="activity_enum"),
+        db.String(50),
         nullable=False,
         default="Walk",
     )

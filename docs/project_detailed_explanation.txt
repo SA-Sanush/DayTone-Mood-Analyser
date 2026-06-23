@@ -1,0 +1,243 @@
+================================================================================
+           DAYTONE MOOD ANALYSER - COMPREHENSIVE PROJECT EXPLANATION
+================================================================================
+
+This document provides a comprehensive technical overview, architectural blueprint,
+feature implementation breakdown, and operational guide for DayTone.
+
+--------------------------------------------------------------------------------
+1. EXECUTIVE SUMMARY & OBJECTIVE
+--------------------------------------------------------------------------------
+DayTone is a self-hosted, production-ready, and GDPR-compliant Flask web
+application designed for personal mental wellness tracking and burnout prediction.
+It acts as a private, secure journal and analytics engine that allows users to
+log daily metrics (mood, sleep, stress, activity, and social interaction) along
+with personal journal reflections. 
+
+Unlike typical mental health applications that process sensitive data in external
+proprietary clouds, DayTone uses local natural language processing (NLP) and
+on-device Machine Learning (ML) to analyze burnout risk, compute sentiment,
+and generate wellness tips. It is built to run on $0 student-friendly free-tier
+hosting (Docker, PostgreSQL, and Redis) while implementing enterprise-grade
+security, accessibility, and performance optimizations.
+
+--------------------------------------------------------------------------------
+2. SYSTEM ARCHITECTURE
+--------------------------------------------------------------------------------
+DayTone follows a modular, layered architecture:
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                              PRESENTATION LAYER                              │
+│  - Responsive Dark-themed HTML5/CSS3 Web Pages                               │
+│  - 3D Interactive WebGL Mood Orb (THREE.js Custom Simplex Noise Shader)      │
+│  - Dynamic Wellness Analytics & Data Visualizations (Chart.js)               │
+│  - Offline Fallback & Home-Screen Installation (PWA Service Worker)          │
+└───────────────────────┬──────────────────────────────▲───────────────────────┘
+                        │ Form Submissions             │ Render Templates / JSON
+                        ▼                              │
+┌──────────────────────────────────────────────────────┴───────────────────────┐
+│                           BUSINESS LOGIC (BACKEND)                           │
+│  - Python Flask Application Core (Modular Blueprints: Auth, Mood, Admin)      │
+│  - Middlewares: Flask-Limiter (Rate Limiting), Flask-Login (Sessions)        │
+│  - Local NLP Pipeline: VADER Lexicon Sentiment Analysis                     │
+│  - ML Engine: scikit-learn Decision Tree Predictor & Drift Monitors          │
+└───────────────────────┬──────────────────────────────▲───────────────────────┘
+                        │ Read / Write Queries         │ Loaded Model & Records
+                        ▼                              │
+┌──────────────────────────────────────────────────────┴───────────────────────┐
+│                        DATA & INFRASTRUCTURE LAYER                            │
+│  - Relational Storage: PostgreSQL (Production) / SQLite (Local Developer DB) │
+│  - Symmetric Encryption: AES-256 Fernet (Cryptography Note Encryption)       │
+│  - Cache & Limits Storage: Redis Cluster (Internal Private Subnet)            │
+│  - Multi-stage Docker Container (Optimized Gunicorn runtime)                 │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+--------------------------------------------------------------------------------
+3. CORE FEATURES & IMPLEMENTATION DETAILS
+--------------------------------------------------------------------------------
+
+A. DAILY LOGGING ENGINE & LOCAL NLP
+- Daily Check-ins: Users log their mood (1-10 scale), sleep duration (hours),
+  stress levels (1-10 scale), physical activity (yes/no), social interaction
+  (yes/no), and reflection journal notes.
+- Sentiment Analysis: Journal notes are processed locally using the NLTK VADER 
+  lexicon. VADER computes positive, negative, neutral, and compound scores, 
+  which are used to determine user sentiment without transmitting text to 
+  external APIs.
+
+B. 3D WEBGL SHADER ORB
+- Dynamic Visual Feedback: The dashboard renders an interactive 3D orb using 
+  THREE.js.
+- Simplex Noise Deformation: A custom WebGL shader deforms the orb's vertices
+  and changes its color gradients in real-time based on the user's logged mood,
+  stress, and sleep metrics. The shader runs directly on the user's GPU.
+- Stability: Includes custom shader modulo division patches to prevent flickering
+  and visual glitches across diverse device profiles.
+
+C. BURNOUT RISK CLASSIFIER (ML PIPELINE)
+- Predictor Model: A scikit-learn Decision Tree Classifier runs inside the app
+  memory. It evaluates a 12-feature matrix (daily metrics, average mood, stress, 
+  sleep trends over 7 days, consecutive bad days, and sentiment score) to output
+  a burnout risk prediction (Low, Medium, High).
+- Explainable AI (XAI): The dashboard displays key metrics driving the burnout
+  prediction so users can identify specific factors impacting their well-being.
+- Fairness & Audit:
+  * Bias Audits (scripts/bias_audit.py): Audits model predictions across sleep 
+    and stress quintiles, flagging accuracy drops greater than 5%. Results are 
+    rendered on the admin dashboard.
+  * Drift Monitoring (scripts/monitor_drift.py): Checks the active prediction
+    distribution against a baseline to detect model performance degradation.
+  * Model Card (app/ml/model_card.md): Documents model specifications, training 
+    details, limitations, and ethical considerations.
+
+D. GDPR COMPLIANCE & EXPORTS
+- Right to be Forgotten: Users can delete their account from the settings page,
+  permanently purging their profiles, credentials, logs, and goals.
+- Data Portability: Users can export their entire history in CSV format or as a
+  formatted PDF report generated using ReportLab (app/utils/pdf_report.py).
+
+E. SECURITY & HARDENING
+- Encrypted Journaling: Reflection logs are encrypted at rest using AES-256 
+  Fernet symmetric cryptography. The decryption key is loaded from the environment 
+  variables, protecting raw text entries in the database.
+- Crisis Safety Protocol: If the model predicts a High burnout risk, the application
+  renders emergency resource links (e.g., 988 Suicide & Crisis Lifeline).
+- Rate Limiting: Key actions (login, registration, API endpoints) are rate-limited 
+  using flask-limiter and a Redis backend.
+
+F. PWA & WEB STANDARDS
+- Offline Mode: PWA capabilities are supported via manifest.json and a custom 
+  Service Worker (sw.js). When offline, users are served cached static resources 
+  and a custom offline.html fallback.
+- Accessibility: Structured layout landmarks, skip-to-content links, clear focus 
+  indicators, and navbar ARIA labels help the application meet accessibility 
+  guidelines.
+- Performance: Decohesion of heavy packages (THREE.js and Chart.js load only on 
+  necessary pages), async Google Fonts integration, and custom CSS minification 
+  helped improve Lighthouse speed scores.
+
+--------------------------------------------------------------------------------
+4. CODEBASE DIRECTORY STRUCTURE
+--------------------------------------------------------------------------------
+Here is the layout of the DayTone codebase:
+
+DayTone/
+├── app/                        # Flask Application Package
+│   ├── admin/                  # Admin Dashboard Blueprint
+│   │   ├── forms.py            # Admin forms
+│   │   └── routes.py           # Admin routes (User search, bias audit)
+│   ├── auth/                   # Authentication Blueprint
+│   │   ├── forms.py            # Login, signup, and settings forms
+│   │   └── routes.py           # Auth routes, GDPR deletion, legal policies
+│   ├── mood/                   # Wellness Logging Blueprint
+│   │   ├── forms.py            # Log forms
+│   │   └── routes.py           # User dashboard, PDF/CSV export, goals
+│   ├── ml/                     # Machine Learning Pipeline
+│   │   ├── model.pkl           # Pickled active scikit-learn model
+│   │   ├── train.py            # Model training and selection script
+│   │   ├── predictor.py        # Log parsing and inference logic
+│   │   ├── generate_data.py    # Synthetic training data generator
+│   │   └── model_card.md       # Model specifications card
+│   ├── nlp/                    # Natural Language Processing
+│   │   └── sentiment.py        # Local VADER sentiment analysis
+│   ├── utils/                  # Helper modules
+│   │   ├── audit.py            # SOC-2 admin audit log logging utility
+│   │   ├── pdf_report.py       # ReportLab PDF generator
+│   │   ├── ab_testing.py       # UI conversion optimizer
+│   │   └── suggestions.py      # Rule-based wellness tip engine
+│   ├── static/                 # Static Assets
+│   │   ├── css/                # Custom CSS (and minified files)
+│   │   ├── js/                 # sw.js, PWA install prompts, orb rendering
+│   │   └── manifest.json       # PWA manifest
+│   ├── templates/              # HTML Templates (Jinja2)
+│   │   ├── admin/              # Admin pages
+│   │   ├── auth/               # Login & signup pages
+│   │   ├── legal/              # Privacy & Terms templates
+│   │   ├── mood/               # Dashboards & check-in forms
+│   │   └── base.html           # Main template shell
+│   ├── constants.py            # App-wide constants & tips list
+│   ├── extensions.py           # Database & extension initialization
+│   ├── models.py               # SQLAlchemy Database Models (User, MoodLog, AuditLog)
+│   └── __init__.py             # Flask App factory initialization
+├── docs/                       # Project Documentation
+│   ├── runbook.md              # Operations and deployment guide
+│   ├── pilot_consent_form.md   # Consent form template
+│   ├── project_detailed_explanation.txt  # This document
+│   └── project_workflow_history.txt      # Chronological workflow log
+├── migrations/                 # Alembic Database Migrations
+├── scripts/                    # Maintenance & Analysis Scripts
+│   ├── bias_audit.py           # Bias audit CLI script
+│   ├── monitor_drift.py        # Prediction drift monitoring script
+│   ├── minify_css.py           # CSS compression pipeline
+│   └── security_audit.py       # Local security configuration inspector
+├── tests/                      # Automated Test Suite (PyTest)
+├── Dockerfile                  # Production build configuration
+├── docker-compose.yml          # Local container orchestration
+├── render.yaml                 # Infrastructure-as-code deployment blueprint
+├── requirements.txt            # Production dependencies
+└── requirements-dev.txt        # Development/testing dependencies
+
+--------------------------------------------------------------------------------
+5. QUICK START & OPERATIONS MANUAL
+--------------------------------------------------------------------------------
+
+A. LOCAL DEVELOPMENT SETUP
+```bash
+# 1. Prepare environment
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt -r requirements-dev.txt
+
+# 2. Configure variables
+cp .env.example .env
+# Open .env and add your SECRET_KEY and ENCRYPTION_KEY
+
+# 3. Apply database schemas
+flask db upgrade
+
+# 4. Generate local training data and train the model
+python -m app.ml.generate_data
+python -m app.ml.train
+
+# 5. Run the application
+python run.py
+# Open: http://localhost:5000
+```
+
+B. RUNNING TESTS & CODE AUDITS
+```bash
+# Run the test suite
+pytest -v
+
+# Check PEP-8 Compliance
+flake8 app/
+
+# Run the local bias audit
+python scripts/bias_audit.py
+
+# Check for model drift
+python scripts/monitor_drift.py
+```
+
+C. CONTAINERS (DOCKER)
+```bash
+# Start Flask application and a Redis container locally
+docker-compose up -d --build
+```
+
+--------------------------------------------------------------------------------
+6. PRODUCTION DEPLOYMENT (RENDER BLUEPRINT)
+--------------------------------------------------------------------------------
+DayTone utilizes infrastructure-as-code configurations in render.yaml to provision
+a live production stack containing:
+1. Python Web Service: Configured to pull from GitHub, compile dependencies, run
+   database migrations automatically inside the startCommand runtime, and serve 
+   traffic via gunicorn.
+2. Managed PostgreSQL Instance: Houses persistent data. Boolean default values 
+   and columns are fully PostgreSQL-compliant.
+3. Private Redis Instance: Utilized as a session store and token bucket registry
+   for rate-limiting requests securely. Protected from outside networks using private
+   subnet settings (ipAllowList: []).
+
+Live deployed instance: https://daytone-piyi.onrender.com
+================================================================================

@@ -40,7 +40,11 @@ class RegistrationForm(FlaskForm):
         "Preferred Activity",
         choices=[
             ("Walk", "Walk"),
+            ("Run", "Run"),
+            ("Cycle", "Cycle"),
             ("Yoga", "Yoga"),
+            ("Gym", "Gym"),
+            ("Swim", "Swim"),
             ("Music", "Music"),
             ("Reading", "Reading"),
         ],
