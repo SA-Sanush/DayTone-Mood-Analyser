@@ -2,7 +2,8 @@ services:
   - type: web
     name: daytone
     runtime: python
-    buildCommand: pip install -r requirements.txt && flask db upgrade
+    buildCommand: pip install -r requirements.txt
+    preDeployCommand: flask db upgrade
     startCommand: gunicorn "app:create_app()" --workers 2 --threads 2 --timeout 120 --bind 0.0.0.0:$PORT --preload
     plan: free
     healthCheckPath: /health
