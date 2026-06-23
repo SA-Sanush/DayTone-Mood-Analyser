@@ -9,7 +9,7 @@
  * Update flow: bump CACHE_VERSION to force refresh on next visit.
  */
 
-const CACHE_VERSION = 'daytone-v1';
+const CACHE_VERSION = 'daytone-v2';
 const OFFLINE_URL   = '/offline';
 
 // Static assets to pre-cache on install
@@ -86,7 +86,7 @@ function isStaticAsset(pathname) {
 }
 
 async function cacheFirst(request) {
-  const cached = await caches.match(request);
+  const cached = await caches.match(request, { ignoreSearch: true });
   if (cached) return cached;
 
   try {
@@ -110,7 +110,7 @@ async function networkFirst(request) {
     }
     return response;
   } catch {
-    const cached = await caches.match(request);
+    const cached = await caches.match(request, { ignoreSearch: true });
     return cached || new Response('Offline', { status: 503 });
   }
 }
@@ -124,7 +124,7 @@ async function networkFirstWithOfflineFallback(request) {
     }
     return response;
   } catch {
-    const cached = await caches.match(request);
+    const cached = await caches.match(request, { ignoreSearch: true });
     if (cached) return cached;
 
     // Return the offline page
