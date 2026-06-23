@@ -3,13 +3,13 @@
 {% block content %}
 <style>
   .error-ring {
-    outline: 2px solid #ef4444 !important;
+    outline: 2px solid var(--dt-bad, #c2413d) !important;
     outline-offset: 4px;
     border-radius: 12px;
     animation: fieldShake 0.4s ease;
   }
   .field-error-msg {
-    color: #ef4444;
+    color: var(--dt-bad, #c2413d);
     font-size: 0.82rem;
     margin-top: 0.4rem;
     display: flex;
@@ -24,6 +24,8 @@
     80% { transform: translateX(4px); }
   }
   .mood-selection-grid.error-ring { border-radius: 14px; }
+  .stress-btn-group.error-ring { border-radius: 8px; }
+  .social-btn-group.error-ring { border-radius: 8px; }
 </style>
 <form method="post" id="checkinForm" class="panel form-panel elevated-panel checkin-panel" novalidate>
   {{ form.hidden_tag() }}
@@ -77,7 +79,7 @@
         <span id="sleep_value" class="text-primary fw-extrabold" style="font-size: 0.9rem;">8.0 hrs</span>
       </div>
       <input type="range" class="form-range" id="sleep_slider" min="3" max="12" step="0.5" value="8">
-      {{ form.sleep_hours(class="d-none") }}
+      {{ form.sleep_hours(class="d-none", required=False) }}
       {% if form.sleep_hours.errors %}
         <div class="text-danger small mt-2">
           {% for error in form.sleep_hours.errors %}
@@ -95,7 +97,7 @@
         <button type="button" class="option-btn" data-value="4" title="High">4</button>
         <button type="button" class="option-btn" data-value="5" title="Extreme">5</button>
       </div>
-      {{ form.stress_level(class="d-none") }}
+      {{ form.stress_level(class="d-none", required=False) }}
       {% if form.stress_level.errors %}
         <div class="field-error-msg">
           <span>⚠</span>
@@ -113,7 +115,7 @@
         <button type="button" class="option-btn" data-value="2" title="Group">👥 Group</button>
         <button type="button" class="option-btn" data-value="3" title="Social">🗣️ Social</button>
       </div>
-      {{ form.social_interaction(class="d-none") }}
+      {{ form.social_interaction(class="d-none", required=False) }}
       {% if form.social_interaction.errors %}
         <div class="field-error-msg">
           <span>⚠</span>
@@ -185,23 +187,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Check mood
       if (!moodInput || !moodInput.value || moodInput.value === '') {
-        markError('mood-field-container', 'mood-error');
+        markError('.mood-selection-grid', 'mood-error');
       } else {
-        clearError('mood-field-container', 'mood-error');
+        clearError('.mood-selection-grid', 'mood-error');
       }
 
       // Check stress
       if (!stressInput || !stressInput.value || stressInput.value === '') {
-        markError('stress-field-container', 'stress-error');
+        markError('.stress-btn-group', 'stress-error');
       } else {
-        clearError('stress-field-container', 'stress-error');
+        clearError('.stress-btn-group', 'stress-error');
       }
 
       // Check social
       if (!socialInput || !socialInput.value || socialInput.value === '') {
-        markError('social-field-container', 'social-error');
+        markError('.social-btn-group', 'social-error');
       } else {
-        clearError('social-field-container', 'social-error');
+        clearError('.social-btn-group', 'social-error');
       }
 
       if (hasError) {
