@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Privacy Policy — DayTone{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:780px;">
+
+  <div class="d-flex align-items-center gap-2 mb-2">
+    <i data-lucide="shield" style="width:22px;height:22px;color:var(--dt-primary)"></i>
+    <h1 style="font-size:1.6rem;font-weight:800;margin:0;">Privacy Policy</h1>
+  </div>
+  <p class="text-secondary mb-5" style="font-size:0.88rem;">
+    Effective date: <strong>June 2026</strong> &mdash;
+    Last updated: <strong>June 2026</strong>
+  </p>
+
+  <div class="panel elevated-panel p-4 mb-4">
+    <p style="font-size:0.95rem;line-height:1.75;margin:0;">
+      DayTone is a personal wellness tracking tool built for academic demonstration and individual use.
+      We take your privacy seriously. This policy explains what data we collect, how we use it, and
+      what rights you have.
+    </p>
+  </div>
+
+  <section class="mb-4">
+    <h2 style="font-size:1.1rem;font-weight:700;">1. What data we collect</h2>
+    <div class="panel p-3">
+      <ul style="line-height:1.9;margin:0;padding-left:1.25rem;">
+        <li><strong>Account information:</strong> your name and email address (required to create an account).</li>
+        <li><strong>Profile information:</strong> optional age, gender, and occupation you provide during registration.</li>
+        <li><strong>Daily mood logs:</strong> mood score, sleep hours, stress level, social interaction, physical activity, and an optional journal note (all self-reported).</li>
+        <li><strong>Sentiment score:</strong> a numeric sentiment value derived locally from your journal note using VADER — no text is transmitted externally.</li>
+        <li><strong>Burnout predictions:</strong> the AI-generated Low / Medium / High risk classification and associated confidence score.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="mb-4">
+    <h2 style="font-size:1.1rem;font-weight:700;">2. How your data is stored</h2>
+    <div class="panel p-3">
+      <ul style="line-height:1.9;margin:0;padding-left:1.25rem;">
+        <li>All data is stored in a local database (SQLite for development, PostgreSQL for production deployments).</li>
+        <li>Passwords are hashed using <strong>scrypt</strong> — we never store plaintext passwords.</li>
+        <li>Journal notes are <strong>encrypted at rest</strong> using Fernet symmetric encryption when the <code>ENCRYPTION_KEY</code> environment variable is configured.</li>
+        <li>Sessions are secured with HTTP-only cookies and CSRF protection on all state-changing forms.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="mb-4">
+    <h2 style="font-size:1.1rem;font-weight:700;">3. How we use your data</h2>
+    <div class="panel p-3">
+      <ul style="line-height:1.9;margin:0;padding-left:1.25rem;">
+        <li>To provide your personal dashboard, charts, and burnout risk predictions.</li>
+        <li>To generate personalised wellness suggestions based on your log history.</li>
+        <li>To send optional daily check-in reminder emails — <strong>only if you opt in</strong> during registration or in Settings.</li>
+        <li>To allow administrators to monitor platform health and assist with technical issues.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="mb-4">
+    <h2 style="font-size:1.1rem;font-weight:700;">4. What we do not do</h2>
+    <div class="panel p-3">
+      <ul style="line-height:1.9;margin:0;padding-left:1.25rem;">
+        <li>We <strong>never sell</strong> your personal data to third parties.</li>
+        <li>We <strong>do not share</strong> your individual data with advertisers, research firms, or any external organisation.</li>
+        <li>We <strong>do not use</strong> your data to train external AI models.</li>
+        <li>We <strong>do not process</strong> special-category health data — DayTone is a self-tracking tool, not a medical service.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="mb-4">
+    <h2 style="font-size:1.1rem;font-weight:700;">5. Your rights</h2>
+    <div class="panel p-3">
+      <ul style="line-height:1.9;margin:0;padding-left:1.25rem;">
+        <li><strong>Access &amp; portability:</strong> Export all your data as a JSON file from <a href="{{ url_for('auth.profile') }}">Settings → Export data</a>.</li>
+        <li><strong>Rectification:</strong> Edit any mood log from the History page, or update your profile in Settings.</li>
+        <li><strong>Erasure (Right to be Forgotten):</strong> Delete your account and all associated data permanently from <a href="{{ url_for('auth.profile') }}">Settings → Delete account</a>. This action is irreversible.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="mb-4">
+    <h2 style="font-size:1.1rem;font-weight:700;">6. Data retention</h2>
+    <div class="panel p-3">
+      <p style="margin:0;line-height:1.75;">
+        Your data is retained for as long as your account is active. When you delete your account,
+        all personal data (mood logs, notes, goals, burnout history, and profile) is permanently
+        removed from the database. Backup files, if any exist, are overwritten on the next scheduled cycle.
+      </p>
+    </div>
+  </section>
+
+  <section class="mb-4">
+    <h2 style="font-size:1.1rem;font-weight:700;">7. Not a medical service</h2>
+    <div class="panel p-3" style="border-left:4px solid var(--dt-accent,#f59e0b);">
+      <p style="margin:0;line-height:1.75;">
+        DayTone is an informational wellness tool. AI-generated burnout risk predictions are
+        <strong>not</strong> medical diagnoses. They should not replace professional mental health
+        support. If you are in distress, please reach out to a qualified professional or a crisis
+        helpline.
+      </p>
+    </div>
+  </section>
+
+  <section class="mb-5">
+    <h2 style="font-size:1.1rem;font-weight:700;">8. Contact</h2>
+    <div class="panel p-3">
+      <p style="margin:0;line-height:1.75;">
+        Questions about this policy? Email us at
+        <a href="mailto:privacy@daytone.example">privacy@daytone.example</a>.
+      </p>
+    </div>
+  </section>
+
+  <div class="d-flex gap-3 flex-wrap">
+    <a href="{{ url_for('auth.terms') }}" class="btn btn-outline-primary">
+      <i data-lucide="file-text"></i> Terms of Service
+    </a>
+    {% if current_user.is_authenticated %}
+    <a href="{{ url_for('mood.dashboard') }}" class="btn btn-glass">
+      <i data-lucide="layout-dashboard"></i> Dashboard
+    </a>
+    {% else %}
+    <a href="{{ url_for('auth.login') }}" class="btn btn-glass">
+      <i data-lucide="log-in"></i> Sign in
+    </a>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

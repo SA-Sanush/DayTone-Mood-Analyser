@@ -3,14 +3,41 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="DayTone - Track your mood, sleep, stress, and burnout risk with scikit-learn ML analytics.">
   <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1e293b" media="(prefers-color-scheme: dark)">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DayTone">
   <title>{% block title %}DayTone{% endblock %}</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='icons/icon-32.png') }}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='icons/icon-16.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-180.png') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
+  <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+  </noscript>
+  <script>
+    (function () {
+      const saved = localStorage.getItem('daytone-theme');
+      let theme = 'light';
+      if (saved === 'dark' || saved === 'light') {
+        theme = saved;
+      } else {
+        theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}?v=2.0.0">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/dark.css') }}?v=2.0.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.min.css') }}?v=2.1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dark.min.css') }}?v=2.1.0">
   <style>
     @view-transition {
       navigation: auto;
@@ -18,14 +45,15 @@
   </style>
 </head>
 <body>
+  <a href="#main-content" class="skip-to-main">Skip to main content</a>
   <div class="app-shell-bg" aria-hidden="true"></div>
-  <nav class="navbar navbar-expand-lg sticky-top app-nav">
+  <nav class="navbar navbar-expand-lg sticky-top app-nav" role="navigation" aria-label="Main navigation">
     <div class="container-fluid app-nav-inner">
       <a class="navbar-brand brand-lockup" href="{{ url_for('mood.dashboard') if current_user.is_authenticated else url_for('auth.login') }}">
         <span class="brand-mark">DT</span>
         <span>DayTone</span>
       </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-label="Toggle navigation menu">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navMenu">
@@ -39,6 +67,8 @@
           {% if current_user.is_admin %}
           <li class="nav-item"><a class="nav-link{% if request.endpoint == 'admin.dashboard' %} active{% endif %}" href="{{ url_for('admin.dashboard') }}"><i data-lucide="shield-check"></i>Admin</a></li>
           <li class="nav-item"><a class="nav-link{% if request.endpoint == 'admin.model_diagnostics' %} active{% endif %}" href="{{ url_for('admin.model_diagnostics') }}"><i data-lucide="cpu"></i>ML</a></li>
+          <li class="nav-item"><a class="nav-link{% if request.endpoint == 'admin.bias_audit' %} active{% endif %}" href="{{ url_for('admin.bias_audit') }}"><i data-lucide="scale"></i>Bias</a></li>
+          <li class="nav-item"><a class="nav-link{% if request.endpoint == 'admin.audit_log' %} active{% endif %}" href="{{ url_for('admin.audit_log') }}"><i data-lucide="scroll-text"></i>Audit</a></li>
           {% endif %}
           {% endif %}
         </ul>
@@ -56,7 +86,7 @@
       </div>
     </div>
   </nav>
-  <main class="container-fluid app-main">
+  <main class="container-fluid app-main" id="main-content" role="main">
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         {% for category, message in messages %}
@@ -69,13 +99,81 @@
     {% endwith %}
     {% block content %}{% endblock %}
   </main>
-  <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/chart.umd.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/three.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/lucide.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/darkmode.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/ambient.js') }}"></script>
-  <script>if (window.lucide) window.lucide.createIcons();</script>
+  <footer class="app-footer" role="contentinfo" aria-label="Site footer">
+    <span>&copy; 2026 DayTone &mdash; Not a medical service.</span>
+    <span class="footer-links">
+      <a href="{{ url_for('auth.contact') }}">Contact</a>
+      <a href="{{ url_for('auth.privacy') }}">Privacy Policy</a>
+      <a href="{{ url_for('auth.terms') }}">Terms of Service</a>
+    </span>
+  </footer>
+  <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/lucide.min.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/darkmode.js') }}" defer></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) window.lucide.createIcons();
+    });
+  </script>
+
+  <!-- PWA: Service Worker registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+          .catch(err => console.warn('SW registration failed:', err));
+      });
+    }
+
+    // Install prompt (A2HS banner)
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const banner = document.getElementById('pwa-install-banner');
+      if (banner) banner.classList.remove('pwa-banner-hidden');
+    });
+
+    window.addEventListener('appinstalled', () => {
+      deferredPrompt = null;
+      const banner = document.getElementById('pwa-install-banner');
+      if (banner) banner.remove();
+    });
+
+    function pwaInstall() {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+    }
+
+    function pwaDismiss() {
+      deferredPrompt = null;
+      const banner = document.getElementById('pwa-install-banner');
+      if (banner) banner.remove();
+      localStorage.setItem('pwa-dismissed', '1');
+    }
+
+    // Don't show if already dismissed
+    if (localStorage.getItem('pwa-dismissed')) {
+      document.addEventListener('DOMContentLoaded', () => {
+        const b = document.getElementById('pwa-install-banner');
+        if (b) b.remove();
+      });
+    }
+  </script>
+
   {% block scripts %}{% endblock %}
+
+  <!-- PWA Install Banner (Add to Home Screen) -->
+  <div id="pwa-install-banner" class="pwa-banner pwa-banner-hidden" role="dialog" aria-label="Install DayTone app">
+    <img src="{{ url_for('static', filename='icons/icon-48.png') }}" alt="DayTone icon" class="pwa-banner-icon">
+    <div class="pwa-banner-copy">
+      <strong>Install DayTone</strong>
+      <span>Add to your home screen for quick access</span>
+    </div>
+    <button class="btn btn-sm btn-primary pwa-banner-btn" onclick="pwaInstall()" aria-label="Install app">Install</button>
+    <button class="btn btn-sm btn-glass pwa-banner-close" onclick="pwaDismiss()" aria-label="Dismiss install prompt">✕</button>
+  </div>
 </body>
 </html>
+

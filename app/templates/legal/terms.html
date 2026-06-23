@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Terms of Service — DayTone{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:780px;">
+
+  <div class="d-flex align-items-center gap-2 mb-2">
+    <i data-lucide="file-text" style="width:22px;height:22px;color:var(--dt-primary)"></i>
+    <h1 style="font-size:1.6rem;font-weight:800;margin:0;">Terms of Service</h1>
+  </div>
+  <p class="text-secondary mb-5" style="font-size:0.88rem;">
+    Effective date: <strong>June 2026</strong> &mdash;
+    Last updated: <strong>June 2026</strong>
+  </p>
+
+  <div class="panel elevated-panel p-4 mb-4">
+    <p style="font-size:0.95rem;line-height:1.75;margin:0;">
+      Please read these Terms of Service carefully before using DayTone. By creating an account
+      or using this application, you agree to be bound by these terms.
+    </p>
+  </div>
+
+  <section class="mb-4">
+    <h2 style="font-size:1.1rem;font-weight:700;">1. What DayTone is</h2>
+    <div class="panel p-3">
+      <p style="margin:0;line-height:1.75;">
+        DayTone is a personal wellness tracking application that helps you log daily mood,
+        sleep, stress, and activity data. It uses a machine learning model to estimate burnout
+        risk and provides personalised suggestions. DayTone is built for educational and
+        individual self-monitoring purposes.
+      </p>
+    </div>
+  </section>
+
+  <section class="mb-4">
+    <h2 style="font-size:1.1rem;font-weight:700;">2. Not a medical service</h2>
+    <div class="panel p-3" style="border-left:4px solid var(--dt-accent,#f59e0b);">
+      <ul style="line-height:1.9;margin:0;padding-left:1.25rem;">
+        <li>DayTone is <strong>not</strong> a medical device, clinical service, or substitute for professional mental health care.</li>
+        <li>AI-generated burnout risk scores are informational estimates only — they are <strong>not diagnoses</strong>.</li>
+        <li>If you are experiencing a mental health crisis, please contact a qualified professional or a crisis helpline immediately.</li>
+        <li>Nothing in DayTone constitutes medical advice.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="mb-4">
+    <h2 style="font-size:1.1rem;font-weight:700;">3. Eligibility</h2>
+    <div class="panel p-3">
+      <p style="margin:0;line-height:1.75;">
+        You must be at least <strong>13 years old</strong> to use DayTone. By registering,
+        you confirm that you meet this age requirement.
+      </p>
+    </div>
+  </section>
+
+  <section class="mb-4">
+    <h2 style="font-size:1.1rem;font-weight:700;">4. Your account</h2>
+    <div class="panel p-3">
+      <ul style="line-height:1.9;margin:0;padding-left:1.25rem;">
+        <li>You are responsible for maintaining the confidentiality of your password.</li>
+        <li>You must not share your account credentials with others.</li>
+        <li>You agree to provide accurate information and keep it up to date.</li>
+        <li>You may delete your account at any time from Settings. All data will be permanently erased.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="mb-4">
+    <h2 style="font-size:1.1rem;font-weight:700;">5. Acceptable use</h2>
+    <div class="panel p-3">
+      <p style="margin:0 0 0.5rem;line-height:1.75;">You agree <strong>not</strong> to:</p>
+      <ul style="line-height:1.9;margin:0;padding-left:1.25rem;">
+        <li>Use DayTone to harm, harass, or exploit other individuals.</li>
+        <li>Attempt to circumvent authentication or access another user's data.</li>
+        <li>Submit false or misleading data with the intent to manipulate the system.</li>
+        <li>Use automated tools to scrape or abuse the application.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="mb-4">
+    <h2 style="font-size:1.1rem;font-weight:700;">6. Data and privacy</h2>
+    <div class="panel p-3">
+      <p style="margin:0;line-height:1.75;">
+        Our use of your personal data is governed by the
+        <a href="{{ url_for('auth.privacy') }}">Privacy Policy</a>, which forms part of these Terms.
+        By using DayTone you consent to the data practices described therein.
+      </p>
+    </div>
+  </section>
+
+  <section class="mb-4">
+    <h2 style="font-size:1.1rem;font-weight:700;">7. Disclaimer of warranties</h2>
+    <div class="panel p-3">
+      <p style="margin:0;line-height:1.75;">
+        DayTone is provided <strong>"as is"</strong>, without warranty of any kind, express or implied,
+        including but not limited to warranties of merchantability, fitness for a particular purpose,
+        or non-infringement. We do not warrant that the service will be uninterrupted, error-free,
+        or that predictions will be accurate.
+      </p>
+    </div>
+  </section>
+
+  <section class="mb-4">
+    <h2 style="font-size:1.1rem;font-weight:700;">8. Limitation of liability</h2>
+    <div class="panel p-3">
+      <p style="margin:0;line-height:1.75;">
+        To the fullest extent permitted by applicable law, DayTone and its developers shall not
+        be liable for any indirect, incidental, special, or consequential damages arising out of
+        or in connection with your use of the service.
+      </p>
+    </div>
+  </section>
+
+  <section class="mb-4">
+    <h2 style="font-size:1.1rem;font-weight:700;">9. Changes to these terms</h2>
+    <div class="panel p-3">
+      <p style="margin:0;line-height:1.75;">
+        We may update these Terms from time to time. Continued use of DayTone after changes
+        are posted constitutes acceptance of the revised Terms.
+      </p>
+    </div>
+  </section>
+
+  <section class="mb-5">
+    <h2 style="font-size:1.1rem;font-weight:700;">10. Contact</h2>
+    <div class="panel p-3">
+      <p style="margin:0;line-height:1.75;">
+        Questions about these Terms? Email us at
+        <a href="mailto:legal@daytone.example">legal@daytone.example</a>.
+      </p>
+    </div>
+  </section>
+
+  <div class="d-flex gap-3 flex-wrap">
+    <a href="{{ url_for('auth.privacy') }}" class="btn btn-outline-primary">
+      <i data-lucide="shield"></i> Privacy Policy
+    </a>
+    {% if current_user.is_authenticated %}
+    <a href="{{ url_for('mood.dashboard') }}" class="btn btn-glass">
+      <i data-lucide="layout-dashboard"></i> Dashboard
+    </a>
+    {% else %}
+    <a href="{{ url_for('auth.login') }}" class="btn btn-glass">
+      <i data-lucide="log-in"></i> Sign in
+    </a>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

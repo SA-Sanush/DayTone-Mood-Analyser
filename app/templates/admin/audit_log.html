@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Admin Audit Log — DayTone{% endblock %}
+{% block content %}
+<div class="container-fluid py-4" style="max-width: 1100px;">
+
+  <div class="d-flex align-items-center gap-2 mb-1">
+    <i data-lucide="scroll-text" style="width:22px;height:22px;color:var(--dt-primary)"></i>
+    <h1 style="font-size:1.45rem;font-weight:800;margin:0;">Admin Audit Log</h1>
+  </div>
+  <p class="text-secondary mb-4" style="font-size:0.9rem;">
+    Last 200 admin actions. All destructive operations are recorded automatically.
+  </p>
+
+  {% if entries %}
+  <div class="panel elevated-panel p-0 mb-4" style="overflow:hidden;">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0" style="font-size:0.84rem;">
+        <thead style="background:var(--dt-surface-2,rgba(255,255,255,0.04));font-weight:700;">
+          <tr>
+            <th style="padding:0.75rem 1rem;">When</th>
+            <th>Admin</th>
+            <th>Action</th>
+            <th>Target</th>
+            <th>Detail</th>
+            <th>IP</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in entries %}
+          <tr>
+            <td style="padding:0.65rem 1rem;white-space:nowrap;color:var(--dt-muted);">
+              {{ entry.performed_at.strftime("%Y-%m-%d %H:%M") }}
+            </td>
+            <td>
+              {% if entry.admin %}
+                <span class="badge bg-primary-subtle text-primary" style="font-size:0.72rem;">
+                  {{ entry.admin.name }}
+                </span>
+              {% else %}
+                <span class="text-secondary">—</span>
+              {% endif %}
+            </td>
+            <td>
+              <code style="font-size:0.78rem;padding:2px 6px;border-radius:4px;
+                           background:var(--dt-surface-2,rgba(255,255,255,0.06));">
+                {{ entry.action }}
+              </code>
+            </td>
+            <td>
+              {% if entry.target_type %}
+                {{ entry.target_type }}
+                {% if entry.target_id %}
+                  <span class="text-secondary">#{{ entry.target_id }}</span>
+                {% endif %}
+              {% else %}—{% endif %}
+            </td>
+            <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+                       color:var(--dt-muted);">
+              {{ entry.detail or "—" }}
+            </td>
+            <td style="color:var(--dt-muted);font-size:0.75rem;">
+              {{ entry.ip_address or "—" }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="panel elevated-panel p-4 text-center text-secondary">
+    <i data-lucide="inbox" style="width:32px;height:32px;margin-bottom:0.5rem;opacity:0.4;"></i>
+    <p class="mb-0">No audit entries yet. Actions will appear here once admins perform mutations.</p>
+  </div>
+  {% endif %}
+
+  <a href="{{ url_for('admin.dashboard') }}" class="btn btn-glass">
+    <i data-lucide="arrow-left"></i> Admin Dashboard
+  </a>
+
+</div>
+{% endblock %}

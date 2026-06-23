@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}ML Bias & Fairness Audit — DayTone Admin{% endblock %}
+{% block content %}
+<div class="container-fluid py-4" style="max-width: 960px;">
+
+  <div class="d-flex align-items-center gap-2 mb-1">
+    <i data-lucide="shield-check" style="width:22px;height:22px;color:var(--dt-primary)"></i>
+    <h1 style="font-size:1.45rem;font-weight:800;margin:0;">ML Bias &amp; Fairness Audit</h1>
+  </div>
+  <p class="text-secondary mb-4" style="font-size:0.9rem;">
+    This audit evaluates the burnout predictor for accuracy disparities across synthetic
+    demographic groups (stress levels, sleep duration, activity, social interaction).
+    Groups whose accuracy falls more than <strong>5%</strong> below the overall accuracy
+    are flagged with <code>⚠ BIAS_FLAG</code>.
+  </p>
+
+  <div class="panel elevated-panel p-3 mb-4">
+    <div class="panel-title mb-2">
+      <i data-lucide="terminal"></i>
+      <h2 style="font-size:1rem;font-weight:700;">Audit Output</h2>
+    </div>
+    <pre style="white-space:pre-wrap;word-break:break-word;font-size:0.78rem;line-height:1.55;
+                background:var(--dt-surface,#0f172a);color:var(--dt-text,#e2e8f0);
+                border-radius:8px;padding:1.25rem;margin:0;overflow-x:auto;">{{ output or "No output produced." }}</pre>
+  </div>
+
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="{{ url_for('admin.model_diagnostics') }}" class="btn btn-outline-primary">
+      <i data-lucide="cpu"></i> ML Diagnostics
+    </a>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-glass">
+      <i data-lucide="arrow-left"></i> Admin Dashboard
+    </a>
+  </div>
+
+</div>
+{% endblock %}

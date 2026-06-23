@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>You're offline — DayTone</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/icon-32.png">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --border: rgba(255,255,255,0.08);
+      --primary: #6366f1;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --good: #10b981;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      text-align: center;
+    }
+    .icon-wrap {
+      width: 96px; height: 96px;
+      background: linear-gradient(135deg, #2563eb 0%, #0f9f8f 100%);
+      border-radius: 24px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 2rem;
+      font-size: 2rem; font-weight: 900; color: #fff;
+      box-shadow: 0 16px 40px rgba(37, 99, 235, 0.4);
+    }
+    h1 { font-size: 1.75rem; font-weight: 800; margin-bottom: 0.5rem; }
+    p { color: var(--muted); font-size: 1rem; margin-bottom: 2rem; max-width: 340px; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.35rem 1rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 2.5rem;
+    }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #ef4444;
+      animation: pulse-dot 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.75); }
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: var(--primary);
+      color: #fff;
+      border: none; border-radius: 10px;
+      padding: 0.75rem 1.75rem;
+      font-size: 0.95rem; font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+      margin: 0.4rem;
+    }
+    .btn:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .tip {
+      margin-top: 2.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1rem 1.25rem;
+      max-width: 380px;
+      text-align: left;
+    }
+    .tip-label { font-size: 0.72rem; font-weight: 700; color: var(--good); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 0.3rem; }
+    .tip p { font-size: 0.85rem; color: var(--muted); margin: 0; }
+  </style>
+</head>
+<body>
+  <div class="icon-wrap">DT</div>
+  <h1>You're offline</h1>
+  <p>DayTone can't reach the server right now. Check your internet connection and try again.</p>
+
+  <div class="pill">
+    <span class="dot"></span>
+    No connection detected
+  </div>
+
+  <div>
+    <button class="btn" onclick="window.location.reload()">
+      ↺ Try again
+    </button>
+    <a class="btn btn-outline" href="/">Go home</a>
+  </div>
+
+  <div class="tip">
+    <div class="tip-label">💡 While you wait</div>
+    <p>Previously visited pages are still available from cache. Try navigating to your dashboard or history.</p>
+  </div>
+
+  <script>
+    // Auto-reload when connection is restored
+    window.addEventListener('online', () => window.location.reload());
+  </script>
+</body>
+</html>

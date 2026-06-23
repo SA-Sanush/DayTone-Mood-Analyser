@@ -430,9 +430,11 @@ block content %} {% if data.latest %}
   window.DAYTONE_CHARTS = {{ chart_data|tojson }};
   window.DAYTONE_DASHBOARD = {{ dashboard_state|tojson }};
 </script>
-<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chart.umd.min.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}" defer></script>
 {% if not dashboard_state.calm_mode %}
-<script src="{{ url_for('static', filename='js/mood-orb-three-shader.js') }}?v=1.0.5"></script>
+<script src="{{ url_for('static', filename='js/three.min.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/mood-orb-three-shader.js') }}?v=1.0.5" defer></script>
 {% endif %}
 <script>
 (function() {

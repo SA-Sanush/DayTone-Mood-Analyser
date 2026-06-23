@@ -1,0 +1,61 @@
+{
+  "timestamp": "2026-06-23T06:39:39.784031",
+  "checks": [
+    {
+      "name": "bandit",
+      "status": "PASS",
+      "detail": "B301 pickle in ML predictor \u2014 internal use only"
+    },
+    {
+      "name": "deps",
+      "status": "SKIP",
+      "detail": "tool not available"
+    },
+    {
+      "name": "headers",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "cookies",
+      "status": "PASS",
+      "detail": "all cookies secure"
+    },
+    {
+      "name": "csrf",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "rate_limit",
+      "status": "PASS",
+      "detail": "dev mode \u2014 memory limiter expected"
+    },
+    {
+      "name": "auth_gates",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "secrets",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "env_committed",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "debug_routes",
+      "status": "PASS",
+      "detail": ""
+    }
+  ],
+  "summary": {
+    "PASS": 9,
+    "WARN": 0,
+    "FAIL": 0,
+    "SKIP": 1
+  }
+}

@@ -7,6 +7,7 @@ htmlcov/
 .venv/
 venv/
 instance/*.db
+logs/
 app/ml/model.pkl
 app/ml/models/
 app/ml/training_data.csv

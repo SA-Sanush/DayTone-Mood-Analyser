@@ -265,6 +265,22 @@ class Goal(db.Model):
         return units.get(self.target_type, "")
 
 
+class AuditLog(db.Model):
+    """Records admin actions for compliance and accountability."""
+    __tablename__ = "audit_log"
+
+    id = db.Column(db.Integer, primary_key=True)
+    admin_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="SET NULL"), nullable=True)
+    action = db.Column(db.String(100), nullable=False)    # e.g. 'delete_user', 'toggle_role'
+    target_type = db.Column(db.String(50), nullable=True)  # e.g. 'User', 'MoodLog'
+    target_id = db.Column(db.Integer, nullable=True)
+    detail = db.Column(db.Text, nullable=True)             # Free text or JSON snippet
+    ip_address = db.Column(db.String(45), nullable=True)
+    performed_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False, index=True)
+
+    admin = db.relationship("User", foreign_keys=[admin_id])
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))

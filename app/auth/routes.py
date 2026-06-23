@@ -222,3 +222,65 @@ def export_data_json():
             "X-Content-Type-Options": "nosniff",
         },
     )
+
+
+@auth_bp.route("/privacy")
+def privacy():
+    """Public privacy policy page."""
+    return render_template("legal/privacy.html")
+
+
+@auth_bp.route("/terms")
+def terms():
+    """Public terms of service page."""
+    return render_template("legal/terms.html")
+
+
+@auth_bp.route("/contact", methods=["GET", "POST"])
+@limiter.limit("5 per hour")
+def contact():
+    """Public contact / support form."""
+    from flask_mail import Message
+    from app.extensions import mail
+
+    sent = False
+    error = None
+
+    if request.method == "POST":
+        name    = (request.form.get("name") or "").strip()
+        email   = (request.form.get("email") or "").strip()
+        subject = (request.form.get("subject") or "DayTone Support Request").strip()
+        body    = (request.form.get("body") or "").strip()
+
+        if not name or not email or not body:
+            error = "Please fill in all required fields."
+        else:
+            admin_email = current_app.config.get("ADMIN_ALERT_EMAIL") or current_app.config.get("MAIL_USERNAME")
+            if admin_email and current_app.config.get("MAIL_USERNAME"):
+                try:
+                    msg = Message(
+                        subject=f"[DayTone Contact] {subject}",
+                        recipients=[admin_email],
+                        reply_to=email,
+                        body=(
+                            f"From: {name} <{email}>\n\n"
+                            f"{body}\n\n"
+                            f"---\nSent via DayTone contact form"
+                        ),
+                    )
+                    mail.send(msg)
+                    sent = True
+                except Exception as exc:
+                    current_app.logger.error("Contact form mail failed: %s", exc)
+                    error = "Could not send your message right now. Please email us directly."
+            else:
+                # Mail not configured — log it and show success anyway
+                current_app.logger.info(
+                    "contact_form name=%r email=%r subject=%r body_len=%d",
+                    name, email, subject, len(body),
+                )
+                sent = True
+
+    return render_template("auth/contact.html", sent=sent, error=error)
+
+

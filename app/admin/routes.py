@@ -8,6 +8,7 @@ from flask_login import current_user, login_required, logout_user
 from app.extensions import db, cache
 from app.models import BurnoutHistory, MoodLog, User, UserProfile, Suggestion
 from app.utils.analytics import dashboard_data, platform_stats
+from app.utils.audit import log_admin_action
 from app.ml.predictor import build_features, predict_burnout
 from app.nlp.sentiment import get_sentiment_score, get_sentiment_backend
 from app.utils.suggestions import get_suggestions
@@ -112,15 +113,23 @@ def user_detail(user_id):
 def toggle_role(user_id):
     user = User.query.get_or_404(user_id)
     is_self = (user.id == current_user.id)
-    
+    old_role = user.role
     user.role = "user" if user.role == "admin" else "admin"
+
+    log_admin_action(
+        admin_id=current_user.id,
+        action="toggle_role",
+        target_type="User",
+        target_id=user.id,
+        detail=f"{old_role} -> {user.role}",
+    )
     db.session.commit()
-    
+
     if is_self and user.role == "user":
         logout_user()
         flash("You have demoted yourself. You no longer have admin access.", "warning")
         return redirect(url_for("auth.login"))
-        
+
     flash(f"{user.name} is now a {user.role}.", "success")
     return redirect(request.referrer or url_for("admin.users"))
 
@@ -130,15 +139,22 @@ def toggle_role(user_id):
 def delete_user(user_id):
     user = User.query.get_or_404(user_id)
     is_self = (user.id == current_user.id)
-    
+
+    log_admin_action(
+        admin_id=current_user.id,
+        action="delete_user",
+        target_type="User",
+        target_id=user.id,
+        detail=f"name={user.name!r} email={user.email!r}",
+    )
     db.session.delete(user)
     db.session.commit()
-    
+
     if is_self:
         logout_user()
         flash("Your admin account has been permanently deleted.", "info")
         return redirect(url_for("auth.register"))
-        
+
     flash(f"User '{user.name}' has been deleted.", "danger")
     return redirect(url_for("admin.users"))
 
@@ -224,11 +240,18 @@ def edit_user_log(user_id, log_id):
 def delete_user_log(user_id, log_id):
     user = User.query.get_or_404(user_id)
     log = MoodLog.query.filter_by(id=log_id, user_id=user.id).first_or_404()
-    
+
+    log_admin_action(
+        admin_id=current_user.id,
+        action="delete_mood_log",
+        target_type="MoodLog",
+        target_id=log.id,
+        detail=f"user_id={user.id} date={log.log_date}",
+    )
     db.session.delete(log)
     db.session.commit()
     cache.delete_memoized(dashboard_data, user.id)
-    
+
     flash("Mood log has been deleted.", "danger")
     return redirect(url_for("admin.user_detail", user_id=user.id))
 
@@ -263,3 +286,40 @@ def model_diagnostics():
         error=error,
         stats=platform_stats(),
     )
+
+
+@admin_bp.route("/ml/bias-audit")
+@admin_required
+def bias_audit():
+    """Run the ML bias & fairness audit script and display results inline."""
+    import subprocess
+    import sys
+    from flask import current_app
+
+    script = Path(current_app.root_path).parent / "scripts" / "bias_audit.py"
+    try:
+        result = subprocess.run(
+            [sys.executable, str(script)],
+            cwd=str(Path(current_app.root_path).parent),
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+        output = result.stdout or ""
+        if result.returncode != 0:
+            output += "\n[STDERR]\n" + result.stderr
+    except subprocess.TimeoutExpired:
+        output = "[ERROR] Audit timed out after 120 seconds."
+    except Exception as exc:
+        output = f"[ERROR] {exc}"
+
+    return render_template("admin/bias_audit.html", output=output)
+
+
+@admin_bp.route("/audit-log")
+@admin_required
+def audit_log():
+    """View recent admin audit log entries."""
+    from app.models import AuditLog
+    entries = AuditLog.query.order_by(AuditLog.performed_at.desc()).limit(200).all()
+    return render_template("admin/audit_log.html", entries=entries)

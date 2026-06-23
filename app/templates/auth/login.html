@@ -129,6 +129,8 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/three.min.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/ambient.js') }}" defer></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 

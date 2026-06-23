@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Contact & Support — DayTone{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:640px;">
+
+  <div class="d-flex align-items-center gap-2 mb-2">
+    <i data-lucide="mail" style="width:22px;height:22px;color:var(--dt-primary)"></i>
+    <h1 style="font-size:1.5rem;font-weight:800;margin:0;">Contact & Support</h1>
+  </div>
+  <p class="text-secondary mb-4" style="font-size:0.9rem;">
+    Have a question, found a bug, or want to share feedback? We'd love to hear from you.
+  </p>
+
+  {% if sent %}
+  <div class="panel elevated-panel p-4 text-center mb-4" style="border-left:4px solid var(--dt-good);">
+    <i data-lucide="check-circle" style="width:36px;height:36px;color:var(--dt-good);margin-bottom:0.75rem;"></i>
+    <h2 style="font-size:1.1rem;font-weight:800;margin-bottom:0.4rem;">Message received!</h2>
+    <p class="text-secondary mb-0" style="font-size:0.9rem;">
+      Thanks for reaching out. We'll get back to you as soon as possible.
+    </p>
+  </div>
+  <a href="{{ url_for('mood.dashboard') if current_user.is_authenticated else url_for('auth.login') }}"
+     class="btn btn-primary">
+    <i data-lucide="arrow-left"></i> Back to DayTone
+  </a>
+
+  {% else %}
+
+  {% if error %}
+  <div class="alert alert-danger d-flex align-items-center gap-2 mb-3">
+    <i data-lucide="alert-circle" style="width:16px;height:16px;flex-shrink:0;"></i>
+    {{ error }}
+  </div>
+  {% endif %}
+
+  <div class="panel elevated-panel p-4">
+    <form method="POST" action="{{ url_for('auth.contact') }}" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="mb-3">
+        <label for="contact-name" class="form-label" style="font-weight:700;font-size:0.88rem;">
+          Your name <span class="text-danger">*</span>
+        </label>
+        <input
+          id="contact-name"
+          type="text"
+          name="name"
+          class="form-control"
+          placeholder="e.g. Alex Johnson"
+          value="{{ request.form.get('name', '') }}"
+          required
+          autocomplete="name"
+          aria-required="true"
+        >
+      </div>
+
+      <div class="mb-3">
+        <label for="contact-email" class="form-label" style="font-weight:700;font-size:0.88rem;">
+          Email address <span class="text-danger">*</span>
+        </label>
+        <input
+          id="contact-email"
+          type="email"
+          name="email"
+          class="form-control"
+          placeholder="you@example.com"
+          value="{{ request.form.get('email', current_user.email if current_user.is_authenticated else '') }}"
+          required
+          autocomplete="email"
+          aria-required="true"
+        >
+      </div>
+
+      <div class="mb-3">
+        <label for="contact-subject" class="form-label" style="font-weight:700;font-size:0.88rem;">
+          Subject
+        </label>
+        <select id="contact-subject" name="subject" class="form-select">
+          <option value="General question">General question</option>
+          <option value="Bug report">Bug report</option>
+          <option value="Feature request">Feature request</option>
+          <option value="Data / Privacy request">Data / Privacy request</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <div class="mb-4">
+        <label for="contact-body" class="form-label" style="font-weight:700;font-size:0.88rem;">
+          Message <span class="text-danger">*</span>
+        </label>
+        <textarea
+          id="contact-body"
+          name="body"
+          class="form-control"
+          rows="6"
+          placeholder="Describe your question or issue…"
+          required
+          aria-required="true"
+        >{{ request.form.get('body', '') }}</textarea>
+        <div class="form-text">Please don't include sensitive health information.</div>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100" id="contact-submit">
+        <i data-lucide="send"></i> Send message
+      </button>
+    </form>
+  </div>
+
+  <div class="panel p-3 mt-3" style="font-size:0.85rem;">
+    <p class="mb-1" style="font-weight:700;">Other ways to reach us</p>
+    <p class="text-secondary mb-0">
+      Email directly:
+      <a href="mailto:support@daytone.example">support@daytone.example</a>
+    </p>
+  </div>
+
+  {% endif %}
+
+</div>
+{% endblock %}

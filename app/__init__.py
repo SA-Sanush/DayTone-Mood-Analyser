@@ -1,4 +1,5 @@
 import logging
+import logging.handlers
 import os
 import warnings
 
@@ -64,6 +65,18 @@ def create_app(config_object=Config):
         handler.setFormatter(jsonlogger.JsonFormatter("%(asctime)s %(levelname)s %(name)s %(message)s"))
         logging.getLogger().addHandler(handler)
         logging.getLogger().setLevel(logging.INFO)
+
+        # Rotating file log (7-day retention, 10 MB per file)
+        log_dir = os.path.join(os.path.dirname(__file__), "..", "logs")
+        os.makedirs(log_dir, exist_ok=True)
+        file_handler = logging.handlers.TimedRotatingFileHandler(
+            os.path.join(log_dir, "daytone.log"),
+            when="midnight",
+            backupCount=7,
+            encoding="utf-8",
+        )
+        file_handler.setFormatter(jsonlogger.JsonFormatter("%(asctime)s %(levelname)s %(name)s %(message)s"))
+        logging.getLogger().addHandler(file_handler)
     else:
         logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
@@ -80,18 +93,52 @@ def create_app(config_object=Config):
     cache.init_app(app)
     csrf.init_app(app)
 
-    # Initialize Talisman with CSP
+    # Sentry error tracking — only active when SENTRY_DSN is set
+    sentry_dsn = os.getenv("SENTRY_DSN")
+    if sentry_dsn:
+        import sentry_sdk
+        from sentry_sdk.integrations.flask import FlaskIntegration
+        from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+        sentry_sdk.init(
+            dsn=sentry_dsn,
+            integrations=[FlaskIntegration(), SqlalchemyIntegration()],
+            traces_sample_rate=0.1,   # 10 % of requests for performance tracing
+            send_default_pii=False,   # never send PII to Sentry
+        )
+        app.logger.info("Sentry error tracking enabled.")
+
+    # Initialize Talisman with hardened CSP
+    # ZAP findings fixed:
+    #   - Added frame-ancestors 'self'  (blocks clickjacking without relying on X-Frame-Options)
+    #   - Added form-action 'self'       (prevents form hijacking to external URLs)
+    #   - Added connect-src 'self'       (required for PWA service worker fetch)
+    #   - Kept unsafe-inline on script/style (needed for Bootstrap + inline event handlers)
+    #     → SRI attributes added on CDN tags in base.html for Supply-Chain safety
     Talisman(
         app,
         content_security_policy={
             "default-src": "'self'",
-            "script-src": ["'self'", "cdn.jsdelivr.net", "unpkg.com", "'unsafe-inline'"],
-            "style-src": ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net", "fonts.googleapis.com"],
-            "font-src": ["'self'", "fonts.gstatic.com"],
-            "img-src": ["'self'", "data:"],
+            "script-src":  ["'self'", "cdn.jsdelivr.net", "unpkg.com", "'unsafe-inline'"],
+            "style-src":   ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net", "fonts.googleapis.com"],
+            "font-src":    ["'self'", "fonts.gstatic.com"],
+            "img-src":     ["'self'", "data:"],
+            "connect-src": ["'self'"],
+            "frame-ancestors": ["'self'"],
+            "form-action": ["'self'"],
+            "base-uri":    ["'self'"],
+            "object-src":  ["'none'"],
         },
         force_https=(config_object.ENV == "production"),
+        # Suppress exact server version from Server header
+        content_security_policy_nonce_in=[],
     )
+
+    # Hide Werkzeug/Flask version from Server response header
+    @app.after_request
+    def remove_server_header(response):
+        response.headers["Server"] = "DayTone"
+        return response
+
 
     login_manager.login_view = "auth.login"
     login_manager.login_message_category = "info"
@@ -108,6 +155,30 @@ def create_app(config_object=Config):
     def health():
         return jsonify({"status": "ok"}), 200
 
+    # ── PWA routes ────────────────────────────────────────────────────────────
+    @app.route("/sw.js")
+    def service_worker():
+        """Serve the service worker from root scope (required for full-app SW scope)."""
+        from flask import make_response, send_from_directory
+        resp = make_response(
+            send_from_directory(app.static_folder + "/js", "sw.js")
+        )
+        resp.headers["Content-Type"] = "application/javascript"
+        resp.headers["Service-Worker-Allowed"] = "/"
+        resp.headers["Cache-Control"] = "no-cache"
+        return resp
+
+    @app.route("/manifest.json")
+    def pwa_manifest():
+        from flask import send_from_directory
+        return send_from_directory(app.static_folder, "manifest.json",
+                                   mimetype="application/manifest+json")
+
+    @app.route("/offline")
+    def offline():
+        from flask import render_template as rt
+        return rt("offline.html"), 200
+
     @app.cli.command("reload-model")
     def reload_model():
         from app.ml.predictor import _model_payload
@@ -116,3 +187,4 @@ def create_app(config_object=Config):
         print("Model cache cleared. Next prediction will load the current artifact.")
 
     return app
+
