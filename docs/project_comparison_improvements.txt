@@ -23,6 +23,8 @@ fully polished, secure, and deployed production application.
 | Accessibility (a11y) | Missing ARIA tags, poor keyboard focus rings, no landmark regions. WCAG score: < 50. | Full WCAG 2.1 keyboard support, skip-to-content links, ARIA labels. WCAG score: 100/100. |
 | Performance & Speed | Render-blocking fonts; heavy JS libraries loaded globally on every template. | Decoupled libraries (Three/Chart load async on use), async fonts, minified CSS. |
 | Model Operations | Simple scikit-learn tree saved; no bias or drift tracking. | Bias audit scripts, prediction drift monitor, and an official ML Model Card. |
+| Training Data Source | Model trained strictly on a static synthetic dataset (`generate_data.py`). | Supports compiling real user database entries using `export_db_to_training.py` (merge or replace modes). |
+| Wellness Activities | Mismatch between frontend choices and backend/DB constraints causing errors. | Consistent list of 8 activities supported across forms, template, and String(50) column database. |
 | CI/CD & Code Quality | Duplicate, failing GitHub Action tests. PEP 8 violations in 18 files. | Zero flake8 warnings, black formatted, automated pytest and gitleaks scans in CI. |
 | Deployment & Hosting | Manual local running only. | Infrastructure-as-code Render Blueprint. Private Redis, PostgreSQL, and Flask running live. |
 
@@ -76,4 +78,14 @@ D. DATABASE COMPATIBILITY & DEPLOYMENT AUTOMATION
   * Render Blueprints: Automated the entire provisioning process in render.yaml.
   * Start Command Migration: Shifted migrations to startCommand, allowing free-tier
     deploys to build and upgrade successfully.
+
+E. MACHINE LEARNING & PIPELINE EVOLUTION
+- Initial: The ML model was trained statically on synthetic data, with no way to inject 
+  real user interactions. Additionally, users selecting wellness activities (like Run 
+  or Swim) encountered severe validation failure bugs due to backend Enum mismatches.
+- Improved:
+  * Database Compiler: Developed `export_db_to_training.py` which reads the database, 
+    calculates 7-day rolling statistics, and outputs ML-ready features for model retraining.
+  * Flexible String Schemas: Converted the activity column to String(50), allowing the forms 
+    and database to dynamically accept all 8 activities seamlessly.
 ================================================================================

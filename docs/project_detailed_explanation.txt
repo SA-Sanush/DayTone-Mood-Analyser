@@ -89,6 +89,9 @@ C. BURNOUT RISK CLASSIFIER (ML PIPELINE)
     distribution against a baseline to detect model performance degradation.
   * Model Card (app/ml/model_card.md): Documents model specifications, training 
     details, limitations, and ethical considerations.
+  * Database Log Extraction (scripts/export_db_to_training.py): Extracts real user
+    database entries, calculates rolling 7-day values, and compiles/merges them
+    into the ML training CSV, facilitating the transition to real-user data.
 
 D. GDPR COMPLIANCE & EXPORTS
 - Right to be Forgotten: Users can delete their account from the settings page,
@@ -165,9 +168,11 @@ DayTone/
 │   ├── project_detailed_explanation.txt  # This document
 │   └── project_workflow_history.txt      # Chronological workflow log
 ├── migrations/                 # Alembic Database Migrations
+│   └── versions/               # Schema version delta files (including activity string migration)
 ├── scripts/                    # Maintenance & Analysis Scripts
 │   ├── bias_audit.py           # Bias audit CLI script
 │   ├── monitor_drift.py        # Prediction drift monitoring script
+│   ├── export_db_to_training.py # Database log extraction features compiler
 │   ├── minify_css.py           # CSS compression pipeline
 │   └── security_audit.py       # Local security configuration inspector
 ├── tests/                      # Automated Test Suite (PyTest)
@@ -199,7 +204,11 @@ flask db upgrade
 python -m app.ml.generate_data
 python -m app.ml.train
 
-# 5. Run the application
+# 5. Extract database logs (optional, when real logs exist in DB to retrain on)
+python scripts/export_db_to_training.py --mode merge
+python -m app.ml.train
+
+# 6. Run the application
 python run.py
 # Open: http://localhost:5000
 ```

@@ -48,19 +48,23 @@ PHASE 2: 3D SHADER ORB & VISUAL INTERACTION
   all modern GPU drivers.
 
 PHASE 3: MACHINE LEARNING & ANALYTICS PIPELINE
-- Burnout Classifier: Developed a scikit-learn Decision Tree Classifier to 
-  categorize user burnout risk into Low, Medium, or High categories based on a
-  12-feature matrix (mood, sleep, stress, activity, consecutive bad days, etc.).
-- Explainable AI (XAI): Designed driver indicators on the user dashboard showing 
-  feature importance lists to explain the primary factors driving their burnout 
-  risk score.
-- Model Auditing:
-  * Created scripts/bias_audit.py to audit model fairness across demographic 
-    groups (stress & sleep quintiles) and flag accuracy drift above 5%.
-  * Created scripts/monitor_drift.py to check prediction drift and detect model 
-    degradation over time.
-  * Authored a standard ML Model Card (app/ml/model_card.md) detailing 
-    training configurations, data attributes, limits, and ethical considerations.
+* Decision Tree Classifier: Trained a scikit-learn multiclass classifier to 
+  predict burnout risk (Low, Medium, High) across 12 distinct user metrics.
+* Explainable AI (XAI): Designed driver cards on the dashboard showing feature
+  importance lists dynamically explaining the primary causes behind an individual's
+  burnout score (e.g. sleep duration, stress levels).
+* Bias & Fairness Audit: Developed a standalone testing utility
+  (`scripts/bias_audit.py`) executing audits on demographic groups (stress/sleep
+  quintiles), flagging accuracy drops above 5%. Integrated a visual bias audit report
+  directly inside the Admin dashboard.
+* Model Card Documentation: Authored an ML Model Card (`app/ml/model_card.md`) 
+  following standard documentation conventions detailing training configurations,
+  evaluation, limitations, and ethical considerations.
+* Data Drift Monitoring: Created `scripts/monitor_drift.py` checking prediction
+  drift and model degradation against a saved baseline.
+* Database Log Exporter: Created a database extraction utility (`scripts/export_db_to_training.py`)
+  that compiles real user logs into a 12-feature training matrix, supporting both 
+  data augmentation (merging real and synthetic data) and complete replacement.
 
 PHASE 4: USER & ADMIN CONSOLE IMPROVEMENTS
 - Admin Management Portal: Built a complete administrative dashboard allowing 
@@ -113,6 +117,10 @@ PHASE 8: RENDER CLOUD DEPLOYMENT
   * Resolved Alembic migration limitations by executing "flask db upgrade" 
     during startCommand instead of buildCommand.
   * Modified default constraints (PostgreSQL boolean defaults set to false).
+- Preferred Activity Validation Fix: Resolved a bug where selecting activities other 
+  than Walk (such as Run, Cycle, Gym, Swim) returned a validation error. Migrated the 
+  UserProfile database column type to String(50), synchronized WTForms validators, 
+  and updated the register and settings templates to handle all 8 activities.
 
 --------------------------------------------------------------------------------
 PART 3: COMPLETED FILE & CODEBASE STRUCTURE
@@ -128,6 +136,7 @@ PART 3: COMPLETED FILE & CODEBASE STRUCTURE
 - app/ml/model_card.md (ML Model specifications)
 - scripts/bias_audit.py (Model fairness validator)
 - scripts/monitor_drift.py (Model degradation checker)
+- scripts/export_db_to_training.py (Database log extraction compiler)
 - scripts/minify_css.py (Frontend minifier)
 - docs/runbook.md (Disaster recovery and ops handbook)
 - docs/pilot_consent_form.md (User intake forms)
