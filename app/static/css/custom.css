@@ -4086,11 +4086,13 @@ html[data-theme="dark"] .admin-search-input {
   align-items: center;
   flex-wrap: wrap;
   gap: 0.5rem;
-  padding: 0.5rem 1.5rem;
-  font-size: 0.7rem;
+  padding: 1.25rem;
+  font-size: 0.82rem;
   color: var(--dt-muted, #94a3b8);
   border-top: 1px solid var(--dt-border, rgba(255,255,255,0.08));
-  margin-top: 1.2rem;
+  margin: 1.5rem auto 2.5rem;
+  max-width: 1240px;
+  width: 100%;
 }
 .footer-links {
   display: flex;
