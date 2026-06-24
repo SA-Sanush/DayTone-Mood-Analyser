@@ -90,7 +90,7 @@ PHASE 6: SECURITY HARDENING & PROGRESSIVE WEB APP (PWA)
   the python 'cryptography' library. User journal notes are encrypted at rest 
   before database insertion and decrypted on the fly in memory.
 - Crisis Safety Trigger: Programmed emergency safety card alerts (988 suicide 
-  lifeline, Samaritans, global support linkages) that display on dashboards 
+  lifeline, Kiran national helpline in India, Samaritans, global support linkages) that display on dashboards 
   instantly when a High burnout risk is predicted.
 - PWA Features: Configured static asset manifest (manifest.json), offline 
   rendering fallback (offline.html), and a caching Service Worker (sw.js) for 

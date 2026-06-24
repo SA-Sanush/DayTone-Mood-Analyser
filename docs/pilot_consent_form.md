@@ -32,7 +32,7 @@ Your participation is entirely voluntary. Under GDPR regulations, you hold the f
 ## 5. Disclaimer & Health Warning
 > [!IMPORTANT]
 > **DayTone is NOT a medical device, diagnostic tool, or clinical service.** 
-> All ML burnout risk classifications and recommendations are informational only. If you are experiencing severe stress, depression, or a mental health crisis, please consult a qualified medical professional or contact crisis services (such as calling or texting **988**).
+> All ML burnout risk classifications and recommendations are informational only. If you are experiencing severe stress, depression, or a mental health crisis, please consult a qualified medical professional or contact crisis services (such as calling or texting **988** in the US/Canada, calling the Kiran national helpline at **1800-599-0019** in India, or contacting local emergency services).
 
 ---
 

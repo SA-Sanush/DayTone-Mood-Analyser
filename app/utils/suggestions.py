@@ -5,7 +5,7 @@ from app.constants import BurnoutRisk
 
 CRISIS_RESOURCES = {
     "US": "Call or text 988 for the Suicide & Crisis Lifeline.",
-    "IN": "Visit https://findahelpline.com/in for crisis support options in India.",
+    "IN": "Call the Kiran national mental health helpline at 1800-599-0019 or visit https://findahelpline.com/in.",
     "UK": "Call Samaritans at 116 123 or visit https://www.samaritans.org.",
     "GLOBAL": "Visit https://findahelpline.com to find crisis support near you.",
 }

@@ -104,7 +104,7 @@ E. SECURITY & HARDENING
   Fernet symmetric cryptography. The decryption key is loaded from the environment 
   variables, protecting raw text entries in the database.
 - Crisis Safety Protocol: If the model predicts a High burnout risk, the application
-  renders emergency resource links (e.g., 988 Suicide & Crisis Lifeline).
+  renders emergency resource links (e.g., 988 Suicide & Crisis Lifeline in the US, Kiran national helpline in India).
 - Rate Limiting: Key actions (login, registration, API endpoints) are rate-limited 
   using flask-limiter and a Redis backend.
 
