@@ -9,15 +9,15 @@
  * Update flow: bump CACHE_VERSION to force refresh on next visit.
  */
 
-const CACHE_VERSION = 'daytone-v3';
+const CACHE_VERSION = 'daytone-v8';
 const OFFLINE_URL   = '/offline';
 
 // Static assets to pre-cache on install
 const PRECACHE_URLS = [
   '/offline',
   '/static/css/bootstrap.min.css',
-  '/static/css/custom.min.css',
-  '/static/css/dark.min.css',
+  '/static/css/custom-v7.min.css',
+  '/static/css/dark-v7.min.css',
   '/static/js/bootstrap.bundle.min.js',
   '/static/js/lucide.min.js',
   '/static/js/darkmode.js',

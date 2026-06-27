@@ -87,6 +87,68 @@
     }
     .tip-label { font-size: 0.72rem; font-weight: 700; color: var(--good); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 0.3rem; }
     .tip p { font-size: 0.85rem; color: var(--muted); margin: 0; }
+
+    /* Toast styles */
+    .toast-container {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      pointer-events: none;
+    }
+    .toast {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.88rem;
+      font-weight: 500;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1), fade-out 0.3s ease-in 2.7s forwards;
+      pointer-events: auto;
+    }
+    @keyframes slide-up {
+      from { transform: translateY(1rem) translateX(-50%); opacity: 0; }
+      to { transform: translateY(0) translateX(-50%); opacity: 1; }
+    }
+    /* Fixed keyframes to preserve centering */
+    @keyframes slide-up {
+      from { transform: translateY(1rem); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes fade-out {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+    .btn-loading {
+      position: relative;
+      color: transparent !important;
+      pointer-events: none;
+    }
+    .btn-loading::after {
+      content: "";
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      margin: auto;
+      border: 2px solid transparent;
+      border-top-color: var(--text);
+      border-radius: 50%;
+      animation: button-loading-spinner 1.2s linear infinite;
+    }
+    @keyframes button-loading-spinner {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -100,10 +162,10 @@
   </div>
 
   <div>
-    <button class="btn" onclick="window.location.reload()">
+    <button class="btn" onclick="tryAgain(this)">
       ↺ Try again
     </button>
-    <a class="btn btn-outline" href="/">Go home</a>
+    <a class="btn btn-outline" href="/" onclick="goHome(event, this)">Go home</a>
   </div>
 
   <div class="tip">
@@ -111,9 +173,73 @@
     <p>Previously visited pages are still available from cache. Try navigating to your dashboard or history.</p>
   </div>
 
+  <div id="toast-container" class="toast-container"></div>
+
   <script>
     // Auto-reload when connection is restored
     window.addEventListener('online', () => window.location.reload());
+
+    async function checkConnection() {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), 2500);
+      try {
+        const response = await fetch('/health', {
+          method: 'GET',
+          cache: 'no-store',
+          signal: controller.signal
+        });
+        clearTimeout(id);
+        return response.ok;
+      } catch (e) {
+        clearTimeout(id);
+        return false;
+      }
+    }
+
+    function showToast(message) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
+    }
+
+    async function tryAgain(button) {
+      if (button.classList.contains('btn-loading')) return;
+      button.classList.add('btn-loading');
+      const isOnline = await checkConnection();
+      if (isOnline) {
+        window.location.reload();
+      } else {
+        setTimeout(() => {
+          button.classList.remove('btn-loading');
+          showToast("Still offline. Please check your internet connection.");
+        }, 800);
+      }
+    }
+
+    async function goHome(event, link) {
+      event.preventDefault();
+      if (link.classList.contains('btn-loading')) return;
+      link.classList.add('btn-loading');
+      const isOnline = await checkConnection();
+      if (isOnline) {
+        window.location.href = "/";
+      } else {
+        const cachedResponse = await caches.match('/');
+        if (cachedResponse) {
+          window.location.href = "/";
+        } else {
+          setTimeout(() => {
+            link.classList.remove('btn-loading');
+            showToast("The home page is not available offline. Please connect to the internet.");
+          }, 800);
+        }
+      }
+    }
   </script>
 </body>
 </html>

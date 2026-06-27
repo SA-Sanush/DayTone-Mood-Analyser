@@ -36,11 +36,60 @@
     })();
   </script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.min.css') }}?v=2.1.2">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/dark.min.css') }}?v=2.1.2">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/custom-v7.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-v7.min.css') }}">
   <style>
     @view-transition {
       navigation: auto;
+    }
+    /* Instant layout overrides to bypass service worker CSS caching */
+    .app-main,
+    .app-nav-inner {
+      max-width: 1350px !important;
+    }
+    .app-nav-inner {
+      padding-left: 1.25rem !important;
+      padding-right: 1.25rem !important;
+    }
+    .nav-pills-soft .nav-link {
+      padding: 0.36rem 0.54rem !important;
+      font-size: 0.82rem !important;
+      gap: 0.25rem !important;
+    }
+    .nav-pills-soft {
+      gap: 0.1rem !important;
+      margin-left: 0.8rem !important;
+    }
+    .nav-actions {
+      gap: 0.35rem !important;
+      margin-right: 0 !important;
+    }
+    .user-chip {
+      padding: 0.35rem 0.48rem !important;
+      font-size: 0.82rem !important;
+    }
+    
+    @media (min-width: 992px) and (max-width: 1440px) {
+      .nav-pills-soft .nav-link {
+        padding: 0.3rem 0.48rem !important;
+        font-size: 0.78rem !important;
+        gap: 0.18rem !important;
+      }
+      .nav-pills-soft {
+        margin-left: 0.4rem !important;
+        gap: 0.05rem !important;
+      }
+      .nav-actions {
+        gap: 0.28rem !important;
+        margin-right: 0 !important;
+      }
+      .user-chip {
+        padding: 0.32rem 0.45rem !important;
+        font-size: 0.78rem !important;
+      }
+      .brand-lockup {
+        font-size: 0.9rem !important;
+      }
     }
   </style>
 </head>

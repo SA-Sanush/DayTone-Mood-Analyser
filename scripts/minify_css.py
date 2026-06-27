@@ -27,7 +27,7 @@ def main():
             
         minified = minify_css(content)
         
-        min_filename = filename.replace('.css', '.min.css')
+        min_filename = filename.replace('.css', '-v7.min.css')
         min_file_path = css_dir / min_filename
         with open(min_file_path, 'w', encoding='utf-8') as f:
             f.write(minified)

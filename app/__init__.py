@@ -174,10 +174,15 @@ def create_app(config_object=Config):
         content_security_policy_nonce_in=[],
     )
 
-    # Hide Werkzeug/Flask version from Server response header
+    # Hide Werkzeug/Flask version from Server response header and set cache control
     @app.after_request
-    def remove_server_header(response):
+    def add_custom_headers(response):
         response.headers["Server"] = "DayTone"
+        content_type = response.headers.get("Content-Type", "")
+        if "text/html" in content_type:
+            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+            response.headers["Pragma"] = "no-cache"
+            response.headers["Expires"] = "0"
         return response
 
     login_manager.login_view = "auth.login"
