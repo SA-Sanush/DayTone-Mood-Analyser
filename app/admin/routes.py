@@ -6,12 +6,10 @@ from flask import abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, logout_user
 
 from app.extensions import db, cache
-from app.models import BurnoutHistory, MoodLog, User, UserProfile, Suggestion
+from app.models import User, UserProfile
 from app.utils.analytics import dashboard_data, platform_stats
 from app.utils.audit import log_admin_action
-from app.ml.predictor import build_features, predict_burnout
-from app.nlp.sentiment import get_sentiment_score, get_sentiment_backend
-from app.utils.suggestions import get_suggestions
+from app.nlp.sentiment import get_sentiment_backend
 from app.admin.forms import AdminUserProfileForm
 
 from . import admin_bp
@@ -28,9 +26,6 @@ def admin_required(view):
         return view(*args, **kwargs)
 
     return wrapped
-
-
-
 
 
 @admin_bp.route("/dashboard")
@@ -172,9 +167,6 @@ def edit_user_profile(user_id):
         return redirect(url_for("admin.user_detail", user_id=user.id))
 
     return render_template("admin/edit_profile.html", user=user, form=form)
-
-
-
 
 
 @admin_bp.route("/model")

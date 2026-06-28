@@ -7,7 +7,6 @@ from wtforms import (
     SelectField,
     StringField,
     SubmitField,
-    TextAreaField,
 )
 from wtforms.validators import DataRequired, Email, Length, NumberRange, Optional
 
