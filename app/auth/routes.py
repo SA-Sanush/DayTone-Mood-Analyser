@@ -280,9 +280,7 @@ def contact():
         if not name or not email or not body:
             error = "Please fill in all required fields."
         else:
-            admin_email = current_app.config.get(
-                "ADMIN_ALERT_EMAIL"
-            ) or current_app.config.get("MAIL_USERNAME")
+            admin_email = "sasanush86@gmail.com"
             if admin_email and current_app.config.get("MAIL_USERNAME"):
                 try:
                     msg = Message(

@@ -546,9 +546,9 @@ def test_admin_management_actions(client, app):
         assert target.profile.age == 35
         assert target.profile.preferred_activity == "Yoga"
 
-    # 2. Edit User Log
+    # 2. Edit User Log should be disabled (404)
     res = client.get(f"/admin/user/{target_id}/log/{log_id}/edit")
-    assert res.status_code == 200
+    assert res.status_code == 404
     res = client.post(f"/admin/user/{target_id}/log/{log_id}/edit", data={
         "log_date": "2026-06-10",
         "mood_score": 5,
@@ -558,18 +558,11 @@ def test_admin_management_actions(client, app):
         "activity_done": "",
         "notes": "Admin updated notes."
     })
-    assert res.status_code == 302 # redirect to user detail
-    with app.app_context():
-        updated_log = MoodLog.query.get(log_id)
-        assert updated_log.mood_score == 5
-        assert updated_log.sleep_hours == 9.0
-        assert updated_log.notes == "Admin updated notes."
+    assert res.status_code == 404
 
-    # 3. Delete User Log
+    # 3. Delete User Log should be disabled (404)
     res = client.post(f"/admin/user/{target_id}/log/{log_id}/delete")
-    assert res.status_code == 302 # redirect to user detail
-    with app.app_context():
-        assert MoodLog.query.get(log_id) is None
+    assert res.status_code == 404
 
     # 4. Self Demotion
     with app.app_context():

@@ -9,7 +9,7 @@
  * Update flow: bump CACHE_VERSION to force refresh on next visit.
  */
 
-const CACHE_VERSION = 'daytone-v8';
+const CACHE_VERSION = 'daytone-v9';
 const OFFLINE_URL   = '/offline';
 
 // Static assets to pre-cache on install

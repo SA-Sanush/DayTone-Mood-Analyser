@@ -85,5 +85,4 @@ class AdminMoodLogForm(FlaskForm):
         validators=[DataRequired()],
     )
     activity_done = BooleanField("Activity Completed")
-    notes = TextAreaField("Journal Notes", validators=[Optional(), Length(max=1000)])
     submit = SubmitField("Save Changes")

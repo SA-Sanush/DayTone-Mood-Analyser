@@ -12,7 +12,7 @@ from app.utils.audit import log_admin_action
 from app.ml.predictor import build_features, predict_burnout
 from app.nlp.sentiment import get_sentiment_score, get_sentiment_backend
 from app.utils.suggestions import get_suggestions
-from app.admin.forms import AdminUserProfileForm, AdminMoodLogForm
+from app.admin.forms import AdminUserProfileForm
 
 from . import admin_bp
 
@@ -30,53 +30,7 @@ def admin_required(view):
     return wrapped
 
 
-def update_log_analysis(user_id, log, form):
-    sentiment = get_sentiment_score(form.notes.data)
-    features = build_features(
-        user_id,
-        form.log_date.data,
-        form.mood_score.data,
-        form.sleep_hours.data,
-        form.stress_level.data,
-        form.activity_done.data,
-        form.social_interaction.data,
-        sentiment,
-    )
-    prediction = predict_burnout(features)
-    log.log_date = form.log_date.data
-    log.mood_score = form.mood_score.data
-    log.sleep_hours = form.sleep_hours.data
-    log.stress_level = form.stress_level.data
-    log.activity_done = form.activity_done.data
-    log.social_interaction = form.social_interaction.data
-    log.notes = form.notes.data
-    log.sentiment_score = sentiment
-    log.burnout_risk = prediction["prediction"]
 
-    # Update BurnoutHistory
-    BurnoutHistory.query.filter_by(log_id=log.id).delete()
-    history = BurnoutHistory(
-        user_id=user_id,
-        log_id=log.id,
-        prediction=prediction["prediction"],
-        confidence=prediction["confidence"],
-        algorithm_used=prediction["algorithm"],
-    )
-    db.session.add(history)
-
-    # Update suggestions
-    Suggestion.query.filter_by(log_id=log.id).delete()
-    user = User.query.get(user_id)
-    preferred = user.profile.preferred_activity if user.profile else "Walk"
-    for text in get_suggestions(
-        log.burnout_risk,
-        log.sleep_hours,
-        log.stress_level,
-        log.social_interaction,
-        log.activity_done,
-        preferred,
-    ):
-        db.session.add(Suggestion(user_id=user_id, log_id=log.id, suggestion_text=text))
 
 
 @admin_bp.route("/dashboard")
@@ -107,11 +61,8 @@ def users():
 @admin_required
 def user_detail(user_id):
     user = User.query.get_or_404(user_id)
-    logs = (
-        MoodLog.query.filter_by(user_id=user.id).order_by(MoodLog.log_date.desc()).all()
-    )
     return render_template(
-        "admin/user_detail.html", user=user, logs=logs, data=dashboard_data(user.id)
+        "admin/user_detail.html", user=user
     )
 
 
@@ -223,52 +174,7 @@ def edit_user_profile(user_id):
     return render_template("admin/edit_profile.html", user=user, form=form)
 
 
-@admin_bp.route("/user/<int:user_id>/log/<int:log_id>/edit", methods=["GET", "POST"])
-@admin_required
-def edit_user_log(user_id, log_id):
-    user = User.query.get_or_404(user_id)
-    log = MoodLog.query.filter_by(id=log_id, user_id=user.id).first_or_404()
-    form = AdminMoodLogForm(obj=log)
 
-    if form.validate_on_submit():
-        existing = (
-            MoodLog.query.filter_by(user_id=user.id, log_date=form.log_date.data)
-            .filter(MoodLog.id != log.id)
-            .first()
-        )
-        if existing:
-            flash(f"{user.name} already has a log for {form.log_date.data}.", "warning")
-            return render_template("admin/edit_log.html", user=user, log=log, form=form)
-
-        update_log_analysis(user.id, log, form)
-        db.session.commit()
-        cache.delete_memoized(dashboard_data, user.id)
-
-        flash(f"Mood log for {user.name} updated.", "success")
-        return redirect(url_for("admin.user_detail", user_id=user.id))
-
-    return render_template("admin/edit_log.html", user=user, log=log, form=form)
-
-
-@admin_bp.route("/user/<int:user_id>/log/<int:log_id>/delete", methods=["POST"])
-@admin_required
-def delete_user_log(user_id, log_id):
-    user = User.query.get_or_404(user_id)
-    log = MoodLog.query.filter_by(id=log_id, user_id=user.id).first_or_404()
-
-    log_admin_action(
-        admin_id=current_user.id,
-        action="delete_mood_log",
-        target_type="MoodLog",
-        target_id=log.id,
-        detail=f"user_id={user.id} date={log.log_date}",
-    )
-    db.session.delete(log)
-    db.session.commit()
-    cache.delete_memoized(dashboard_data, user.id)
-
-    flash("Mood log has been deleted.", "danger")
-    return redirect(url_for("admin.user_detail", user_id=user.id))
 
 
 @admin_bp.route("/model")
