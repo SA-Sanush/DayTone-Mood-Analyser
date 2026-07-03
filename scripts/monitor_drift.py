@@ -15,7 +15,7 @@ Outputs:
 """
 
 import json
-import pickle
+import joblib
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -24,8 +24,8 @@ import pandas as pd
 from sklearn.metrics import accuracy_score, f1_score
 
 ROOT = Path(__file__).resolve().parent.parent
-MODEL_PATH   = ROOT / "app" / "ml" / "model.pkl"
-DATA_PATH    = ROOT / "app" / "ml" / "training_data.csv"
+MODEL_PATH = ROOT / "app" / "ml" / "model.pkl"
+DATA_PATH = ROOT / "app" / "ml" / "training_data.csv"
 BASELINE_PATH = ROOT / "app" / "ml" / "drift_baseline.json"
 
 FEATURE_NAMES = [
@@ -46,7 +46,7 @@ def load_artifacts():
         sys.exit(f"[ERROR] Data not found: {DATA_PATH}")
 
     with MODEL_PATH.open("rb") as f:
-        payload = pickle.load(f)
+        payload = joblib.load(f)
 
     df = pd.read_csv(DATA_PATH)
     return payload["model"], df
@@ -83,7 +83,7 @@ def main():
 
     baseline = json.loads(BASELINE_PATH.read_text())
     acc_delta = current["accuracy"] - baseline["accuracy"]
-    f1_delta  = current["macro_f1"] - baseline["macro_f1"]
+    f1_delta = current["macro_f1"] - baseline["macro_f1"]
 
     print(f"Baseline — accuracy: {baseline['accuracy']:.1%}  macro-F1: {baseline['macro_f1']:.3f}  (recorded {baseline['timestamp'][:10]})")
     print(f"\nDrift    — accuracy Δ: {acc_delta:+.1%}   macro-F1 Δ: {f1_delta:+.3f}")
