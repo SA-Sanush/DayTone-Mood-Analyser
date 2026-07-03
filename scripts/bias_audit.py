@@ -17,14 +17,13 @@ import joblib
 import sys
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score, f1_score
 
 # ── Paths ────────────────────────────────────────────────────────────────────
 ROOT = Path(__file__).resolve().parent.parent
 MODEL_PATH = ROOT / "app" / "ml" / "model.pkl"
-DATA_PATH  = ROOT / "app" / "ml" / "training_data.csv"
+DATA_PATH = ROOT / "app" / "ml" / "training_data.csv"
 
 FEATURE_NAMES = [
     "mood_score", "sleep_hours", "stress_level", "activity_done",
@@ -117,8 +116,8 @@ def print_results(overall_acc, group_results):
             flagged.append(label)
 
         f_high = f"{f1s.get('High', 0.0):.3f}"
-        f_low  = f"{f1s.get('Low',  0.0):.3f}"
-        f_med  = f"{f1s.get('Medium', 0.0):.3f}"
+        f_low = f"{f1s.get('Low', 0.0):.3f}"
+        f_med = f"{f1s.get('Medium', 0.0):.3f}"
 
         print(f"  {label:<33} {n:>6} {acc:>10.1%} {f_high:>8} {f_low:>8} {f_med:>8}  {flag}")
 

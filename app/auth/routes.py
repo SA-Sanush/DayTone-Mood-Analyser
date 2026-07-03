@@ -75,14 +75,14 @@ def register():
             now = datetime.datetime.now(datetime.timezone.utc)
             invite = AdminInviteToken.query.filter_by(token=form.admin_code.data, is_used=False).first()
             expected_code = current_app.config.get("ADMIN_REGISTRATION_CODE")
-            
+
             if invite:
                 if invite.expires_at is None or invite.expires_at > now:
                     wants_admin = True
                     invite.is_used = True
             elif expected_code and form.admin_code.data == expected_code:
                 wants_admin = True
-            
+
         user = User(
             name=form.name.data.strip(),
             email=form.email.data.lower().strip(),

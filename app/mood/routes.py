@@ -4,7 +4,6 @@ from io import StringIO
 
 from flask import (
     Response,
-    current_app,
     flash,
     jsonify,
     redirect,
@@ -16,61 +15,13 @@ from flask import (
 )
 from flask_login import current_user, login_required
 
-from app.constants import BurnoutRisk
 from app.extensions import db, limiter, cache
-from app.ml.predictor import build_features, predict_burnout
-from app.models import BurnoutHistory, Goal, MoodLog, Suggestion
-from app.nlp.sentiment import get_sentiment_score
+from app.models import BurnoutHistory, Goal, MoodLog
 from app.utils.analytics import dashboard_data, heatmap_data, goal_progress
-from app.utils.mailer import send_high_risk_alert
 from app.utils.pdf_report import build_pdf_report
-from app.utils.suggestions import get_suggestions
 
 from . import mood_bp
 from .forms import MoodLogForm
-
-
-def _mutate_log_with_analysis(log, form):
-    sentiment = get_sentiment_score(form.notes.data)
-    features = build_features(
-        current_user.id,
-        form.log_date.data,
-        form.mood_score.data,
-        form.sleep_hours.data,
-        form.stress_level.data,
-        form.activity_done.data,
-        form.social_interaction.data,
-        sentiment,
-    )
-    prediction = predict_burnout(features)
-    log.log_date = form.log_date.data
-    log.mood_score = form.mood_score.data
-    log.sleep_hours = form.sleep_hours.data
-    log.stress_level = form.stress_level.data
-    log.activity_done = form.activity_done.data
-    log.social_interaction = form.social_interaction.data
-    log.notes = form.notes.data
-    log.sentiment_score = sentiment
-    log.burnout_risk = prediction["prediction"]
-    return prediction
-
-
-def _replace_suggestions(log):
-    Suggestion.query.filter_by(log_id=log.id).delete()
-    preferred = (
-        current_user.profile.preferred_activity if current_user.profile else "Walk"
-    )
-    for text in get_suggestions(
-        log.burnout_risk,
-        log.sleep_hours,
-        log.stress_level,
-        log.social_interaction,
-        log.activity_done,
-        preferred,
-    ):
-        db.session.add(
-            Suggestion(user_id=current_user.id, log_id=log.id, suggestion_text=text)
-        )
 
 
 @mood_bp.route("/log", methods=["GET", "POST"])
@@ -274,7 +225,7 @@ def goals():
     # Reconstruct from cache / DB
     active_goals = Goal.query.filter_by(user_id=current_user.id, completed=False).all()
     completed_goals = Goal.query.filter_by(user_id=current_user.id, completed=True).all()
-    
+
     progress_map = {gid: progress for gid, progress in cached_data["goals_with_progress"]}
     goals_with_progress = []
     for g in active_goals:
