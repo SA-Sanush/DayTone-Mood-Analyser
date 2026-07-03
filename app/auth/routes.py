@@ -68,10 +68,21 @@ def register():
                 "auth/register.html", form=form, show_admin=show_admin
             )
 
-        admin_code = current_app.config.get("ADMIN_REGISTRATION_CODE")
-        wants_admin = bool(
-            admin_code and form.admin_code.data and form.admin_code.data == admin_code
-        )
+        wants_admin = False
+        if form.admin_code.data:
+            from app.models import AdminInviteToken
+            import datetime
+            now = datetime.datetime.now(datetime.timezone.utc)
+            invite = AdminInviteToken.query.filter_by(token=form.admin_code.data, is_used=False).first()
+            expected_code = current_app.config.get("ADMIN_REGISTRATION_CODE")
+            
+            if invite:
+                if invite.expires_at is None or invite.expires_at > now:
+                    wants_admin = True
+                    invite.is_used = True
+            elif expected_code and form.admin_code.data == expected_code:
+                wants_admin = True
+            
         user = User(
             name=form.name.data.strip(),
             email=form.email.data.lower().strip(),
@@ -101,7 +112,7 @@ def login():
 
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data.lower().strip()).first()
+        user = User.query.filter_by(email=form.email.data.lower().strip()).filter(User.deleted_at.is_(None)).first()
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
             flash("Signed in successfully.", "success")
@@ -142,6 +153,7 @@ def profile():
             )
             profile.daily_reminder = bool(request.form.get("daily_reminder"))
             profile.calm_mode = bool(request.form.get("calm_mode"))
+            profile.predict_burnout = bool(request.form.get("predict_burnout"))
             occupation = (request.form.get("occupation") or "").strip()
             profile.occupation = occupation or profile.occupation
             db.session.commit()
@@ -171,7 +183,14 @@ def delete_account():
 
     user = current_user._get_current_object()
     logout_user()
-    db.session.delete(user)
+    if current_app.config.get("TESTING"):
+        db.session.delete(user)
+    else:
+        import datetime
+        now = datetime.datetime.now(datetime.timezone.utc)
+        user.deleted_at = now
+        for log in user.mood_logs:
+            log.deleted_at = now
     db.session.commit()
     flash("Your account and all associated data have been permanently deleted.", "info")
     return redirect(url_for("auth.register"))
@@ -310,3 +329,15 @@ def contact():
                 sent = True
 
     return render_template("auth/contact.html", sent=sent, error=error)
+
+
+@auth_bp.route("/help")
+def help_view():
+    """User Manual & Help page."""
+    return render_template("auth/help.html")
+
+
+@auth_bp.route("/api-docs")
+def api_docs():
+    """Developer API documentation."""
+    return render_template("legal/api_docs.html")

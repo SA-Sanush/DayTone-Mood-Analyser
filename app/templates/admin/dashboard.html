@@ -8,7 +8,8 @@
     <h1>Admin Dashboard</h1>
     <p class="text-secondary mb-0">Real-time overview of all DayTone users &amp; wellness signals.</p>
   </div>
-  <div class="admin-hero-actions">
+  <div class="admin-hero-actions d-flex gap-2">
+    <a class="btn btn-outline-primary" href="{{ url_for('admin.invite_tokens') }}"><i data-lucide="ticket"></i> Invite Tokens</a>
     <a class="btn btn-primary" href="{{ url_for('admin.users') }}"><i data-lucide="users"></i> Manage Users</a>
   </div>
 </div>

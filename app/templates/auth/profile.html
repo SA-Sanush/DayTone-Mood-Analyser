@@ -79,6 +79,21 @@
           </label>
         </div>
 
+        <div class="settings-toggle-row" style="border-top: 1px solid var(--dt-border); padding-top:1rem; margin-top:0.5rem;">
+          <div>
+            <span class="settings-label" style="display:flex;align-items:center;gap:0.4rem;">
+              <i data-lucide="brain-circuit" style="width:16px;height:16px;color:var(--dt-primary)"></i>
+              AI Burnout Predictions
+            </span>
+            <small class="d-block text-secondary">Calculate burnout risk scores using machine learning. Opt-out to disable predictive classification.</small>
+          </div>
+          <label class="dt-toggle" aria-label="Toggle AI predictions">
+            <input type="checkbox" name="predict_burnout" id="predict_burnout"
+                   {% if profile.predict_burnout %}checked{% endif %}>
+            <span class="dt-toggle-track calm-track"></span>
+          </label>
+        </div>
+
         <button type="submit" class="btn btn-primary mt-3 w-100">
           <i data-lucide="save"></i> Save Preferences
         </button>

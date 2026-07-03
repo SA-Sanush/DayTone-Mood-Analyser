@@ -233,4 +233,41 @@ def create_app(config_object=Config):
         _model_payload.cache_clear()
         print("Model cache cleared. Next prediction will load the current artifact.")
 
+    # ── Context Processor for template globals ───────────────────────────────
+    @app.context_processor
+    def inject_template_globals():
+        from app.constants import CRISIS_RESOURCES
+        from datetime import datetime, timezone
+        return dict(
+            crisis_resources=CRISIS_RESOURCES,
+            now=datetime.now(timezone.utc)
+        )
+
+    # ── Dynamic SQLite Schema Updates ─────────────────────────────────────────
+    with app.app_context():
+        try:
+            db.create_all()
+            from sqlalchemy import inspect
+            inspector = inspect(db.engine)
+            if "user_profile" in inspector.get_table_names():
+                columns = [c["name"] for c in inspector.get_columns("user_profile")]
+                if "predict_burnout" not in columns:
+                    db.session.execute(db.text("ALTER TABLE user_profile ADD COLUMN predict_burnout BOOLEAN NOT NULL DEFAULT 1"))
+                    db.session.commit()
+            if "user" in inspector.get_table_names():
+                columns = [c["name"] for c in inspector.get_columns("user")]
+                if "organization_id" not in columns:
+                    db.session.execute(db.text("ALTER TABLE user ADD COLUMN organization_id INTEGER REFERENCES organization(id) ON DELETE SET NULL"))
+                    db.session.commit()
+                if "deleted_at" not in columns:
+                    db.session.execute(db.text("ALTER TABLE user ADD COLUMN deleted_at DATETIME"))
+                    db.session.commit()
+            if "mood_log" in inspector.get_table_names():
+                columns = [c["name"] for c in inspector.get_columns("mood_log")]
+                if "deleted_at" not in columns:
+                    db.session.execute(db.text("ALTER TABLE mood_log ADD COLUMN deleted_at DATETIME"))
+                    db.session.commit()
+        except Exception as exc:
+            app.logger.warning("Dynamic schema update skipped/failed: %s", exc)
+
     return app

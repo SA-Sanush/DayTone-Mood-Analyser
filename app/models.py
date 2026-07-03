@@ -109,6 +109,8 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(256), nullable=False)
     role = db.Column(db.String(20), nullable=False, default="user")
     created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
+    organization_id = db.Column(db.Integer, db.ForeignKey("organization.id", ondelete="SET NULL"), nullable=True)
+    deleted_at = db.Column(db.DateTime(timezone=True), nullable=True)
 
     profile = db.relationship(
         "UserProfile",
@@ -120,6 +122,7 @@ class User(UserMixin, db.Model):
         "MoodLog", back_populates="user", cascade="all, delete-orphan"
     )
     goals = db.relationship("Goal", back_populates="user", cascade="all, delete-orphan")
+    organization = db.relationship("Organization", back_populates="users")
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password, method="scrypt")
@@ -151,6 +154,7 @@ class UserProfile(db.Model):
     daily_reminder = db.Column(db.Boolean, default=False, nullable=False)
     # Accessibility: disables 3D orb simplex deformation and Chart.js animations
     calm_mode = db.Column(db.Boolean, default=False, nullable=False)
+    predict_burnout = db.Column(db.Boolean, default=True, nullable=False)
 
     user = db.relationship("User", back_populates="profile")
 
@@ -184,6 +188,7 @@ class MoodLog(db.Model):
     )
     created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
     updated_at = db.Column(db.DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+    deleted_at = db.Column(db.DateTime(timezone=True), nullable=True)
 
     user = db.relationship("User", back_populates="mood_logs")
     suggestions = db.relationship(
@@ -329,6 +334,26 @@ class AuditLog(db.Model):
     admin = db.relationship("User", foreign_keys=[admin_id])
 
 
+class Organization(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    invite_code = db.Column(db.String(50), unique=True, nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
+
+    users = db.relationship("User", back_populates="organization")
+
+
+class AdminInviteToken(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    token = db.Column(db.String(100), unique=True, nullable=False)
+    is_used = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
+    expires_at = db.Column(db.DateTime(timezone=True), nullable=True)
+
+
 @login_manager.user_loader
 def load_user(user_id):
-    return db.session.get(User, int(user_id))
+    user = db.session.get(User, int(user_id))
+    if user and user.deleted_at is not None:
+        return None
+    return user

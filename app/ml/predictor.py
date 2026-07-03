@@ -1,4 +1,4 @@
-import pickle
+import joblib
 from flask import current_app, has_app_context
 from datetime import date, timedelta
 from functools import lru_cache
@@ -44,7 +44,7 @@ def _model_payload():
         raise FileNotFoundError(f"Model file not found at {MODEL_PATH}")
 
     with MODEL_PATH.open("rb") as model_file:
-        return pickle.load(model_file)
+        return joblib.load(model_file)
 
 
 def _recent_logs(user_id, log_date):
@@ -54,6 +54,7 @@ def _recent_logs(user_id, log_date):
             MoodLog.user_id == user_id,
             MoodLog.log_date >= start_date,
             MoodLog.log_date <= log_date,
+            MoodLog.deleted_at.is_(None),
         )
         .order_by(MoodLog.log_date.asc())
         .all()

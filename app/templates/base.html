@@ -151,6 +151,8 @@
   <footer class="app-footer" role="contentinfo" aria-label="Site footer">
     <span>&copy; 2026 DayTone &mdash; AI powered Mental Wellness Tracker.</span>
     <span class="footer-links">
+      <a href="{{ url_for('auth.help_view') }}">Help &amp; Manual</a>
+      <a href="{{ url_for('auth.api_docs') }}">Developer APIs</a>
       <a href="{{ url_for('auth.contact') }}">Contact</a>
       <a href="{{ url_for('auth.privacy') }}">Privacy Policy</a>
       <a href="{{ url_for('auth.terms') }}">Terms of Service</a>
@@ -209,6 +211,52 @@
         if (b) b.remove();
       });
     }
+
+    // Tab Sync via BroadcastChannel
+    (function() {
+      if ('BroadcastChannel' in window) {
+        const channel = new BroadcastChannel('daytone_sync');
+        
+        channel.onmessage = (event) => {
+          if (event.data === 'reload_dashboard' && window.location.pathname.includes('/dashboard')) {
+            showSyncToast();
+          }
+        };
+        
+        window.triggerTabSync = function() {
+          channel.postMessage('reload_dashboard');
+        };
+      }
+      
+      function showSyncToast() {
+        let container = document.getElementById('toastContainer');
+        if (!container) {
+          container = document.createElement('div');
+          container.id = 'toastContainer';
+          container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+          container.style.zIndex = '1080';
+          document.body.appendChild(container);
+        }
+        
+        const id = 'toast-sync-' + Date.now();
+        const toastHtml = `
+          <div id="${id}" class="custom-toast animate-slide-in d-flex align-items-center gap-2 p-3 mb-2 rounded shadow" style="background: var(--dt-glass-modal-bg); border: 1px solid var(--dt-border); border-left: 4px solid var(--dt-primary); min-width: 300px; backdrop-filter: blur(15px); color: var(--dt-text);">
+            <i data-lucide="refresh-cw" class="animate-spin text-primary" style="width: 20px; height: 20px; flex-shrink: 0; color: var(--dt-primary) !important;"></i>
+            <div class="flex-grow-1">
+              <span class="fw-bold d-block" style="font-size: 0.85rem; color: var(--dt-text);">Data Updated</span>
+              <small class="text-secondary" style="font-size: 0.75rem;">Logs were modified in another tab.</small>
+            </div>
+            <button class="btn btn-xs btn-primary" onclick="window.location.reload()">Reload</button>
+          </div>
+        `;
+        container.insertAdjacentHTML('beforeend', toastHtml);
+        
+        const toastEl = document.getElementById(id);
+        if (window.lucide) {
+          window.lucide.createIcons({ node: toastEl });
+        }
+      }
+    })();
   </script>
 
   {% block scripts %}{% endblock %}

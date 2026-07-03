@@ -13,7 +13,7 @@ Requires:
     - app/ml/training_data.csv (training/evaluation dataset)
 """
 
-import pickle
+import joblib
 import sys
 from pathlib import Path
 
@@ -43,7 +43,7 @@ def load_artifacts():
         sys.exit(f"[ERROR] Data not found at {DATA_PATH}.")
 
     with MODEL_PATH.open("rb") as f:
-        payload = pickle.load(f)
+        payload = joblib.load(f)
 
     df = pd.read_csv(DATA_PATH)
     return payload["model"], df

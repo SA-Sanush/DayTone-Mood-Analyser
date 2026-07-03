@@ -13,9 +13,27 @@
   const button = document.getElementById('darkToggle');
   if (!button) return;
 
+  function updateIcon(themeName) {
+    const currentIcon = button.querySelector('i') || button.querySelector('svg');
+    if (currentIcon) {
+      const newIcon = document.createElement('i');
+      newIcon.setAttribute('data-lucide', themeName === 'dark' ? 'sun' : 'moon');
+      currentIcon.replaceWith(newIcon);
+      if (window.lucide) {
+        window.lucide.createIcons({
+          node: button
+        });
+      }
+    }
+  }
+
+  // Set initial icon on load
+  updateIcon(theme);
+
   button.addEventListener('click', () => {
     const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
     root.setAttribute('data-theme', next);
     localStorage.setItem('daytone-theme', next);
+    updateIcon(next);
   });
 })();

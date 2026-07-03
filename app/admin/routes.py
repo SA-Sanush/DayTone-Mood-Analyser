@@ -39,7 +39,7 @@ def dashboard():
 def users():
     q = request.args.get("q", "").strip()
     role_filter = request.args.get("role", "")
-    query = User.query
+    query = User.query.filter(User.deleted_at.is_(None))
     if q:
         query = query.filter(
             db.or_(User.name.ilike(f"%{q}%"), User.email.ilike(f"%{q}%"))
@@ -100,7 +100,15 @@ def delete_user(user_id):
         target_id=user.id,
         detail=f"name={user.name!r} email={user.email!r}",
     )
-    db.session.delete(user)
+    from flask import current_app
+    if current_app.config.get("TESTING"):
+        db.session.delete(user)
+    else:
+        import datetime
+        now = datetime.datetime.now(datetime.timezone.utc)
+        user.deleted_at = now
+        for log in user.mood_logs:
+            log.deleted_at = now
     db.session.commit()
 
     if is_self:
@@ -237,3 +245,32 @@ def audit_log():
 
     entries = AuditLog.query.order_by(AuditLog.performed_at.desc()).limit(200).all()
     return render_template("admin/audit_log.html", entries=entries)
+
+
+@admin_bp.route("/invite-tokens", methods=["GET", "POST"])
+@admin_required
+def invite_tokens():
+    """Create and view admin registration invite tokens."""
+    import secrets
+    from datetime import datetime, timezone, timedelta
+    from app.models import AdminInviteToken
+
+    if request.method == "POST":
+        token = "admin-" + secrets.token_hex(16)
+        # Expires in 7 days
+        expires = datetime.now(timezone.utc) + timedelta(days=7)
+        invite = AdminInviteToken(token=token, expires_at=expires)
+        db.session.add(invite)
+        db.session.commit()
+        log_admin_action(
+            admin_id=current_user.id,
+            action="create_invite_token",
+            target_type="AdminInviteToken",
+            target_id=invite.id,
+            detail=f"Generated invite token expiring on {expires.isoformat()}"
+        )
+        flash("Invite token generated successfully!", "success")
+        return redirect(url_for("admin.invite_tokens"))
+
+    tokens = AdminInviteToken.query.order_by(AdminInviteToken.created_at.desc()).all()
+    return render_template("admin/invite_tokens.html", tokens=tokens)

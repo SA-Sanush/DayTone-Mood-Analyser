@@ -4,7 +4,18 @@ block content %} {% if data.latest %}
 {# ── High-Risk Compassionate Intervention Card (shown before all other content when risk is HIGH) ── #}
 {% if data.latest.burnout_risk == 'High' %}
 <div class="intervention-card" role="alert" aria-live="polite" id="interventionCard">
-  <div class="intervention-inner">
+  <!-- Content Warning screen -->
+  <div id="crisisWarningScreen" class="p-3 text-center w-100">
+    <i data-lucide="alert-triangle" class="mb-2" style="width:28px;height:28px;color:var(--dt-warning)"></i>
+    <h3 class="intervention-title">Wellness Classification Alert</h3>
+    <p class="intervention-text small text-secondary">
+      DayTone has compiled today's burnout risk assessment. It contains predictive feedback that may raise stress levels. Would you like to view the details?
+    </p>
+    <button class="btn btn-sm btn-primary" onclick="document.getElementById('crisisWarningScreen').remove(); document.getElementById('crisisMainContent').classList.remove('d-none');">Reveal Assessment</button>
+  </div>
+
+  <!-- Actual content (hidden initially) -->
+  <div id="crisisMainContent" class="intervention-inner d-none w-100">
     <div class="intervention-icon" aria-hidden="true">💛</div>
     <div class="intervention-body">
       <h2 class="intervention-title">We're here with you</h2>
@@ -23,10 +34,9 @@ block content %} {% if data.latest %}
       <details class="intervention-crisis mt-2">
         <summary class="text-secondary" style="cursor:pointer;font-size:0.82rem">🆘 Crisis support resources</summary>
         <ul class="crisis-list mt-2">
-          <li><strong>Global:</strong> <a href="https://findahelpline.com" target="_blank" rel="noopener">findahelpline.com</a></li>
-          <li><strong>US:</strong> Call or text <strong>988</strong> (Suicide &amp; Crisis Lifeline)</li>
-          <li><strong>UK:</strong> Samaritans <strong>116 123</strong></li>
-          <li><strong>India:</strong> Kiran (National Helpline) <strong>1800-599-0019</strong> (Toll-Free) or iCall <strong>9152987821</strong></li>
+          {% for resource in crisis_resources %}
+          <li><strong>{{ resource.region }}:</strong> <a href="{{ resource.url }}" target="_blank" rel="noopener">{{ resource.label }}</a></li>
+          {% endfor %}
         </ul>
         <p class="text-secondary mt-1" style="font-size:0.75rem;font-style:italic">DayTone is not a medical service. These resources connect you to trained humans.</p>
       </details>
@@ -65,7 +75,10 @@ block content %} {% if data.latest %}
       </div>
     </div>
     <div class="orb-stage-wrap">
-      <canvas id="moodOrb" aria-label="Interactive mood orb"></canvas>
+      <canvas id="moodOrb" aria-label="Interactive 3D mood orb representing a {{ data.latest_orb_state.label|lower }} mood state of {{ data.latest_orb_state.mood }} out of 5."></canvas>
+      <div class="visually-hidden" id="orbAriaLive" aria-live="polite">
+        Today's wellness signal indicates a {{ data.latest_orb_state.label|lower }} mood state ({{ data.latest_orb_state.mood }}/5) with {{ data.latest.burnout_risk|lower }} burnout risk.
+      </div>
       <div class="orb-readout">
         <span id="orbLabel">{{ data.latest_orb_state.label }}</span>
         <strong id="orbScore">{{ data.latest_orb_state.mood }}/5</strong>
@@ -429,6 +442,9 @@ block content %} {% if data.latest %}
 <script>
   window.DAYTONE_CHARTS = {{ chart_data|tojson }};
   window.DAYTONE_DASHBOARD = {{ dashboard_state|tojson }};
+  if (window.triggerTabSync) {
+    window.triggerTabSync();
+  }
 </script>
 <script src="{{ url_for('static', filename='js/chart.umd.min.js') }}" defer></script>
 <script src="{{ url_for('static', filename='js/charts.js') }}" defer></script>

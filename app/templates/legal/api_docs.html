@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Developer API Reference — DayTone{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width: 800px;">
+  <div class="mb-4">
+    <span class="eyebrow">Developer Documentation</span>
+    <h1>DayTone Developer APIs</h1>
+    <p class="text-secondary">Integrate with DayTone logs or audit the machine learning performance metrics.</p>
+  </div>
+
+  <!-- ── Endpoint 1: Heatmap Data ─────────────────────────────────────── -->
+  <div class="panel elevated-panel mb-4 animate-fade-in-up">
+    <div class="panel-title">
+      <span class="badge bg-success me-2">GET</span>
+      <h2>/api/heatmap</h2>
+    </div>
+    <p class="text-secondary mt-2">
+      Fetch daily aggregated mood and burnout risk metrics to render heatmaps.
+    </p>
+    <h3 class="h6 mt-3">Request Parameters</h3>
+    <table class="table table-sm" style="font-size: 0.85rem;">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Required</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="font-monospace">year</td>
+          <td>integer</td>
+          <td>No</td>
+          <td>The four-digit calendar year (defaults to the current year).</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 class="h6 mt-3">Response Schema (200 OK)</h3>
+    <pre class="bg-dark p-3 rounded font-monospace text-light" style="font-size: 0.8rem;">{
+  "2026-07-01": {
+    "id": 42,
+    "mood_score": 4,
+    "burnout_risk": "Low"
+  },
+  "2026-07-02": {
+    "id": 43,
+    "mood_score": 2,
+    "burnout_risk": "Medium"
+  }
+}</pre>
+  </div>
+
+  <!-- ── Endpoint 2: Prediction Feedback ──────────────────────────────── -->
+  <div class="panel elevated-panel mb-4 animate-fade-in-up delay-1">
+    <div class="panel-title">
+      <span class="badge bg-primary me-2">POST</span>
+      <h2>/api/feedback/&lt;history_id&gt;</h2>
+    </div>
+    <p class="text-secondary mt-2">
+      Submit user feedback on the accuracy of a specific ML burnout risk prediction.
+    </p>
+    
+    <div class="alert alert-warning d-flex align-items-start gap-2 my-2" style="font-size: 0.8rem;">
+      <i data-lucide="shield-alert" class="flex-shrink-0 mt-0.5" style="color: var(--dt-danger);"></i>
+      <div>
+        <strong>Header Guard:</strong> Requests must send the <code>Content-Type: application/json</code> header.
+      </div>
+    </div>
+
+    <h3 class="h6 mt-3">Request Body Schema</h3>
+    <pre class="bg-dark p-3 rounded font-monospace text-light" style="font-size: 0.8rem;">{
+  "accurate": true
+}</pre>
+
+    <h3 class="h6 mt-3">Response Schema (200 OK)</h3>
+    <pre class="bg-dark p-3 rounded font-monospace text-light" style="font-size: 0.8rem;">{
+  "success": true,
+  "history_id": 128
+}</pre>
+  </div>
+
+  <!-- ── Model Card Section ────────────────────────────────────────────── -->
+  <div class="panel elevated-panel mb-4 animate-fade-in-up delay-2">
+    <div class="panel-title">
+      <i data-lucide="cpu"></i>
+      <h2>Machine Learning Model Card</h2>
+    </div>
+    <p>
+      For details on model features, limitations, and bias audit results, please check:
+    </p>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('admin.model_diagnostics') }}" class="btn btn-outline-primary">
+        <i data-lucide="line-chart"></i> View Diagnostics Panel
+      </a>
+      <a href="{{ url_for('admin.bias_audit') }}" class="btn btn-outline-primary">
+        <i data-lucide="scale"></i> View Bias Audit Reports
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

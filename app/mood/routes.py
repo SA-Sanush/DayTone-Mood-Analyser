@@ -93,39 +93,8 @@ def log_mood():
             )
             return render_template("mood/log.html", form=form)
 
-        log = MoodLog(
-            user_id=current_user.id,
-            log_date=form.log_date.data,
-            mood_score=form.mood_score.data,
-            sleep_hours=form.sleep_hours.data,
-            stress_level=form.stress_level.data,
-            activity_done=form.activity_done.data,
-            social_interaction=form.social_interaction.data,
-        )
-        prediction = _mutate_log_with_analysis(log, form)
-        db.session.add(log)
-        db.session.flush()
-
-        history = BurnoutHistory(
-            user_id=current_user.id,
-            log_id=log.id,
-            prediction=prediction["prediction"],
-            confidence=prediction["confidence"],
-            algorithm_used=prediction["algorithm"],
-        )
-        db.session.add(history)
-
-        _replace_suggestions(log)
-
-        db.session.commit()
-        # Invalidate dashboard cache for the user
-        cache.delete_memoized(dashboard_data, current_user.id)
-
-        if log.burnout_risk == BurnoutRisk.HIGH:
-            current_app.logger.info(
-                "High-risk alert queued user_id=%s log_id=%s", current_user.id, log.id
-            )
-            send_high_risk_alert(current_user, log)
+        from app.utils.services import MoodLogService
+        MoodLogService.create_log(current_user, form)
         flash("Mood log saved with DayTone burnout analysis.", "success")
         return redirect(url_for("mood.dashboard"))
 
@@ -135,7 +104,7 @@ def log_mood():
 @mood_bp.route("/log/<int:log_id>/edit", methods=["GET", "POST"])
 @login_required
 def edit_log(log_id):
-    log = MoodLog.query.filter_by(id=log_id, user_id=current_user.id).first_or_404()
+    log = MoodLog.query.filter_by(id=log_id, user_id=current_user.id).filter(MoodLog.deleted_at.is_(None)).first_or_404()
     form = MoodLogForm(obj=log)
     # Pre-populate the notes field from the decrypted property
     if request.method == "GET":
@@ -152,27 +121,8 @@ def edit_log(log_id):
             flash("You already have another log for that date.", "warning")
             return render_template("mood/log.html", form=form, editing=True, log=log)
 
-        prediction = _mutate_log_with_analysis(log, form)
-        BurnoutHistory.query.filter_by(log_id=log.id).delete()
-        db.session.add(
-            BurnoutHistory(
-                user_id=current_user.id,
-                log_id=log.id,
-                prediction=prediction["prediction"],
-                confidence=prediction["confidence"],
-                algorithm_used=prediction["algorithm"],
-            )
-        )
-        _replace_suggestions(log)
-        db.session.commit()
-        # Invalidate dashboard cache for the user
-        cache.delete_memoized(dashboard_data, current_user.id)
-
-        if log.burnout_risk == BurnoutRisk.HIGH:
-            current_app.logger.info(
-                "High-risk alert queued user_id=%s log_id=%s", current_user.id, log.id
-            )
-            send_high_risk_alert(current_user, log)
+        from app.utils.services import MoodLogService
+        MoodLogService.update_log(current_user, log, form)
         flash("Mood log updated with fresh DayTone analysis.", "success")
         return redirect(url_for("mood.history"))
 
@@ -222,6 +172,7 @@ def history():
     page = request.args.get("page", 1, type=int)
     pagination = (
         MoodLog.query.filter_by(user_id=current_user.id)
+        .filter(MoodLog.deleted_at.is_(None))
         .options(joinedload(MoodLog.suggestions), joinedload(MoodLog.burnout_history))
         .order_by(MoodLog.log_date.desc())
         .paginate(page=page, per_page=30, error_out=False)
@@ -241,7 +192,12 @@ def heatmap():
 @login_required
 def heatmap_api():
     year = request.args.get("year", type=int)
-    return jsonify(heatmap_data(current_user.id, year=year))
+    cache_key = f"heatmap_data_{current_user.id}_{year or 'current'}"
+    data = cache.get(cache_key)
+    if data is None:
+        data = heatmap_data(current_user.id, year=year)
+        cache.set(cache_key, data, timeout=300)
+    return jsonify(data)
 
 
 @mood_bp.route("/api/feedback/<int:history_id>", methods=["POST"])
@@ -253,6 +209,8 @@ def prediction_feedback(history_id):
     Accepts JSON body: {"accurate": true|false}
     Returns JSON: {"success": true, "history_id": <int>}
     """
+    if not request.is_json:
+        return jsonify({"error": "Content-Type must be application/json"}), 415
     history = BurnoutHistory.query.filter_by(
         id=history_id, user_id=current_user.id
     ).first_or_404()
@@ -270,6 +228,7 @@ def prediction_feedback(history_id):
 def goals():
     """Goal management page: create and view personal wellness goals."""
     if request.method == "POST":
+        from app.utils.services import GoalService
         action = request.form.get("action", "create")
         if action == "create":
             target_type = request.form.get("target_type", "")
@@ -280,14 +239,7 @@ def goals():
             else:
                 try:
                     target_value = float(target_value_raw)
-                    goal = Goal(
-                        user_id=current_user.id,
-                        target_type=target_type,
-                        target_value=target_value,
-                    )
-                    db.session.add(goal)
-                    db.session.commit()
-                    cache.delete_memoized(dashboard_data, current_user.id)
+                    goal = GoalService.create_goal(current_user, target_type, target_value)
                     flash(f"Goal '{goal.display_name}' created!", "success")
                 except (ValueError, TypeError):
                     flash("Invalid target value.", "danger")
@@ -295,28 +247,40 @@ def goals():
         elif action == "complete":
             goal_id = request.form.get("goal_id", type=int)
             if goal_id:
-                goal = Goal.query.filter_by(id=goal_id, user_id=current_user.id).first()
-                if goal:
-                    goal.completed = True
-                    db.session.commit()
-                    flash("Goal marked as completed!", "success")
+                GoalService.complete_goal(current_user, goal_id)
+                flash("Goal marked as completed!", "success")
 
         elif action == "delete":
             goal_id = request.form.get("goal_id", type=int)
             if goal_id:
-                goal = Goal.query.filter_by(id=goal_id, user_id=current_user.id).first()
-                if goal:
-                    db.session.delete(goal)
-                    db.session.commit()
-                    flash("Goal removed.", "info")
+                GoalService.delete_goal(current_user, goal_id)
+                flash("Goal removed.", "info")
 
         return redirect(url_for("mood.goals"))
 
+    # Caching goals progress computations
+    cache_key = f"goals_with_progress_{current_user.id}"
+    cached_data = cache.get(cache_key)
+    if cached_data is None:
+        active_goals = Goal.query.filter_by(user_id=current_user.id, completed=False).all()
+        completed_goals = Goal.query.filter_by(user_id=current_user.id, completed=True).all()
+        goals_with_progress = [(g, goal_progress(g, current_user.id)) for g in active_goals]
+        cached_data = {
+            "goals_with_progress": [(g.id, progress) for g, progress in goals_with_progress],
+            "completed_goals_ids": [g.id for g in completed_goals]
+        }
+        cache.set(cache_key, cached_data, timeout=300)
+
+    # Reconstruct from cache / DB
     active_goals = Goal.query.filter_by(user_id=current_user.id, completed=False).all()
-    completed_goals = Goal.query.filter_by(
-        user_id=current_user.id, completed=True
-    ).all()
-    goals_with_progress = [(g, goal_progress(g, current_user.id)) for g in active_goals]
+    completed_goals = Goal.query.filter_by(user_id=current_user.id, completed=True).all()
+    
+    progress_map = {gid: progress for gid, progress in cached_data["goals_with_progress"]}
+    goals_with_progress = []
+    for g in active_goals:
+        progress = progress_map.get(g.id) or goal_progress(g, current_user.id)
+        goals_with_progress.append((g, progress))
+
     return render_template(
         "mood/goals.html",
         goals_with_progress=goals_with_progress,
@@ -365,6 +329,7 @@ def export_csv():
 
         logs = (
             MoodLog.query.filter_by(user_id=current_user.id)
+            .filter(MoodLog.deleted_at.is_(None))
             .order_by(MoodLog.log_date.asc())
             .all()
         )

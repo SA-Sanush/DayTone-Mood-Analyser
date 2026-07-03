@@ -17,6 +17,7 @@ def user_logs(user_id: int, limit: int | None = None) -> list[MoodLog]:
     if limit:
         logs = (
             MoodLog.query.filter_by(user_id=user_id)
+            .filter(MoodLog.deleted_at.is_(None))
             .options(joinedload(MoodLog.suggestions))
             .order_by(MoodLog.log_date.desc())
             .limit(limit)
@@ -25,7 +26,10 @@ def user_logs(user_id: int, limit: int | None = None) -> list[MoodLog]:
         logs.reverse()
         return logs
     return (
-        MoodLog.query.filter_by(user_id=user_id).order_by(MoodLog.log_date.asc()).all()
+        MoodLog.query.filter_by(user_id=user_id)
+        .filter(MoodLog.deleted_at.is_(None))
+        .order_by(MoodLog.log_date.asc())
+        .all()
     )
 
 
@@ -249,12 +253,13 @@ def goal_progress(goal: "Goal", user_id: int) -> dict:
         status: 'on_track' | 'behind' | 'achieved'
     """
     today = date.today()
-    start = goal.start_date
+    start = min(goal.start_date, today - timedelta(days=6))
     recent_logs = (
         MoodLog.query.filter(
             MoodLog.user_id == user_id,
             MoodLog.log_date >= start,
             MoodLog.log_date <= today,
+            MoodLog.deleted_at.is_(None),
         )
         .order_by(MoodLog.log_date.asc())
         .all()
@@ -420,6 +425,7 @@ def heatmap_data(user_id, year=None):
             MoodLog.user_id == user_id,
             MoodLog.log_date >= start,
             MoodLog.log_date <= end,
+            MoodLog.deleted_at.is_(None),
         )
         .order_by(MoodLog.log_date.asc())
         .all()
@@ -439,6 +445,7 @@ def recent_suggestions(user_id: int, log_limit: int = 3) -> list[str]:
     """Retrieve suggestions from the latest mood log that contains suggestions."""
     latest_log_with_sugg = (
         MoodLog.query.filter_by(user_id=user_id)
+        .filter(MoodLog.deleted_at.is_(None))
         .join(Suggestion)
         .order_by(MoodLog.log_date.desc())
         .first()
@@ -449,7 +456,7 @@ def recent_suggestions(user_id: int, log_limit: int = 3) -> list[str]:
 
 
 def db_risk_distribution(user_id=None, limit=None):
-    query = MoodLog.query
+    query = MoodLog.query.filter(MoodLog.deleted_at.is_(None))
     if user_id is not None:
         query = query.filter(MoodLog.user_id == user_id)
     if limit:
@@ -470,20 +477,22 @@ def db_risk_distribution(user_id=None, limit=None):
 
 def platform_stats():
     cutoff = date.today() - timedelta(days=7)
-    total_users = User.query.count()
+    total_users = User.query.filter(User.deleted_at.is_(None)).count()
     active_users = (
         MoodLog.query.with_entities(MoodLog.user_id)
         .filter(MoodLog.log_date >= cutoff)
+        .filter(MoodLog.deleted_at.is_(None))
         .distinct()
         .count()
     )
-    avg_mood = MoodLog.query.with_entities(func.avg(MoodLog.mood_score)).scalar() or 0
-    avg_sleep = MoodLog.query.with_entities(func.avg(MoodLog.sleep_hours)).scalar() or 0
+    avg_mood = MoodLog.query.with_entities(func.avg(MoodLog.mood_score)).filter(MoodLog.deleted_at.is_(None)).scalar() or 0
+    avg_sleep = MoodLog.query.with_entities(func.avg(MoodLog.sleep_hours)).filter(MoodLog.deleted_at.is_(None)).scalar() or 0
 
     latest = (
         MoodLog.query.with_entities(
             MoodLog.user_id, func.max(MoodLog.log_date).label("latest_date")
         )
+        .filter(MoodLog.deleted_at.is_(None))
         .group_by(MoodLog.user_id)
         .subquery()
     )

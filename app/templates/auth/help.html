@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Help & Manual — DayTone{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width: 800px;">
+  <div class="mb-4">
+    <span class="eyebrow">User Guide</span>
+    <h1>DayTone Help Center & Manual</h1>
+    <p class="text-secondary">Learn how DayTone tracks mood, computes goals, and classifies burnout risk.</p>
+  </div>
+
+  <!-- ── Section 1: The 3D Mood Orb ───────────────────────────────────── -->
+  <div class="panel elevated-panel mb-4 animate-fade-in-up">
+    <div class="panel-title">
+      <i data-lucide="sun"></i>
+      <h2>The Interactive 3D Mood Orb</h2>
+    </div>
+    <p>
+      The 3D Orb on your dashboard is a dynamic visualization of your current wellness state:
+    </p>
+    <ul>
+      <li><strong>Colors (Mood Score):</strong> Smoothly transitions between HSL states. A high score (e.g. 5/5) shows cool, calming shades, while lower scores show vibrant warning shades.</li>
+      <li><strong>Shape Deformation (Stress Level):</strong> The orb deforms using simplex noise algorithms. High stress levels trigger stronger, faster wave deformations, providing immediate visual feedback of tension levels.</li>
+      <li><strong>Calm Mode:</strong> If you are sensitive to movement, you can enable <em>Calm Mode</em> in your <a href="{{ url_for('auth.profile') }}">Settings</a> to freeze all 3D canvas rendering and chart transitions.</li>
+    </ul>
+  </div>
+
+  <!-- ── Section 2: Goals Progress ────────────────────────────────────── -->
+  <div class="panel elevated-panel mb-4 animate-fade-in-up delay-1">
+    <div class="panel-title">
+      <i data-lucide="target"></i>
+      <h2>Understanding Wellness Goals</h2>
+    </div>
+    <p>
+      DayTone calculates goals progress using a <strong>rolling average window</strong>:
+    </p>
+    <ul>
+      <li>When you create a goal (e.g., target 8 hours of sleep), DayTone evaluates your check-ins over a rolling 7-day window.</li>
+      <li>For new goals, DayTone immediately integrates historical logs from the past week so you don't start at 0% progress on Day One.</li>
+    </ul>
+  </div>
+
+  <!-- ── Section 3: AI Burnout Predictions & Ethics ───────────────────── -->
+  <div class="panel elevated-panel mb-4 animate-fade-in-up delay-2">
+    <div class="panel-title">
+      <i data-lucide="brain-circuit"></i>
+      <h2>AI Burnout Predictions & Transparency</h2>
+    </div>
+    <p>
+      DayTone uses a supervised machine learning classifier (Decision Tree / Random Forest) trained on standard occupational wellness metrics to predict burnout risk (Low, Medium, High).
+    </p>
+    <div class="alert alert-info d-flex align-items-start gap-2 my-3" style="font-size: 0.88rem;">
+      <i data-lucide="info" class="flex-shrink-0 mt-0.5" style="color: var(--dt-primary);"></i>
+      <div>
+        <strong>Privacy & Ethical Opt-Out:</strong> If you do not wish to have predictions run on your data, you can disable AI classifications anytime under your <a href="{{ url_for('auth.profile') }}">Settings</a> profile. Your data will remain encrypted at rest, and risk metrics will default to Low.
+      </div>
+    </div>
+    <p>
+      For a complete technical analysis of model accuracy, feature weights, bias auditing, and performance indicators, please read the official <a href="/api-docs">Model Card Reference</a>.
+    </p>
+  </div>
+
+  <!-- ── Section 4: Crisis Support ────────────────────────────────────── -->
+  <div class="panel elevated-panel mb-4 animate-fade-in-up delay-3" style="border-left: 4px solid var(--dt-danger);">
+    <div class="panel-title" style="color: var(--dt-danger);">
+      <i data-lucide="heart" style="color: var(--dt-danger);"></i>
+      <h2 style="color: var(--dt-danger);">Need Support?</h2>
+    </div>
+    <p class="text-secondary">
+      DayTone is a tracking and reflection tool, not a clinical diagnostic or crisis service. If you are experiencing distress, please consider calling or text messaging:
+    </p>
+    <ul class="crisis-list">
+      {% for resource in crisis_resources %}
+      <li><strong>{{ resource.region }}:</strong> <a href="{{ resource.url }}" target="_blank" rel="noopener">{{ resource.label }}</a></li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}

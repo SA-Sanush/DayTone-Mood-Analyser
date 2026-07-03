@@ -1,6 +1,6 @@
 import json
 import logging
-import pickle
+import joblib
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -149,13 +149,13 @@ def train():
     # Write active model
     payload = {"model": best_model, "name": best_name, "features": FEATURE_NAMES}
     with MODEL_PATH.open("wb") as model_file:
-        pickle.dump(payload, model_file)
+        joblib.dump(payload, model_file)
 
     # Write timestamped backup
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     backup_path = BASE / f"model_{timestamp}.pkl"
     with backup_path.open("wb") as backup_file:
-        pickle.dump(payload, backup_file)
+        joblib.dump(payload, backup_file)
 
     METRICS_PATH.write_text(
         json.dumps(
