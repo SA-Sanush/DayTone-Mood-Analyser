@@ -94,34 +94,28 @@ C. BURNOUT RISK CLASSIFIER (ML PIPELINE)
     into the ML training CSV, facilitating the transition to real-user data.
 
 D. GDPR COMPLIANCE & EXPORTS
-- Right to be Forgotten: Users can delete their account from the settings page,
-  permanently purging their profiles, credentials, logs, and goals.
-- Data Portability: Users can export their entire history in CSV format or as a
-  formatted PDF report generated using ReportLab (app/utils/pdf_report.py).
+- Right to be Forgotten: Users can delete their account from the settings page, permanently purging their profiles, credentials, logs, and goals.
+- Data Portability: Users can export their entire history in CSV format or as a formatted PDF report generated using ReportLab (app/utils/pdf_report.py).
+- Database Soft Deletes: Integrated `deleted_at` fields on Users and MoodLogs, preserving administrative analytical histories while performing cascading purges upon hard user account deletion.
 
 E. SECURITY & HARDENING
-- Encrypted Journaling: Reflection logs are encrypted at rest using AES-256 
-  Fernet symmetric cryptography. The decryption key is loaded from the environment 
-  variables, protecting raw text entries in the database.
-- Crisis Safety Protocol: If the model predicts a High burnout risk, the application
-  renders emergency resource links (e.g., 988 Suicide & Crisis Lifeline in the US, Kiran national helpline in India).
-- Rate Limiting: Key actions (login, registration, API endpoints) are rate-limited 
-  using flask-limiter and a Redis backend.
+- Encrypted Journaling: Reflection logs are encrypted at rest using AES-256 Fernet symmetric cryptography. The decryption key is loaded from the environment variables, protecting raw text entries in the database.
+- Dynamic Admin Invite Tokens: Implemented database-backed invitation tokens generated and managed from the Admin console, removing static config-file registration codes.
+- Crisis Safety Protocol: If the model predicts a High burnout risk, the application renders emergency resource links (e.g., 988 Suicide & Crisis Lifeline in the US, Kiran national helpline in India).
+- Rate Limiting: Key actions (login, registration, API endpoints) are rate-limited using flask-limiter and a Redis backend.
 
-F. PWA & WEB STANDARDS
-- Offline Mode: PWA capabilities are supported via manifest.json and a custom 
-  Service Worker (sw.js). When offline, users are served cached static resources 
-  and a custom offline.html fallback.
-- Accessibility: Structured layout landmarks, skip-to-content links, clear focus 
-  indicators, and navbar ARIA labels help the application meet accessibility 
-  guidelines.
-- Performance: Decohesion of heavy packages (THREE.js and Chart.js load only on 
-  necessary pages), async Google Fonts integration, and custom CSS minification 
-  helped improve Lighthouse speed scores.
-- Sticky Footer Layout: Implemented a Flexbox-based sticky footer layout on the body 
-  (display: flex; flex-direction: column) and main content area (flex: 1 0 auto). 
-  Bounded the footer container width to 1240px and centered it using auto-margins 
-  to align with the core page grid.
+F. PWA, CACHING & WEB STANDARDS
+- Offline Mode: PWA capabilities are supported via manifest.json and a custom Service Worker (sw.js). When offline, users are served cached static resources and a custom offline.html fallback.
+- Multi-Tab State Sync: Integrated a browser BroadcastChannel sync system that broadcasts refresh triggers across all open tabs on check-in or preference edits, alerting users via a glassmorphic toast notification.
+- Precise Query Caching: Enabled caching on the goals list page and daily heatmap JSON API, with selective invalidation keys cleared immediately upon log edits/creations.
+- Accessibility: Structured layout landmarks, skip-to-content links, clear focus indicators, `aria-live` announcement regions, and explicit orb canvas descriptions.
+- Performance: Decohesion of heavy packages (THREE.js and Chart.js load only on necessary pages), async Google Fonts integration, and custom CSS minification.
+- Sticky Footer Layout: Implemented a Flexbox-based sticky footer layout on the body (display: flex; flex-direction: column) and main content area (flex: 1 0 auto). Bounded the footer container width to 1240px and centered it using auto-margins.
+
+G. ETHICAL ML & USER AUTONOMY
+- ML Predictions Preference Toggle: Integrated a profile toggle setting to opt-out of machine learning analysis. When disabled, the ML classifier pipeline is bypassed and logs fallback to a static "Low" risk.
+- Warnings Reveal Shield: Covered high-risk burnout warnings and crisis helplines on the user dashboard behind an opt-in reveal shield to prevent immediate, system-generated user anxiety.
+- Model Pipeline Joblib Migration: Replaced insecure pickle serialization with joblib format loading and retraining configurations across the training, prediction, bias audit, and drift monitor scripts.
 
 --------------------------------------------------------------------------------
 4. CODEBASE DIRECTORY STRUCTURE

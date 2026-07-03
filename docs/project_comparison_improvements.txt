@@ -28,6 +28,12 @@ fully polished, secure, and deployed production application.
 | Footer & Layout | Stretched across full screen width; floated high on pages with short content. | Flexbox sticky footer layout centered and constrained to 1240px grid; rests at bottom of screen. |
 | CI/CD & Code Quality | Duplicate, failing GitHub Action tests. PEP 8 violations in 18 files. | Zero flake8 warnings, black formatted, automated pytest and gitleaks scans in CI. |
 | Deployment & Hosting | Manual local running only. | Infrastructure-as-code Render Blueprint. Private Redis, PostgreSQL, and Flask running live. |
+| Admin Invite Security| Static registration code key stored in config settings. | Database-backed dynamic Admin invite tokens generated/revoked from the admin panel. |
+| ML User Autonomy     | Forced ML analysis of check-ins. | Preference toggle allowing users to opt-out of ML burnout risk predictions. |
+| Crisis Warnings       | Direct high-risk warning notices displaying instantly. | Compassionate reveal shield covering high-risk warning scores to prevent anxiety. |
+| Multi-Tab State      | Outdated pages and logs shown on multiple open browser tabs. | Real-time BroadcastChannel sync with custom reload toasts. |
+| Database Deletes     | Hard deletes only; destroys historical log integrity. | Soft deletes preserving log history, with GDPR cascades. |
+| Caching              | No caching on database heavy pages. | Heated maps and goals list data cached with exact invalidation logic on log updates. |
 
 --------------------------------------------------------------------------------
 2. DETAILED COMPARISON OF KEY MILESTONES
@@ -92,4 +98,15 @@ E. MACHINE LEARNING & PIPELINE EVOLUTION
     calculates 7-day rolling statistics, and outputs ML-ready features for model retraining.
   * Flexible String Schemas: Converted the activity column to String(50), allowing the forms 
     and database to dynamically accept all 8 activities seamlessly.
+  * Model Pipeline Serialization: Migrated all loading/dumping configurations (trainer, predictor, bias audit, drift monitor) from pickle to secure joblib serialization to prevent scikit-learn load failures.
+
+F. COMPASSIONATE UX, AUTH SECURITY & MULTI-TAB SYNC
+- Initial: High-risk predictive alerts and crisis resources were printed instantly, causing potential user anxiety. Admin registration relied on a static configuration string code. Navigating on multiple tabs led to outdated dashboards, and caching was absent.
+- Improved:
+  * Content Warnings Reveal Shield: Covered high-risk burnout warnings behind a compassionate, opt-in "Reveal Alert" shield to give users control over reading negative notifications.
+  * ML Autonomy: Integrated a dashboard profile setting allowing users to disable machine learning analysis, recording check-ins with static baseline Low risk.
+  * Database-Backed Invite Tokens: Created a secure admin-only view to generate, track, and revoke cryptographically secure admin registration invite tokens.
+  * Real-Time Broadcast Sync: Implemented HTML5 BroadcastChannel synchronization across all open browser tabs, notifying active sessions of modifications with smooth, glassmorphic toast prompts.
+  * Soft Deletes: Integrated deleted_at fields on users and logs to enable soft deletes, preserving analytical data while maintaining absolute compliance during hard account purging.
+  * Precise Cache Invalidation: Added caching for the goals list and heatmap endpoints, clearing specific cache keys immediately upon log edits/creations.
 ================================================================================

@@ -125,6 +125,19 @@ PHASE 8: RENDER CLOUD DEPLOYMENT
   UserProfile database column type to String(50), synchronized WTForms validators, 
   and updated the register and settings templates to handle all 8 activities.
 
+PHASE 9: COMPASSIONATE UX, ADMIN SECURITY & MULTI-TAB SYNC
+- Ethical ML Controls:
+  * Content Warnings Reveal Shield: Covered high-risk warnings on the user dashboard behind an opt-in reveal shield, giving users control over reading negative notifications.
+  * ML Burnout Prediction Preference Toggle: Implemented a user preference checkbox/toggle to completely opt-out of ML predictive analysis, falling back to static baseline Low risk.
+- Security Hardening:
+  * Dynamic Registration Tokens: Replaced the static registration code with database-backed tokens. Built an admin invite console to generate, monitor, and revoke invite links.
+  * Joblib Migration: Replaced insecure pickle serialization with joblib across the training, prediction, bias audit, and drift monitor scripts.
+- Multi-Tab Sync & Performance:
+  * BroadcastChannel Syncing: Integrated HTML5 BroadcastChannel communication across open browser tabs, signaling tab reloading using a premium glassmorphic toast notification when records change.
+  * DB Soft Deletes: Added deleted_at soft delete fields to users and logs to preserve history, with cascaded hard deletion for GDPR compliance.
+  * Heatmap & Goal Caching: Optimized page speeds by caching the goals list page and daily heatmap JSON API, using exact cache keys that clear instantly on check-in edits/creations.
+  * Interactive Help & API Docs: Implemented online documentation viewports directly from the global footer.
+
 --------------------------------------------------------------------------------
 PART 3: COMPLETED FILE & CODEBASE STRUCTURE
 --------------------------------------------------------------------------------
