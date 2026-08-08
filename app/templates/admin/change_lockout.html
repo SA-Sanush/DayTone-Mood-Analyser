@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Administrator Lockout — DayTone{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      
+      <!-- Lockout Alert Banner -->
+      <div class="panel elevated-panel p-4 mb-4 text-center border-danger" style="border-top: 4px solid var(--bs-danger) !important;">
+        <div class="mb-3 text-danger">
+          <i data-lucide="shield-alert" style="width: 64px; height: 64px;"></i>
+        </div>
+        <h1 id="lockout-heading" class="h3 fw-bold mb-2">Administrative Action Restricted</h1>
+        <p class="text-secondary mb-0">
+          You are currently the <strong>last active administrator</strong> in DayTone. 
+          To prevent a permanent lockout of administrative access, you cannot leave the system or demote yourself until a second administrator is established.
+        </p>
+      </div>
+
+      <div class="row g-4">
+        <!-- Option 1: Promote via Invite Tokens (Bypass) -->
+        <div class="col-md-6">
+          <div class="panel elevated-panel h-100 p-4 d-flex flex-column justify-content-between">
+            <div>
+              <div class="d-flex align-items-center gap-2 mb-3 text-primary">
+                <i data-lucide="ticket" style="width: 24px; height: 24px;"></i>
+                <h2 class="h5 mb-0 fw-bold">Option 1: Invite a New Admin</h2>
+              </div>
+              <p class="text-secondary small mb-3">
+                Generate an admin invite token and send it to a trusted colleague. Once they register their account using the token, they will become an administrator, and you can immediately demote or delete your account.
+              </p>
+            </div>
+            <a href="{{ url_for('admin.invite_tokens') }}" class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-1">
+              <i data-lucide="plus-circle" style="width: 16px; height: 16px;"></i> Generate Invite Token
+            </a>
+          </div>
+        </div>
+
+        <!-- Option 2: Developer Approval & Promote -->
+        <div class="col-md-6">
+          <div class="panel elevated-panel h-100 p-4 d-flex flex-column justify-content-between">
+            <div>
+              <div class="d-flex align-items-center gap-2 mb-3 text-success">
+                <i data-lucide="mail-check" style="width: 24px; height: 24px;"></i>
+                <h2 class="h5 mb-0 fw-bold">Option 2: Request Developer Approval</h2>
+              </div>
+              <p class="text-secondary small mb-3">
+                Select an existing standard user to promote to administrator and request that the developer approve this promotion along with your own demotion or account deletion.
+              </p>
+            </div>
+            <a href="#requestFormCard" class="btn btn-outline-success w-100" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="requestFormCard">
+              Create Change Request
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Request Form Section -->
+      <div class="collapse mt-4" id="requestFormCard">
+        <div class="panel elevated-panel p-4">
+          <h3 class="h5 fw-bold mb-3 d-flex align-items-center gap-2">
+            <i data-lucide="file-plus" class="text-success" style="width: 20px; height: 20px;"></i>
+            Submit Admin Change Request
+          </h3>
+          
+          {% if not users %}
+            <div class="alert alert-warning mb-0" role="alert">
+              <i data-lucide="alert-circle" style="width: 18px; height: 18px; vertical-align: -3px;" class="me-1"></i>
+              There are no registered standard users available to promote. Please register or invite another user first.
+            </div>
+          {% else %}
+            <form method="post" action="{{ url_for('admin.submit_change_request') }}" id="change-request-form">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="action_type" value="{{ action_type }}">
+              
+              <div class="mb-3">
+                <label for="target_user_id" class="form-label fw-semibold small text-secondary">1. Choose a User to Promote to Admin</label>
+                <select class="form-select" id="target_user_id" name="target_user_id" required>
+                  <option value="" disabled selected>Select a user...</option>
+                  {% for u in users %}
+                    <option value="{{ u.id }}">{{ u.name }} ({{ u.email }})</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-semibold small text-secondary d-block">2. Choose Your Desired Action</label>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="action_choice" id="choiceDemote" value="demote" {% if action_type == 'demote' %}checked{% endif %} onchange="document.getElementsByName('action_type')[0].value = 'demote'">
+                  <label class="form-check-label" for="choiceDemote">Demote myself to User</label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="action_choice" id="choiceDelete" value="delete" {% if action_type == 'delete' %}checked{% endif %} onchange="document.getElementsByName('action_type')[0].value = 'delete'">
+                  <label class="form-check-label" for="choiceDelete">Delete my Admin account</label>
+                </div>
+              </div>
+
+              <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-success d-flex align-items-center gap-1">
+                  <i data-lucide="send" style="width: 16px; height: 16px;"></i> Submit Request to Developer
+                </button>
+                <button type="button" class="btn btn-glass" data-bs-toggle="collapse" data-bs-target="#requestFormCard">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Developer Info panel / Option 3 -->
+      <div class="panel elevated-panel p-4 mt-4 border-info" style="border-left: 4px solid var(--bs-info) !important;">
+        <div class="d-flex gap-3 align-items-start">
+          <div class="text-info mt-1">
+            <i data-lucide="terminal" style="width: 24px; height: 24px;"></i>
+          </div>
+          <div>
+            <h2 class="h6 fw-bold mb-1">Testing or Developer Account?</h2>
+            <p class="text-secondary small mb-2">
+              If you have registered an account with the <strong>developer</strong> role, you can access the developer console to view and approve pending requests directly.
+            </p>
+            <a href="{{ url_for('admin.developer_requests') }}" class="btn btn-xs btn-outline-info">
+              Go to Developer Dashboard
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center mt-4">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-glass btn-sm">
+          <i data-lucide="arrow-left" style="width: 14px; height: 14px; vertical-align: -2px;"></i> Back to Admin Dashboard
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

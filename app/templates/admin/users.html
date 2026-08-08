@@ -55,7 +55,9 @@
             </div>
           </td>
           <td>
-            {% if user.is_admin %}
+            {% if user.role == 'developer' %}
+              <span class="badge" style="background:rgba(168,85,247,0.18);color:#c084fc;border:1px solid rgba(168,85,247,0.3);"><i data-lucide="terminal" style="width:12px;height:12px;"></i> Developer</span>
+            {% elif user.role == 'admin' %}
               <span class="admin-role-badge role-admin"><i data-lucide="shield-check" style="width:12px;height:12px;"></i> Admin</span>
             {% else %}
               <span class="admin-role-badge role-user"><i data-lucide="user" style="width:12px;height:12px;"></i> User</span>
@@ -72,22 +74,26 @@
               <a href="{{ url_for('admin.user_detail', user_id=user.id) }}" class="btn btn-sm btn-glass admin-action-btn" title="View profile">
                 <i data-lucide="eye"></i>
               </a>
-              <form method="post" action="{{ url_for('admin.toggle_role', user_id=user.id) }}" style="display:inline;">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-sm {{ 'btn-outline-warning' if user.is_admin else 'btn-outline-primary' }} admin-action-btn"
-                        title="{{ 'Demote to User' if user.is_admin else 'Promote to Admin' }}"
-                        onclick="return confirm('{% if user.id == current_user.id %}WARNING: You are about to change your own role. Demoting yourself will revoke admin access. {% endif %}Change {{ user.name }}\'s role?')">
-                  <i data-lucide="{{ 'shield-off' if user.is_admin else 'shield-check' }}"></i>
-                </button>
-              </form>
-              <form method="post" action="{{ url_for('admin.delete_user', user_id=user.id) }}" style="display:inline;">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-sm btn-outline-danger admin-action-btn"
-                        title="Delete user"
-                        onclick="return confirm('{% if user.id == current_user.id %}WARNING: You are about to permanently delete your own account! {% endif %}Permanently delete {{ user.name }}? This cannot be undone.')">
-                  <i data-lucide="trash-2"></i>
-                </button>
-              </form>
+              {% if user.role == 'developer' and not current_user.is_developer %}
+                <span class="badge bg-secondary opacity-50" style="font-weight:normal;" title="Only developers can modify developer accounts">Protected</span>
+              {% else %}
+                <form method="post" action="{{ url_for('admin.toggle_role', user_id=user.id) }}" style="display:inline;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-sm {{ 'btn-outline-warning' if user.is_admin else 'btn-outline-primary' }} admin-action-btn"
+                          title="{{ 'Demote to User' if user.is_admin else 'Promote to Admin' }}"
+                          onclick="return confirm('{% if user.id == current_user.id %}WARNING: You are about to change your own role. Demoting yourself will revoke admin access. {% endif %}Change {{ user.name }}\'s role?')">
+                    <i data-lucide="{{ 'shield-off' if user.is_admin else 'shield-check' }}"></i>
+                  </button>
+                </form>
+                <form method="post" action="{{ url_for('admin.delete_user', user_id=user.id) }}" style="display:inline;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-sm btn-outline-danger admin-action-btn"
+                          title="Delete user"
+                          onclick="return confirm('{% if user.id == current_user.id %}WARNING: You are about to permanently delete your own account! {% endif %}Permanently delete {{ user.name }}? This cannot be undone.')">
+                    <i data-lucide="trash-2"></i>
+                  </button>
+                </form>
+              {% endif %}
             </div>
           </td>
         </tr>

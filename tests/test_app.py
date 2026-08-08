@@ -565,6 +565,10 @@ def test_admin_management_actions(client, app):
     assert res.status_code == 404
 
     # 4. Self Demotion
+    # We must register another admin first so this user is not the last admin
+    client.get("/logout")
+    register(client, email="second_temp_admin@example.com", admin=True)
+    login(client, email="super_admin@example.com")
     with app.app_context():
         admin_user = User.query.filter_by(email="super_admin@example.com").first()
         admin_id = admin_user.id
@@ -793,5 +797,162 @@ def test_explainability_driver_generation():
     }
     drivers = explain_prediction(features, "Medium")
     assert any("emotional tone" in d for d in drivers)
+
+
+def test_admin_lockout_guards(client, app):
+    # Register and login as sole admin
+    register(client, email="sole_admin@example.com", admin=True)
+    login(client, email="sole_admin@example.com")
+    
+    with app.app_context():
+        admin = User.query.filter_by(email="sole_admin@example.com").first()
+        admin_id = admin.id
+        assert admin.role == "admin"
+        
+    # Attempt self-demotion via toggle-role
+    res = client.post(f"/admin/user/{admin_id}/toggle-role", follow_redirects=True)
+    assert b"Cannot demote the last remaining administrator" in res.data
+    
+    # Attempt self-deletion
+    res = client.post("/profile/delete", data={"confirm_delete": "DELETE"}, follow_redirects=True)
+    assert b"You are the last remaining administrator" in res.data
+    
+    # Register a second admin (logout first, register, then log back in as sole_admin)
+    client.get("/logout")
+    register(client, email="second_admin@example.com", admin=True)
+    login(client, email="sole_admin@example.com")
+    
+    # Try self-demotion again - should succeed now
+    res = client.post(f"/admin/user/{admin_id}/toggle-role", follow_redirects=True)
+    assert b"You have demoted yourself" in res.data
+    
+    with app.app_context():
+        demoted_admin = User.query.get(admin_id)
+        assert demoted_admin.role == "user"
+
+
+def test_admin_change_request_flow(client, app):
+    # Register sole admin and standard user
+    register(client, email="sole@example.com", admin=True)
+    register(client, email="trusted@example.com")
+    login(client, email="sole@example.com")
+    
+    with app.app_context():
+        sole_admin = User.query.filter_by(email="sole@example.com").first()
+        trusted_user = User.query.filter_by(email="trusted@example.com").first()
+        sole_id = sole_admin.id
+        trusted_id = trusted_user.id
+        
+    # Submit change request
+    res = client.post("/admin/change-request/submit", data={
+        "action_type": "demote",
+        "target_user_id": trusted_id
+    }, follow_redirects=True)
+    
+    assert b"Request submitted" in res.data
+    
+    with app.app_context():
+        from app.models import AdminChangeRequest
+        req = AdminChangeRequest.query.filter_by(requester_id=sole_id).first()
+        assert req is not None
+        assert req.status == "pending"
+        assert req.target_user_id == trusted_id
+        token = req.token
+        
+    # Approve request via email link
+    res = client.get(f"/admin/change-request/{token}/approve", follow_redirects=True)
+    assert b"Your request has been approved" in res.data
+    
+    with app.app_context():
+        updated_sole = User.query.get(sole_id)
+        updated_trusted = User.query.get(trusted_id)
+        assert updated_sole.role == "user"
+        assert updated_trusted.role == "admin"
+
+
+def test_developer_dashboard_requests(client, app):
+    # Register sole admin and user first
+    register(client, email="admin_req@example.com", admin=True)
+    register(client, email="user_req@example.com")
+    
+    login(client, email="admin_req@example.com")
+    
+    with app.app_context():
+        admin = User.query.filter_by(email="admin_req@example.com").first()
+        user = User.query.filter_by(email="user_req@example.com").first()
+        admin_id = admin.id
+        user_id = user.id
+        
+    # Submit change request (will succeed since admin_req is currently the sole admin)
+    client.post("/admin/change-request/submit", data={
+        "action_type": "demote",
+        "target_user_id": user_id
+    })
+    
+    # Register developer in database
+    with app.app_context():
+        dev = User(name="Developer User", email="dev@example.com", role="developer")
+        dev.set_password("secret12")
+        db.session.add(dev)
+        db.session.commit()
+    
+    # Log out admin and log in developer
+    client.get("/logout")
+    login(client, email="dev@example.com")
+    
+    # Access developer requests dashboard
+    res = client.get("/admin/developer/dashboard")
+    assert res.status_code == 200
+    assert b"Admin Change Requests" in res.data
+    
+    with app.app_context():
+        from app.models import AdminChangeRequest
+        req = AdminChangeRequest.query.filter_by(requester_id=admin_id).first()
+        req_id = req.id
+        
+    # Approve via dashboard
+    res = client.post(f"/admin/developer/requests/{req_id}/approve", follow_redirects=True)
+    assert res.status_code == 200
+    
+    with app.app_context():
+        updated_admin = User.query.get(admin_id)
+        updated_user = User.query.get(user_id)
+        assert updated_admin.role == "user"
+        assert updated_user.role == "admin"
+        assert AdminChangeRequest.query.get(req_id).status == "approved"
+
+
+def test_developer_authority_and_admin_protection(client, app):
+    with app.app_context():
+        admin = User(name="Regular Admin", email="admin_test@example.com", role="admin")
+        admin.set_password("secret12")
+        dev = User(name="Dev Leader", email="dev_test@example.com", role="developer")
+        dev.set_password("secret12")
+        db.session.add_all([admin, dev])
+        db.session.commit()
+        dev_id = dev.id
+        admin_id = admin.id
+
+    # 1. Developer login -> redirected to Developer Dashboard
+    res = client.post("/login", data={"email": "dev_test@example.com", "password": "secret12"}, follow_redirects=False)
+    assert res.status_code == 302
+    assert "/admin/developer/dashboard" in res.headers["Location"]
+
+    login(client, email="dev_test@example.com")
+    # 2. Developer accessing /admin/dashboard -> redirected to /admin/developer/dashboard
+    res = client.get("/admin/dashboard", follow_redirects=False)
+    assert res.status_code == 302
+    assert "/admin/developer/dashboard" in res.headers["Location"]
+
+    client.get("/logout")
+
+    # 3. Regular Admin tries to demote Developer -> Blocked
+    login(client, email="admin_test@example.com")
+    res = client.post(f"/admin/user/{dev_id}/toggle-role", follow_redirects=True)
+    assert b"Only developers can modify developer accounts." in res.data
+
+    with app.app_context():
+        assert User.query.get(dev_id).role == "developer"
+
 
 

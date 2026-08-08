@@ -1,0 +1,660 @@
+{% extends "base.html" %}
+{% block title %}Developer Control Panel — DayTone{% endblock %}
+
+{% block head %}
+<style>
+/* ── Developer Dashboard — Scoped Styles ─────────────────────────────────── */
+.dev-header {
+  background: linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(168,85,247,0.10) 50%, transparent 100%);
+  border: 1px solid rgba(99,102,241,0.25);
+  border-radius: 16px;
+  padding: 2rem 2.5rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.dev-header::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 180px; height: 180px;
+  background: radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+.dev-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, rgba(99,102,241,0.25), rgba(168,85,247,0.20));
+  border: 1px solid rgba(99,102,241,0.35);
+  color: #a78bfa;
+  margin-bottom: 0.75rem;
+}
+
+/* ── Quick Actions Bar ─────────────────────────────────────────────────── */
+.dev-action-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+}
+.dev-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 650;
+  border: 1px solid var(--dt-border, rgba(255,255,255,0.12));
+  background: var(--dt-surface, rgba(255,255,255,0.04));
+  color: var(--dt-text);
+  text-decoration: none;
+  transition: all 0.18s ease;
+}
+.dev-action-btn:hover {
+  transform: translateY(-2px);
+  background: rgba(99,102,241,0.12);
+  border-color: rgba(99,102,241,0.35);
+  color: #a78bfa;
+}
+
+/* ── Stat Cards ──────────────────────────────────────────────────────────── */
+.dev-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+.dev-stat-card {
+  border-radius: 14px;
+  padding: 1.1rem 1.35rem;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  cursor: default;
+}
+.dev-stat-card:hover { transform: translateY(-3px); }
+
+.dev-stat-card.users   { background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(99,102,241,0.08)); border: 1px solid rgba(59,130,246,0.22); }
+.dev-stat-card.admins  { background: linear-gradient(135deg, rgba(168,85,247,0.12), rgba(99,102,241,0.08)); border: 1px solid rgba(168,85,247,0.22); }
+.dev-stat-card.pending { background: linear-gradient(135deg, rgba(234,179,8,0.12),  rgba(251,146,60,0.08));  border: 1px solid rgba(234,179,8,0.22); }
+.dev-stat-card.risk    { background: linear-gradient(135deg, rgba(239,68,68,0.12),  rgba(225,29,72,0.08));   border: 1px solid rgba(239,68,68,0.22); }
+.dev-stat-card.logs    { background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(5,150,105,0.08));   border: 1px solid rgba(16,185,129,0.22); }
+.dev-stat-card.goals   { background: linear-gradient(135deg, rgba(236,72,153,0.12), rgba(219,39,119,0.08));  border: 1px solid rgba(236,72,153,0.22); }
+
+.dev-stat-icon {
+  width: 34px; height: 34px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 0.6rem;
+}
+.dev-stat-card.users   .dev-stat-icon { background: rgba(59,130,246,0.18); color: #60a5fa; }
+.dev-stat-card.admins  .dev-stat-icon { background: rgba(168,85,247,0.18); color: #c084fc; }
+.dev-stat-card.pending .dev-stat-icon { background: rgba(234,179,8,0.18);  color: #facc15; }
+.dev-stat-card.risk    .dev-stat-icon { background: rgba(239,68,68,0.18);  color: #f87171; }
+.dev-stat-card.logs    .dev-stat-icon { background: rgba(16,185,129,0.18); color: #34d399; }
+.dev-stat-card.goals   .dev-stat-icon { background: rgba(236,72,153,0.18); color: #f472b6; }
+
+.dev-stat-val {
+  font-size: 1.7rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 0.15rem;
+}
+.dev-stat-label { font-size: 0.76rem; opacity: 0.65; font-weight: 500; }
+
+/* ── Panels ──────────────────────────────────────────────────────────────── */
+.dev-panel {
+  border-radius: 14px;
+  border: 1px solid var(--dt-border, rgba(255,255,255,0.08));
+  background: var(--dt-surface, rgba(255,255,255,0.03));
+  padding: 1.35rem;
+  margin-bottom: 1.35rem;
+}
+.dev-panel-title {
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── System Info Grid ────────────────────────────────────────────────────── */
+.sysinfo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.65rem;
+}
+.sysinfo-item {
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sysinfo-key  { font-size: 0.68rem; font-weight: 600; opacity: 0.5; text-transform: uppercase; letter-spacing: 0.07em; }
+.sysinfo-val  { font-size: 0.85rem; font-weight: 600; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+
+/* ── Risk Breakdown Bars ─────────────────────────────────────────────────── */
+.risk-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+  font-size: 0.82rem;
+}
+.risk-bar-track {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.06);
+  overflow: hidden;
+}
+.risk-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+/* ── Pending pulse ───────────────────────────────────────────────────────── */
+.pulse-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #facc15;
+  position: relative;
+  margin-right: 4px;
+}
+.pulse-dot::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 2px solid #facc15;
+  animation: pulse-ring 1.5s ease-out infinite;
+  opacity: 0;
+}
+@keyframes pulse-ring {
+  0%   { transform: scale(0.6); opacity: 0.8; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+/* ── Audit log ───────────────────────────────────────────────────────────── */
+.audit-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.audit-row:last-child { border-bottom: none; }
+.audit-icon-wrap {
+  flex-shrink: 0;
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  background: rgba(99,102,241,0.14);
+  color: #a78bfa;
+  display: flex; align-items: center; justify-content: center;
+}
+.audit-body { flex: 1; min-width: 0; }
+.audit-action { font-size: 0.81rem; font-weight: 600; }
+.audit-detail { font-size: 0.74rem; opacity: 0.55; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.audit-time   { font-size: 0.7rem; opacity: 0.4; white-space: nowrap; flex-shrink: 0; padding-top: 2px; }
+
+/* ── Table tweaks ────────────────────────────────────────────────────────── */
+.req-table th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.5; border-top: none; }
+.req-table td { vertical-align: middle; font-size: 0.86rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Duplicate style block inside content as fail-safe for all Jinja / browser render passes -->
+<style>
+.dev-header{background:linear-gradient(135deg,rgba(99,102,241,0.15) 0%,rgba(168,85,247,0.10) 50%,transparent 100%);border:1px solid rgba(99,102,241,0.25);border-radius:16px;padding:1.8rem 2.2rem;margin-bottom:1.5rem;position:relative;overflow:hidden;}
+.dev-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;background:linear-gradient(90deg,rgba(99,102,241,0.25),rgba(168,85,247,0.20));border:1px solid rgba(99,102,241,0.35);color:#a78bfa;margin-bottom:0.6rem;}
+.dev-action-bar{display:flex;flex-wrap:wrap;gap:0.6rem;margin-bottom:1.5rem;}
+.dev-action-btn{display:inline-flex;align-items:center;gap:0.45rem;padding:0.48rem 0.85rem;border-radius:10px;font-size:0.82rem;font-weight:650;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:inherit;text-decoration:none;transition:all 0.18s ease;}
+.dev-action-btn:hover{transform:translateY(-2px);background:rgba(99,102,241,0.14);border-color:rgba(99,102,241,0.35);color:#a78bfa;}
+.dev-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0.85rem;margin-bottom:1.5rem;}
+.dev-stat-card{border-radius:14px;padding:1rem 1.2rem;position:relative;overflow:hidden;transition:transform 0.18s ease;cursor:default;}
+.dev-stat-card:hover{transform:translateY(-3px);}
+.dev-stat-card.users{background:linear-gradient(135deg,rgba(59,130,246,0.12),rgba(99,102,241,0.08));border:1px solid rgba(59,130,246,0.22);}
+.dev-stat-card.admins{background:linear-gradient(135deg,rgba(168,85,247,0.12),rgba(99,102,241,0.08));border:1px solid rgba(168,85,247,0.22);}
+.dev-stat-card.pending{background:linear-gradient(135deg,rgba(234,179,8,0.12),rgba(251,146,60,0.08));border:1px solid rgba(234,179,8,0.22);}
+.dev-stat-card.risk{background:linear-gradient(135deg,rgba(239,68,68,0.12),rgba(225,29,72,0.08));border:1px solid rgba(239,68,68,0.22);}
+.dev-stat-card.logs{background:linear-gradient(135deg,rgba(16,185,129,0.12),rgba(5,150,105,0.08));border:1px solid rgba(16,185,129,0.22);}
+.dev-stat-card.goals{background:linear-gradient(135deg,rgba(236,72,153,0.12),rgba(219,39,119,0.08));border:1px solid rgba(236,72,153,0.22);}
+.dev-stat-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:0.5rem;}
+.dev-stat-card.users .dev-stat-icon{background:rgba(59,130,246,0.18);color:#60a5fa;}
+.dev-stat-card.admins .dev-stat-icon{background:rgba(168,85,247,0.18);color:#c084fc;}
+.dev-stat-card.pending .dev-stat-icon{background:rgba(234,179,8,0.18);color:#facc15;}
+.dev-stat-card.risk .dev-stat-icon{background:rgba(239,68,68,0.18);color:#f87171;}
+.dev-stat-card.logs .dev-stat-icon{background:rgba(16,185,129,0.18);color:#34d399;}
+.dev-stat-card.goals .dev-stat-icon{background:rgba(236,72,153,0.18);color:#f472b6;}
+.dev-stat-val{font-size:1.65rem;font-weight:800;line-height:1;margin-bottom:0.15rem;}
+.dev-stat-label{font-size:0.75rem;opacity:0.65;font-weight:500;}
+.dev-panel{border-radius:14px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);padding:1.35rem;margin-bottom:1.35rem;}
+.dev-panel-title{font-size:0.83rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;opacity:0.6;margin-bottom:1rem;display:flex;align-items:center;gap:8px;}
+.sysinfo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:0.65rem;}
+.sysinfo-item{padding:0.65rem 0.85rem;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;gap:2px;}
+.sysinfo-key{font-size:0.68rem;font-weight:600;opacity:0.5;text-transform:uppercase;letter-spacing:0.07em;}
+.sysinfo-val{font-size:0.85rem;font-weight:600;font-family:monospace;}
+.audit-row{display:flex;align-items:flex-start;gap:0.75rem;padding:0.55rem 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.audit-row:last-child{border-bottom:none;}
+.audit-icon-wrap{flex-shrink:0;width:28px;height:28px;border-radius:8px;background:rgba(99,102,241,0.14);color:#a78bfa;display:flex;align-items:center;justify-content:center;}
+.audit-body{flex:1;min-width:0;}
+.audit-action{font-size:0.81rem;font-weight:600;}
+.audit-detail{font-size:0.74rem;opacity:0.55;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.audit-time{font-size:0.7rem;opacity:0.4;white-space:nowrap;flex-shrink:0;padding-top:2px;}
+.req-table th{font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;opacity:0.5;border-top:none;}
+.req-table td{vertical-align:middle;font-size:0.86rem;}
+</style>
+
+<div class="container py-4">
+
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <div class="dev-header mb-4">
+    <div class="dev-badge">
+      <i data-lucide="terminal" style="width:13px;height:13px;"></i>
+      Developer Master Control
+    </div>
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+      <div>
+        <h1 class="mb-1 fw-bold" style="font-size:1.75rem;">Developer Command Center</h1>
+        <p class="mb-0 text-secondary" style="font-size:0.92rem;">
+          Full administrative authority &amp; developer controls: users, ML models, security overrides, and system diagnostics.
+        </p>
+      </div>
+      <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-glass d-flex align-items-center gap-1" style="font-size:0.85rem;">
+          <i data-lucide="shield-check" style="width:15px;height:15px;"></i> Admin View
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Developer Action Hub Bar ────────────────────────────────────────── -->
+  <div class="dev-action-bar">
+    <a href="{{ url_for('admin.users') }}" class="dev-action-btn">
+      <i data-lucide="users" style="width:16px;height:16px;color:#60a5fa;"></i> User Directory
+    </a>
+    <a href="{{ url_for('admin.model_diagnostics') }}" class="dev-action-btn">
+      <i data-lucide="cpu" style="width:16px;height:16px;color:#c084fc;"></i> ML Diagnostics
+    </a>
+    <a href="{{ url_for('admin.bias_audit') }}" class="dev-action-btn">
+      <i data-lucide="scale" style="width:16px;height:16px;color:#34d399;"></i> Bias Audit Tool
+    </a>
+    <a href="{{ url_for('admin.audit_log') }}" class="dev-action-btn">
+      <i data-lucide="scroll-text" style="width:16px;height:16px;color:#2dd4bf;"></i> Full Audit Trail
+    </a>
+    <a href="{{ url_for('admin.invite_tokens') }}" class="dev-action-btn">
+      <i data-lucide="ticket" style="width:16px;height:16px;color:#facc15;"></i> Admin Invite Tokens
+    </a>
+  </div>
+
+  <!-- ── Stat Cards Grid ────────────────────────────────────────────────── -->
+  {% if stats %}
+  <div class="dev-stat-grid">
+
+    <div class="dev-stat-card users">
+      <div class="dev-stat-icon"><i data-lucide="users" style="width:17px;height:17px;"></i></div>
+      <div class="dev-stat-val">{{ stats.total_users }}</div>
+      <div class="dev-stat-label">Total Users</div>
+    </div>
+
+    <div class="dev-stat-card admins">
+      <div class="dev-stat-icon"><i data-lucide="shield" style="width:17px;height:17px;"></i></div>
+      <div class="dev-stat-val">{{ stats.admin_count + stats.developer_count }}</div>
+      <div class="dev-stat-label">Admins + Devs</div>
+    </div>
+
+    <div class="dev-stat-card pending">
+      <div class="dev-stat-icon"><i data-lucide="clock" style="width:17px;height:17px;"></i></div>
+      <div class="dev-stat-val">{{ stats.pending_requests }}</div>
+      <div class="dev-stat-label">Pending Requests</div>
+    </div>
+
+    <div class="dev-stat-card risk">
+      <div class="dev-stat-icon"><i data-lucide="alert-triangle" style="width:17px;height:17px;"></i></div>
+      <div class="dev-stat-val">{{ stats.high_risk_users }}</div>
+      <div class="dev-stat-label">High Risk Users</div>
+    </div>
+
+    <div class="dev-stat-card logs">
+      <div class="dev-stat-icon"><i data-lucide="brain" style="width:17px;height:17px;"></i></div>
+      <div class="dev-stat-val">{{ stats.total_mood_logs }}</div>
+      <div class="dev-stat-label">Mood Logs</div>
+    </div>
+
+    <div class="dev-stat-card goals">
+      <div class="dev-stat-icon"><i data-lucide="target" style="width:17px;height:17px;"></i></div>
+      <div class="dev-stat-val">{{ stats.total_goals }}</div>
+      <div class="dev-stat-label">Active Goals</div>
+    </div>
+
+  </div>
+  {% endif %}
+
+  <!-- ── Two-column Layout ──────────────────────────────────────────────── -->
+  <div class="row g-4">
+
+    <!-- LEFT COL: Requests + User Management Quick Directory -->
+    <div class="col-12 col-xl-8">
+
+      <!-- Admin Change Requests Table -->
+      <div class="dev-panel">
+        <div class="dev-panel-title">
+          <i data-lucide="shield-check" style="width:16px;height:16px;color:#a78bfa;"></i>
+          Admin Change &amp; Demotion Requests
+          {% if stats and stats.pending_requests > 0 %}
+            <span class="ms-auto d-flex align-items-center gap-1" style="font-size:0.78rem;color:#facc15;text-transform:none;letter-spacing:0;">
+              <span class="pulse-dot"></span>{{ stats.pending_requests }} pending
+            </span>
+          {% endif %}
+        </div>
+
+        <div class="table-responsive">
+          <table class="table align-middle req-table mb-0">
+            <thead>
+              <tr>
+                <th>Requester</th>
+                <th>Target (Promote)</th>
+                <th>Type</th>
+                <th>Submitted</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if not requests %}
+              <tr>
+                <td colspan="6" class="text-center py-4 text-secondary">
+                  <i data-lucide="clipboard-list" class="mb-2 d-block mx-auto" style="width:32px;height:32px;opacity:0.4;"></i>
+                  No administrative change requests recorded yet.
+                </td>
+              </tr>
+              {% endif %}
+              {% for r in requests %}
+              <tr>
+                <td>
+                  <div class="fw-semibold">{{ r.requester.name }}</div>
+                  <div class="text-secondary" style="font-size:0.75rem;font-family:monospace;">{{ r.requester.email }}</div>
+                </td>
+                <td>
+                  {% if r.target_user %}
+                    <div class="fw-semibold">{{ r.target_user.name }}</div>
+                    <div class="text-secondary" style="font-size:0.75rem;font-family:monospace;">{{ r.target_user.email }}</div>
+                  {% else %}
+                    <span class="text-muted" style="font-size:0.82rem;">None specified</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if r.request_type == 'demote_self' %}
+                    <span class="badge" style="background:rgba(234,179,8,0.18);color:#facc15;border:1px solid rgba(234,179,8,0.3);">Demote Self</span>
+                  {% elif r.request_type == 'delete_account' %}
+                    <span class="badge" style="background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);">Delete Account</span>
+                  {% else %}
+                    <span class="badge bg-secondary">{{ r.request_type }}</span>
+                  {% endif %}
+                </td>
+                <td style="font-size:0.78rem;opacity:0.65;white-space:nowrap;">
+                  {{ r.created_at.strftime('%b %d, %Y') }}<br>
+                  <span style="opacity:0.6;">{{ r.created_at.strftime('%H:%M UTC') }}</span>
+                </td>
+                <td>
+                  {% if r.status == 'pending' %}
+                    <span class="badge" style="background:rgba(250,204,21,0.15);color:#facc15;border:1px solid rgba(250,204,21,0.3);">Pending</span>
+                  {% elif r.status == 'approved' %}
+                    <span class="badge" style="background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.3);">Approved</span>
+                  {% else %}
+                    <span class="badge" style="background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid rgba(100,116,139,0.3);">Rejected</span>
+                  {% endif %}
+                </td>
+                <td class="text-end">
+                  {% if r.status == 'pending' %}
+                    <div class="d-inline-flex gap-2">
+                      <form method="post" action="{{ url_for('admin.developer_approve_request', request_id=r.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm d-flex align-items-center gap-1"
+                          style="background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.3);font-size:0.78rem;"
+                          onclick="return confirm('Approve this request? The target user will be promoted to Admin and the requester will be demoted/deleted.')">
+                          <i data-lucide="check" style="width:13px;height:13px;"></i> Approve
+                        </button>
+                      </form>
+                      <form method="post" action="{{ url_for('admin.developer_reject_request', request_id=r.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm d-flex align-items-center gap-1"
+                          style="background:rgba(239,68,68,0.10);color:#f87171;border:1px solid rgba(239,68,68,0.25);font-size:0.78rem;"
+                          onclick="return confirm('Reject this request?')">
+                          <i data-lucide="x" style="width:13px;height:13px;"></i> Reject
+                        </button>
+                      </form>
+                    </div>
+                  {% else %}
+                    <span style="font-size:0.75rem;opacity:0.45;">
+                      Resolved
+                      {% if r.resolved_at %}{{ r.resolved_at.strftime('%b %d') }}{% endif %}
+                    </span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Quick User Management Panel -->
+      <div class="dev-panel">
+        <div class="dev-panel-title">
+          <i data-lucide="users" style="width:16px;height:16px;color:#60a5fa;"></i>
+          Registered Users Directory &amp; Role Management
+          <a href="{{ url_for('admin.users') }}" class="ms-auto" style="font-size:0.72rem;opacity:0.55;text-decoration:none;">View all users →</a>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table align-middle req-table mb-0">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Role</th>
+                <th>Joined</th>
+                <th class="text-end">Role Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for u in recent_users %}
+              <tr>
+                <td>
+                  <div class="fw-semibold">{{ u.name }}</div>
+                  <div class="text-secondary" style="font-size:0.75rem;font-family:monospace;">{{ u.email }}</div>
+                </td>
+                <td>
+                  {% if u.role == 'developer' %}
+                    <span class="badge" style="background:rgba(168,85,247,0.18);color:#c084fc;border:1px solid rgba(168,85,247,0.3);">Developer</span>
+                  {% elif u.role == 'admin' %}
+                    <span class="badge" style="background:rgba(59,130,246,0.18);color:#60a5fa;border:1px solid rgba(59,130,246,0.3);">Admin</span>
+                  {% else %}
+                    <span class="badge" style="background:rgba(100,116,139,0.15);color:#94a3b8;">User</span>
+                  {% endif %}
+                </td>
+                <td style="font-size:0.78rem;opacity:0.65;">
+                  {{ u.created_at.strftime('%b %d, %Y') }}
+                </td>
+                <td class="text-end">
+                  <div class="d-inline-flex gap-1">
+                    <a href="{{ url_for('admin.edit_user_profile', user_id=u.id) }}" class="btn btn-sm btn-glass p-1 px-2" style="font-size:0.75rem;" title="Edit User">
+                      <i data-lucide="edit-2" style="width:12px;height:12px;"></i> Edit
+                    </a>
+                    {% if u.id != current_user.id %}
+                    <form method="post" action="{{ url_for('admin.toggle_role', user_id=u.id) }}" style="display:inline;">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="btn btn-sm btn-glass p-1 px-2" style="font-size:0.75rem;" onclick="return confirm('Change role for {{ u.name }}?')">
+                        <i data-lucide="refresh-cw" style="width:12px;height:12px;"></i> Toggle Role
+                      </button>
+                    </form>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COL: System Info, Burnout Stats, Audit Log -->
+    <div class="col-12 col-xl-4">
+
+      <!-- Environment & Infrastructure Info -->
+      {% if system_info %}
+      <div class="dev-panel">
+        <div class="dev-panel-title">
+          <i data-lucide="server" style="width:15px;height:15px;color:#60a5fa;"></i>
+          System &amp; Infrastructure
+        </div>
+        <div class="sysinfo-grid">
+          <div class="sysinfo-item">
+            <span class="sysinfo-key">Python</span>
+            <span class="sysinfo-val">{{ system_info.python_version }}</span>
+          </div>
+          <div class="sysinfo-item">
+            <span class="sysinfo-key">Database</span>
+            <span class="sysinfo-val">{{ system_info.database or '—' }}</span>
+          </div>
+          <div class="sysinfo-item">
+            <span class="sysinfo-key">NLP Engine</span>
+            <span class="sysinfo-val">{{ system_info.sentiment_backend }}</span>
+          </div>
+          <div class="sysinfo-item">
+            <span class="sysinfo-key">Mail Config</span>
+            <span class="sysinfo-val" style="color:{% if system_info.mail_configured == 'Yes' %}#34d399{% else %}#f87171{% endif %};">
+              {{ system_info.mail_configured }} ({{ system_info.mail_server or 'none' }})
+            </span>
+          </div>
+          <div class="sysinfo-item">
+            <span class="sysinfo-key">Cache</span>
+            <span class="sysinfo-val">{{ system_info.cache_type or '—' }}</span>
+          </div>
+          <div class="sysinfo-item">
+            <span class="sysinfo-key">Rate Limits</span>
+            <span class="sysinfo-val">{{ system_info.ratelimit_storage or '—' }}</span>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Burnout Risk Distribution Panel -->
+      {% if stats and stats.burnout_distribution %}
+      <div class="dev-panel">
+        <div class="dev-panel-title">
+          <i data-lucide="bar-chart-2" style="width:15px;height:15px;color:#f87171;"></i>
+          Platform Burnout Risk Summary
+        </div>
+        {% set total = (stats.burnout_distribution['Low'] + stats.burnout_distribution['Medium'] + stats.burnout_distribution['High']) or 1 %}
+        <div class="risk-bar-row">
+          <span style="width:60px;font-weight:600;color:#34d399;">🟢 Low</span>
+          <div class="risk-bar-track">
+            <div class="risk-bar-fill" style="width:{{ (stats.burnout_distribution['Low'] / total * 100)|round }}%;background:#34d399;"></div>
+          </div>
+          <span style="font-weight:700;">{{ stats.burnout_distribution['Low'] }}</span>
+        </div>
+        <div class="risk-bar-row">
+          <span style="width:60px;font-weight:600;color:#facc15;">🟡 Med</span>
+          <div class="risk-bar-track">
+            <div class="risk-bar-fill" style="width:{{ (stats.burnout_distribution['Medium'] / total * 100)|round }}%;background:#facc15;"></div>
+          </div>
+          <span style="font-weight:700;">{{ stats.burnout_distribution['Medium'] }}</span>
+        </div>
+        <div class="risk-bar-row">
+          <span style="width:60px;font-weight:600;color:#f87171;">🔴 High</span>
+          <div class="risk-bar-track">
+            <div class="risk-bar-fill" style="width:{{ (stats.burnout_distribution['High'] / total * 100)|round }}%;background:#f87171;"></div>
+          </div>
+          <span style="font-weight:700;">{{ stats.burnout_distribution['High'] }}</span>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Admin Invite Tokens Panel -->
+      <div class="dev-panel">
+        <div class="dev-panel-title">
+          <i data-lucide="ticket" style="width:15px;height:15px;color:#facc15;"></i>
+          Recent Invite Tokens
+          <a href="{{ url_for('admin.invite_tokens') }}" class="ms-auto" style="font-size:0.72rem;opacity:0.55;text-decoration:none;">Generate + →</a>
+        </div>
+        {% if recent_tokens %}
+          {% for t in recent_tokens %}
+          <div class="d-flex align-items-center justify-content-between py-1 border-bottom border-secondary border-opacity-10" style="font-size:0.8rem;">
+            <code style="font-size:0.75rem;">{{ t.token[:16] }}…</code>
+            {% if t.is_used %}
+              <span class="badge bg-secondary">Used</span>
+            {% else %}
+              <span class="badge bg-success">Active</span>
+            {% endif %}
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="text-center py-3 text-secondary" style="font-size:0.8rem;opacity:0.5;">No invite tokens created yet.</div>
+        {% endif %}
+      </div>
+
+      <!-- Recent Privilege Audit Stream -->
+      <div class="dev-panel">
+        <div class="dev-panel-title">
+          <i data-lucide="activity" style="width:15px;height:15px;color:#2dd4bf;"></i>
+          Recent Privilege Events
+          <a href="{{ url_for('admin.audit_log') }}" class="ms-auto" style="font-size:0.72rem;opacity:0.55;text-decoration:none;">View all →</a>
+        </div>
+
+        {% if recent_audit_logs %}
+          {% for entry in recent_audit_logs %}
+          <div class="audit-row">
+            <div class="audit-icon-wrap">
+              {% if 'delete' in entry.action %}
+                <i data-lucide="trash-2" style="width:13px;height:13px;color:#f87171;"></i>
+              {% elif 'approve' in entry.action %}
+                <i data-lucide="check-circle" style="width:13px;height:13px;color:#34d399;"></i>
+              {% elif 'reject' in entry.action %}
+                <i data-lucide="x-circle" style="width:13px;height:13px;color:#f87171;"></i>
+              {% else %}
+                <i data-lucide="shield" style="width:13px;height:13px;color:#a78bfa;"></i>
+              {% endif %}
+            </div>
+            <div class="audit-body">
+              <div class="audit-action">{{ entry.action | replace('_', ' ') | title }}</div>
+              <div class="audit-detail">
+                {% if entry.admin %}by {{ entry.admin.name }}{% endif %}
+                {% if entry.detail %} — {{ entry.detail[:50] }}{% if entry.detail|length > 50 %}…{% endif %}{% endif %}
+              </div>
+            </div>
+            <div class="audit-time">{{ entry.performed_at.strftime('%b %d') }}</div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="text-center py-4 text-secondary" style="font-size:0.82rem;opacity:0.5;">
+            <i data-lucide="inbox" class="d-block mx-auto mb-2" style="width:24px;height:24px;"></i>
+            No privilege events recorded yet.
+          </div>
+        {% endif %}
+      </div>
+
+    </div><!-- /right col -->
+  </div><!-- /row -->
+</div>
+{% endblock %}

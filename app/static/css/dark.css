@@ -111,3 +111,32 @@ html[data-theme="dark"] .orb-copy p,
 html[data-theme="dark"] .insight-panel p {
   color: var(--dt-muted);
 }
+
+html[data-theme="dark"] .admin-drop-toggle.active {
+  background: rgba(106, 164, 255, 0.13);
+  color: var(--dt-primary);
+}
+
+html[data-theme="dark"] .admin-drop-menu {
+  background: rgba(15, 23, 42, 0.97);
+  border-color: rgba(203, 213, 225, 0.13);
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.45);
+}
+
+html[data-theme="dark"] .admin-drop-menu .dropdown-item:hover {
+  background: rgba(106, 164, 255, 0.10);
+  color: var(--dt-primary);
+}
+
+html[data-theme="dark"] .admin-drop-menu .dropdown-item.active {
+  background: rgba(106, 164, 255, 0.13);
+  color: var(--dt-primary);
+}
+
+html[data-theme="dark"] .admin-divider {
+  border-color: rgba(203, 213, 225, 0.12);
+}
+
+html[data-theme="dark"] .admin-dev-item { color: #a78bfa !important; }
+html[data-theme="dark"] .admin-dev-item:hover { background: rgba(167, 139, 250, 0.12) !important; color: #a78bfa !important; }
+html[data-theme="dark"] .admin-dev-item svg { color: #a78bfa; }

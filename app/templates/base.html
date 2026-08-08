@@ -92,6 +92,7 @@
       }
     }
   </style>
+  {% block head %}{% endblock %}
 </head>
 <body>
   <a href="#main-content" class="skip-to-main">Skip to main content</a>
@@ -109,15 +110,64 @@
         <ul class="navbar-nav nav-pills-soft me-auto">
           {% if current_user.is_authenticated %}
           <li class="nav-item"><a class="nav-link{% if request.endpoint == 'mood.log_mood' %} active{% endif %}" href="{{ url_for('mood.log_mood') }}"><i data-lucide="plus-circle"></i>Log</a></li>
-          <li class="nav-item"><a class="nav-link{% if request.endpoint == 'mood.dashboard' %} active{% endif %}" href="{{ url_for('mood.dashboard') }}"><i data-lucide="layout-dashboard"></i>Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link{% if request.endpoint in ('mood.dashboard', 'admin.developer_dashboard') %} active{% endif %}" href="{{ url_for('admin.developer_dashboard') if current_user.is_developer else url_for('mood.dashboard') }}"><i data-lucide="layout-dashboard"></i>Dashboard</a></li>
           <li class="nav-item"><a class="nav-link{% if request.endpoint == 'mood.history' %} active{% endif %}" href="{{ url_for('mood.history') }}"><i data-lucide="history"></i>History</a></li>
           <li class="nav-item"><a class="nav-link{% if request.endpoint == 'mood.heatmap' %} active{% endif %}" href="{{ url_for('mood.heatmap') }}"><i data-lucide="calendar-days"></i>Heatmap</a></li>
           <li class="nav-item"><a class="nav-link{% if request.endpoint == 'mood.goals' %} active{% endif %}" href="{{ url_for('mood.goals') }}"><i data-lucide="target"></i>Goals</a></li>
           {% if current_user.is_admin %}
-          <li class="nav-item"><a class="nav-link{% if request.endpoint == 'admin.dashboard' %} active{% endif %}" href="{{ url_for('admin.dashboard') }}"><i data-lucide="shield-check"></i>Admin</a></li>
-          <li class="nav-item"><a class="nav-link{% if request.endpoint == 'admin.model_diagnostics' %} active{% endif %}" href="{{ url_for('admin.model_diagnostics') }}"><i data-lucide="cpu"></i>ML</a></li>
-          <li class="nav-item"><a class="nav-link{% if request.endpoint == 'admin.bias_audit' %} active{% endif %}" href="{{ url_for('admin.bias_audit') }}"><i data-lucide="scale"></i>Bias</a></li>
-          <li class="nav-item"><a class="nav-link{% if request.endpoint == 'admin.audit_log' %} active{% endif %}" href="{{ url_for('admin.audit_log') }}"><i data-lucide="scroll-text"></i>Audit</a></li>
+          {% set _admin_active = request.endpoint in ('admin.dashboard','admin.users','admin.model_diagnostics','admin.bias_audit','admin.audit_log','admin.developer_dashboard','admin.invite_tokens') %}
+          <li class="nav-item dropdown admin-dropdown">
+            <button class="nav-link admin-drop-toggle{% if _admin_active %} active{% endif %}" id="adminDropBtn" type="button"
+              data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">
+              {% if current_user.is_developer %}
+                <i data-lucide="terminal"></i>Developer<i data-lucide="chevron-down" class="admin-chevron"></i>
+              {% else %}
+                <i data-lucide="shield-check"></i>Admin<i data-lucide="chevron-down" class="admin-chevron"></i>
+              {% endif %}
+            </button>
+            <ul class="dropdown-menu admin-drop-menu" aria-labelledby="adminDropBtn">
+              {% if current_user.is_developer %}
+                <li><a class="dropdown-item admin-dev-item{% if request.endpoint == 'admin.developer_dashboard' %} active{% endif %}" href="{{ url_for('admin.developer_dashboard') }}">
+                  <i data-lucide="terminal"></i>Developer Panel
+                </a></li>
+                <li><hr class="dropdown-divider admin-divider"></li>
+                <li><a class="dropdown-item{% if request.endpoint == 'admin.users' %} active{% endif %}" href="{{ url_for('admin.users') }}">
+                  <i data-lucide="users"></i>Users &amp; Admins
+                </a></li>
+                <li><a class="dropdown-item{% if request.endpoint == 'admin.model_diagnostics' %} active{% endif %}" href="{{ url_for('admin.model_diagnostics') }}">
+                  <i data-lucide="cpu"></i>ML Diagnostics
+                </a></li>
+                <li><a class="dropdown-item{% if request.endpoint == 'admin.bias_audit' %} active{% endif %}" href="{{ url_for('admin.bias_audit') }}">
+                  <i data-lucide="scale"></i>Bias Audit
+                </a></li>
+                <li><a class="dropdown-item{% if request.endpoint == 'admin.audit_log' %} active{% endif %}" href="{{ url_for('admin.audit_log') }}">
+                  <i data-lucide="scroll-text"></i>Audit Log
+                </a></li>
+                <li><a class="dropdown-item{% if request.endpoint == 'admin.invite_tokens' %} active{% endif %}" href="{{ url_for('admin.invite_tokens') }}">
+                  <i data-lucide="ticket"></i>Invite Tokens
+                </a></li>
+              {% else %}
+                <li><a class="dropdown-item{% if request.endpoint == 'admin.dashboard' %} active{% endif %}" href="{{ url_for('admin.dashboard') }}">
+                  <i data-lucide="layout-dashboard"></i>Dashboard
+                </a></li>
+                <li><a class="dropdown-item{% if request.endpoint == 'admin.users' %} active{% endif %}" href="{{ url_for('admin.users') }}">
+                  <i data-lucide="users"></i>Users
+                </a></li>
+                <li><a class="dropdown-item{% if request.endpoint == 'admin.model_diagnostics' %} active{% endif %}" href="{{ url_for('admin.model_diagnostics') }}">
+                  <i data-lucide="cpu"></i>ML Diagnostics
+                </a></li>
+                <li><a class="dropdown-item{% if request.endpoint == 'admin.bias_audit' %} active{% endif %}" href="{{ url_for('admin.bias_audit') }}">
+                  <i data-lucide="scale"></i>Bias Audit
+                </a></li>
+                <li><a class="dropdown-item{% if request.endpoint == 'admin.audit_log' %} active{% endif %}" href="{{ url_for('admin.audit_log') }}">
+                  <i data-lucide="scroll-text"></i>Audit Log
+                </a></li>
+                <li><a class="dropdown-item{% if request.endpoint == 'admin.invite_tokens' %} active{% endif %}" href="{{ url_for('admin.invite_tokens') }}">
+                  <i data-lucide="ticket"></i>Invite Tokens
+                </a></li>
+              {% endif %}
+            </ul>
+          </li>
           {% endif %}
           {% endif %}
         </ul>

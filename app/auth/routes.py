@@ -108,6 +108,8 @@ def register():
 @limiter.limit("5 per minute", key_func=_login_limit_key)
 def login():
     if current_user.is_authenticated:
+        if current_user.is_developer:
+            return redirect(url_for("admin.developer_dashboard"))
         return redirect(url_for("mood.dashboard"))
 
     form = LoginForm()
@@ -117,7 +119,11 @@ def login():
             login_user(user, remember=form.remember_me.data)
             flash("Signed in successfully.", "success")
             next_url = request.args.get("next")
-            return redirect(safe_next_url(next_url) or url_for("mood.dashboard"))
+            if safe_next_url(next_url):
+                return redirect(safe_next_url(next_url))
+            if user.is_developer:
+                return redirect(url_for("admin.developer_dashboard"))
+            return redirect(url_for("mood.dashboard"))
         email_hash = hashlib.sha256(
             form.email.data.lower().strip().encode("utf-8")
         ).hexdigest()[:12]
@@ -182,6 +188,10 @@ def delete_account():
         return redirect(url_for("auth.profile"))
 
     user = current_user._get_current_object()
+    from app.utils.admin_guard import is_last_admin
+    if is_last_admin(user):
+        flash("You are the last remaining administrator. You must request an administrator change or promote another admin before deleting your account.", "danger")
+        return redirect(url_for("admin.change_lockout", action_type="delete"))
     logout_user()
     if current_app.config.get("TESTING"):
         db.session.delete(user)

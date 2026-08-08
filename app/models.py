@@ -132,7 +132,12 @@ class User(UserMixin, db.Model):
 
     @property
     def is_admin(self):
-        return self.role == "admin"
+        return self.role in ("admin", "developer")
+
+    @property
+    def is_developer(self):
+        return self.role == "developer"
+
 
 
 class UserProfile(db.Model):
@@ -349,6 +354,23 @@ class AdminInviteToken(db.Model):
     is_used = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
     expires_at = db.Column(db.DateTime(timezone=True), nullable=True)
+
+
+class AdminChangeRequest(db.Model):
+    __tablename__ = "admin_change_request"
+
+    id = db.Column(db.Integer, primary_key=True)
+    requester_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    target_user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=True)
+    request_type = db.Column(db.String(30), nullable=False)  # 'demote_self' or 'delete_account'
+    status = db.Column(db.String(20), nullable=False, default="pending")  # 'pending', 'approved', 'rejected'
+    token = db.Column(db.String(100), unique=True, nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
+    resolved_at = db.Column(db.DateTime(timezone=True), nullable=True)
+
+    requester = db.relationship("User", foreign_keys=[requester_id], backref="change_requests_made")
+    target_user = db.relationship("User", foreign_keys=[target_user_id], backref="change_requests_target")
+
 
 
 @login_manager.user_loader

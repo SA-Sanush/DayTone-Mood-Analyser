@@ -16,7 +16,7 @@ class AdminUserProfileForm(FlaskForm):
     email = StringField("Email", validators=[DataRequired(), Email(), Length(max=120)])
     role = SelectField(
         "Role",
-        choices=[("user", "User"), ("admin", "Admin")],
+        choices=[("user", "User"), ("admin", "Admin"), ("developer", "Developer")],
         validators=[DataRequired()],
     )
     age = IntegerField("Age", validators=[Optional(), NumberRange(min=10, max=100)])
