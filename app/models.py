@@ -139,7 +139,6 @@ class User(UserMixin, db.Model):
         return self.role == "developer"
 
 
-
 class UserProfile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(
@@ -370,7 +369,6 @@ class AdminChangeRequest(db.Model):
 
     requester = db.relationship("User", foreign_keys=[requester_id], backref="change_requests_made")
     target_user = db.relationship("User", foreign_keys=[target_user_id], backref="change_requests_target")
-
 
 
 @login_manager.user_loader

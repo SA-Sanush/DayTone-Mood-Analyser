@@ -346,7 +346,7 @@ def submit_change_request():
     import secrets
 
     # Requester must be current_user and must be the last admin
-    if not current_user.role in ("admin", "developer") or not is_last_admin(current_user):
+    if current_user.role not in ("admin", "developer") or not is_last_admin(current_user):
         flash("You are not locked out; you can perform role changes directly.", "warning")
         return redirect(url_for("admin.dashboard"))
 
@@ -465,9 +465,9 @@ def process_admin_change_request(req):
 def approve_change_request(token):
     from app.models import AdminChangeRequest
     req = AdminChangeRequest.query.filter_by(token=token, status="pending").first_or_404()
-    
+
     process_admin_change_request(req)
-    
+
     # If the requester was the logged in user, log them out if they demoted themselves
     if current_user.is_authenticated and current_user.id == req.requester_id:
         logout_user()
@@ -502,14 +502,14 @@ def developer_dashboard():
     total_users = User.query.filter(User.deleted_at.is_(None)).count()
     admin_count = User.query.filter_by(role="admin", deleted_at=None).count()
     developer_count = User.query.filter_by(role="developer", deleted_at=None).count()
-    
+
     pending_requests = AdminChangeRequest.query.filter_by(status="pending").count()
     total_requests = AdminChangeRequest.query.count()
-    
+
     total_mood_logs = MoodLog.query.filter(MoodLog.deleted_at.is_(None)).count()
     total_goals = Goal.query.count()
     total_audit_logs = AuditLog.query.count()
-    
+
     p_stats = platform_stats()
 
     system_info = {
