@@ -15,7 +15,23 @@
   let selectedYear = now.getFullYear();
   let selectedCellData = null;
 
-  const colors = ['#e5e7eb', '#fee2e2', '#fed7aa', '#fef3c7', '#bbf7d0', '#86efac'];
+  function isDarkMode() {
+    const theme = document.documentElement.getAttribute('data-theme');
+    return theme === 'dark' || theme === 'nocturne' || document.documentElement.classList.contains('dark');
+  }
+
+  function getColors() {
+    const dark = isDarkMode();
+    return [
+      dark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.28)', // 0: unlogged frosted glass
+      dark ? 'rgba(244, 63, 94, 0.85)' : '#fb7185',  // 1: sick
+      dark ? 'rgba(249, 115, 22, 0.85)' : '#fb923c', // 2: sad
+      dark ? 'rgba(245, 158, 11, 0.85)' : '#fbbf24', // 3: anxious
+      dark ? 'rgba(20, 184, 166, 0.85)' : '#2dd4bf', // 4: calm
+      dark ? 'rgba(16, 185, 129, 0.85)' : '#34d399'  // 5: happy
+    ];
+  }
+
   const moodLabels = {
     1: '🤒 Sick',
     2: '😢 Sad',
@@ -42,6 +58,7 @@
   function renderHeatmap(year) {
     target.innerHTML = '';
     
+    const colors = getColors();
     const byDate = new Map(rows.map((row) => [row.date, row]));
     const start = new Date(year, 0, 1);
     const end = new Date(year, 11, 31);
@@ -63,6 +80,8 @@
       .attr('class', 'heat-cell')
       .attr('width', cell)
       .attr('height', cell)
+      .attr('rx', 3)
+      .attr('ry', 3)
       .attr('x', (d) => d3.timeWeek.count(start, d) * (cell + gap))
       .attr('y', (d) => d.getDay() * (cell + gap) + 18)
       .attr('fill', (d) => {
@@ -179,38 +198,38 @@
       detailContent.innerHTML = `
         <div class="d-flex justify-content-between align-items-start mb-3 border-bottom pb-2 flex-wrap gap-2">
           <div>
-            <h4 style="font-size: 1.15rem; font-weight: 800; color: var(--dt-text); margin-bottom: 0.15rem;">${formattedDate}</h4>
+            <h4 class="text-slate-900 dark:text-white font-extrabold text-base mb-1">${formattedDate}</h4>
             <span class="badge risk-bg-${riskClass}">${item.risk} Burnout Risk</span>
           </div>
-          <a class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1" href="${editLogUrl}">
-            <i data-lucide="pencil" style="width: 14px; height: 14px;"></i>Edit check-in
+          <a class="daytone-btn-primary daytone-btn-sm inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-full text-decoration-none shadow-sm" href="${editLogUrl}">
+            <i data-lucide="pencil" style="width: 13px; height: 13px;"></i>Edit check-in
           </a>
         </div>
         <div class="row g-3">
           <div class="col-6">
-            <span class="text-secondary small d-block">Mood score</span>
-            <span style="font-size: 1.05rem; font-weight: 800; color: var(--dt-text);">${moodLabels[item.mood]}</span>
+            <span class="text-slate-600 dark:text-slate-400 text-xs font-semibold block mb-0.5">Mood score</span>
+            <span class="text-slate-900 dark:text-white font-extrabold text-sm">${moodLabels[item.mood]}</span>
           </div>
           <div class="col-6">
-            <span class="text-secondary small d-block">Log status</span>
-            <span class="text-success small fw-bold"><i data-lucide="check" style="width: 14px; height: 14px; vertical-align: middle;"></i> Logged</span>
+            <span class="text-slate-600 dark:text-slate-400 text-xs font-semibold block mb-0.5">Log status</span>
+            <span class="text-emerald-700 dark:text-emerald-400 text-xs font-bold inline-flex items-center gap-1"><i data-lucide="check" style="width: 14px; height: 14px;"></i> Logged</span>
           </div>
         </div>
-        <p class="text-secondary small mt-3 mb-0">Check your History tab for notes and model confidence details for this entry.</p>
+        <p class="text-slate-600 dark:text-slate-400 text-xs font-medium mt-3 mb-0">Check your History tab for notes and model confidence details for this entry.</p>
       `;
     } else {
       const logUrl = `/log?date=${dateStr}`;
       detailContent.innerHTML = `
         <div class="d-flex justify-content-between align-items-start mb-3 border-bottom pb-2 flex-wrap gap-2">
           <div>
-            <h4 style="font-size: 1.15rem; font-weight: 800; color: var(--dt-text); margin-bottom: 0.15rem;">${formattedDate}</h4>
-            <span class="text-secondary small">No check-in recorded</span>
+            <h4 class="text-slate-900 dark:text-white font-extrabold text-base mb-1">${formattedDate}</h4>
+            <span class="text-slate-600 dark:text-slate-400 text-xs font-semibold">No check-in recorded</span>
           </div>
-          <a class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1" href="${logUrl}">
-            <i data-lucide="plus" style="width: 14px; height: 14px;"></i>Log this day
+          <a class="daytone-btn-primary daytone-btn-sm inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-full text-decoration-none shadow-sm" href="${logUrl}">
+            <i data-lucide="plus" style="width: 13px; height: 13px;"></i>Log this day
           </a>
         </div>
-        <p class="text-secondary small mb-0">You haven't logged your wellness metrics for this day. Click the button above to log retrospectively!</p>
+        <p class="text-slate-600 dark:text-slate-400 text-xs font-medium mb-0">You haven't logged your wellness metrics for this day. Click the button above to log retrospectively!</p>
       `;
     }
     
@@ -258,4 +277,8 @@
     await loadData(selectedYear);
     renderHeatmap(selectedYear);
   })();
+
+  window.addEventListener('daytone-theme-changed', () => {
+    renderHeatmap(selectedYear);
+  });
 })();

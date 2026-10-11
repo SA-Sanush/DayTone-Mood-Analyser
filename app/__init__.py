@@ -3,7 +3,7 @@ import logging.handlers
 import os
 import warnings
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_talisman import Talisman
 
 try:
@@ -170,6 +170,7 @@ def create_app(config_object=Config):
             "object-src": ["'none'"],
         },
         force_https=(config_object.ENV == "production"),
+        session_cookie_secure=(config_object.ENV == "production"),
         # Suppress exact server version from Server header
         content_security_policy_nonce_in=[],
     )
@@ -226,6 +227,46 @@ def create_app(config_object=Config):
 
         return rt("offline.html"), 200
 
+    @app.route("/img/<path:filename>")
+    def serve_img(filename):
+        from flask import send_from_directory
+        return send_from_directory(os.path.join(app.static_folder, "img"), filename)
+
+    @app.route("/assets/<path:filename>")
+    def serve_dist_assets(filename):
+        from flask import send_from_directory
+        repo_root = os.path.dirname(os.path.dirname(__file__))
+        dist_assets = os.path.join(repo_root, "dist", "assets")
+        return send_from_directory(dist_assets, filename)
+
+    @app.route("/anime_frames/<path:filename>")
+    def serve_anime_frames(filename):
+        from flask import send_from_directory
+        repo_root = os.path.dirname(os.path.dirname(__file__))
+        anime_dir = os.path.join(repo_root, "dist", "anime_frames")
+        if not os.path.exists(anime_dir):
+            anime_dir = os.path.join(repo_root, "public", "anime_frames")
+        return send_from_directory(anime_dir, filename)
+
+    @app.route("/frames/<path:filename>")
+    def serve_frames(filename):
+        from flask import send_from_directory
+        repo_root = os.path.dirname(os.path.dirname(__file__))
+        frames_dir = os.path.join(repo_root, "dist", "frames")
+        if not os.path.exists(frames_dir):
+            frames_dir = os.path.join(repo_root, "public", "frames")
+        return send_from_directory(frames_dir, filename)
+
+    @app.route("/vite.svg")
+    def serve_vite_svg():
+        from flask import send_from_directory
+        repo_root = os.path.dirname(os.path.dirname(__file__))
+        dist_svg = os.path.join(repo_root, "dist", "vite.svg")
+        if os.path.exists(dist_svg):
+            return send_from_directory(os.path.join(repo_root, "dist"), "vite.svg")
+        return send_from_directory(os.path.join(repo_root, "public"), "vite.svg")
+
+
     @app.cli.command("reload-model")
     def reload_model():
         from app.ml.predictor import _model_payload
@@ -240,7 +281,7 @@ def create_app(config_object=Config):
         from datetime import datetime, timezone
         return dict(
             crisis_resources=CRISIS_RESOURCES,
-            now=datetime.now(timezone.utc)
+            now=datetime.now(timezone.utc).replace(tzinfo=None)
         )
 
     # ── Dynamic SQLite Schema Updates ─────────────────────────────────────────

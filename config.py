@@ -20,6 +20,7 @@ def _bool_env(name, default=False):
 
 class Config:
     ENV = os.getenv("FLASK_ENV", "development")
+    TEMPLATES_AUTO_RELOAD = True
     _SECRET_KEY = os.getenv("SECRET_KEY")
     if ENV == "production" and not _SECRET_KEY:
         raise RuntimeError("SECRET_KEY must be set to a strong random value in production.")
@@ -33,9 +34,11 @@ class Config:
         "pool_recycle": 300,
     }
     WTF_CSRF_ENABLED = True
+    SESSION_COOKIE_NAME = "daytone_session" if ENV == "production" else "daytone_dev_session"
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SECURE = _bool_env("SESSION_COOKIE_SECURE", ENV == "production")
+    REMEMBER_COOKIE_SECURE = _bool_env("REMEMBER_COOKIE_SECURE", ENV == "production")
     PERMANENT_SESSION_LIFETIME = timedelta(hours=8)
     REMEMBER_COOKIE_DURATION = timedelta(days=14)
     MAX_CONTENT_LENGTH = 2 * 1024 * 1024

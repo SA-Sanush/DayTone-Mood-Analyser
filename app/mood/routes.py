@@ -115,6 +115,14 @@ def dashboard():
     )
 
 
+@mood_bp.route("/onboarding")
+@mood_bp.route("/tour")
+def onboarding():
+    if current_user.is_authenticated:
+        return redirect(url_for("mood.dashboard"))
+    return redirect(url_for("auth.index"))
+
+
 @mood_bp.route("/history")
 @login_required
 def history():

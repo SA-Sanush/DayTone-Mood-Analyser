@@ -17,10 +17,28 @@
     </p>
   </div>
   <div class="admin-hero-actions">
+    {% set is_self = user.id == current_user.id %}
+    {% set is_sole = is_self and user.is_admin and admin_count <= 1 %}
+
+    {% if is_sole %}
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <span class="badge d-inline-flex align-items-center gap-1 px-3 py-2"
+            style="background:rgba(234,179,8,0.15);border:1px solid rgba(234,179,8,0.35);color:#facc15;font-size:0.78rem;border-radius:8px;">
+        <i data-lucide="shield-alert" style="width:13px;height:13px;"></i>
+        Sole Administrator — self-actions locked
+      </span>
+      <button class="btn btn-outline-warning" disabled title="You are the only admin. Promote another admin first.">
+        <i data-lucide="shield-off"></i> Demote to User
+      </button>
+      <button class="btn btn-outline-danger" disabled title="You are the only admin. Promote another admin first.">
+        <i data-lucide="trash-2"></i> Delete User
+      </button>
+    </div>
+    {% else %}
     <form method="post" action="{{ url_for('admin.toggle_role', user_id=user.id) }}" style="display:inline;">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button type="submit" class="btn {{ 'btn-outline-warning' if user.is_admin else 'btn-outline-primary' }}"
-              onclick="return confirm('{% if user.id == current_user.id %}WARNING: You are about to change your own role. Demoting yourself to User will revoke your admin privileges immediately. {% endif %}Change {{ user.name }}\'s role?')">
+              onclick="return confirm('{% if is_self %}WARNING: You are about to change your own role. Demoting yourself to User will revoke your admin privileges immediately. {% endif %}Change {{ user.name }}\'s role?')">
         <i data-lucide="{{ 'shield-off' if user.is_admin else 'shield-check' }}"></i>
         {{ 'Demote to User' if user.is_admin else 'Promote to Admin' }}
       </button>
@@ -28,11 +46,13 @@
     <form method="post" action="{{ url_for('admin.delete_user', user_id=user.id) }}" style="display:inline;">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button type="submit" class="btn btn-outline-danger"
-              onclick="return confirm('{% if user.id == current_user.id %}WARNING: You are about to permanently delete your own account! You will be logged out immediately. {% endif %}Permanently delete {{ user.name }}? This cannot be undone.')">
+              onclick="return confirm('{% if is_self %}WARNING: You are about to permanently delete your own account! You will be logged out immediately. {% endif %}Permanently delete {{ user.name }}? This cannot be undone.')">
         <i data-lucide="trash-2"></i> Delete User
       </button>
     </form>
+    {% endif %}
   </div>
+
 </div>
 
 <div class="row justify-content-center mt-4">
@@ -51,7 +71,7 @@
         <li><span>Occupation</span><strong>{{ user.profile.occupation or '—' }}</strong></li>
         <li><span>Preferred Activity</span><strong>{{ user.profile.preferred_activity or '—' }}</strong></li>
         <li><span>Daily Reminder</span>
-          <strong>{{ '✅ On' if user.profile.daily_reminder else '❌ Off' }}</strong>
+          <span class="badge {{ 'bg-success' if user.profile.daily_reminder else 'bg-secondary' }} rounded-pill px-2.5 py-1 text-xs font-semibold">{{ 'Enabled' if user.profile.daily_reminder else 'Disabled' }}</span>
         </li>
       </ul>
       {% else %}

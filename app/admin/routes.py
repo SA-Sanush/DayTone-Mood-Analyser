@@ -58,8 +58,13 @@ def users():
 @admin_required
 def user_detail(user_id):
     user = User.query.get_or_404(user_id)
+    from app.models import User as _User
+    admin_count = _User.query.filter(
+        _User.role == "admin",
+        _User.deleted_at.is_(None)
+    ).count()
     return render_template(
-        "admin/user_detail.html", user=user
+        "admin/user_detail.html", user=user, admin_count=admin_count
     )
 
 
@@ -77,7 +82,10 @@ def toggle_role(user_id):
     if old_role in ("admin", "developer"):
         from app.utils.admin_guard import is_last_admin
         if is_last_admin(user):
-            flash("Cannot demote the last remaining administrator. You must request a change or promote another admin first.", "danger")
+            if is_self:
+                flash("You are the sole administrator. You cannot demote yourself — promote another admin first.", "danger")
+                return redirect(url_for("admin.user_detail", user_id=user.id))
+            flash("Cannot demote the last remaining administrator. You must promote another admin first.", "danger")
             return redirect(url_for("admin.change_lockout", action_type="demote"))
 
     user.role = "user" if user.role in ("admin", "developer") else "admin"
@@ -113,7 +121,10 @@ def delete_user(user_id):
     if user.role in ("admin", "developer"):
         from app.utils.admin_guard import is_last_admin
         if is_last_admin(user):
-            flash("Cannot delete the last remaining administrator. You must request a change or promote another admin first.", "danger")
+            if is_self:
+                flash("You are the sole administrator. You cannot delete your own account — promote another admin first.", "danger")
+                return redirect(url_for("admin.user_detail", user_id=user.id))
+            flash("Cannot delete the last remaining administrator. You must promote another admin first.", "danger")
             return redirect(url_for("admin.change_lockout", action_type="delete"))
 
     log_admin_action(
@@ -185,7 +196,10 @@ def edit_user_profile(user_id):
         if role_demoted:
             from app.utils.admin_guard import is_last_admin
             if is_last_admin(user):
-                flash("Cannot demote the last remaining administrator. You must request a change or promote another admin first.", "danger")
+                if user.id == current_user.id:
+                    flash("You are the sole administrator. You cannot demote yourself — promote another admin first.", "danger")
+                    return redirect(url_for("admin.user_detail", user_id=user.id))
+                flash("Cannot demote the last remaining administrator. You must promote another admin first.", "danger")
                 return redirect(url_for("admin.change_lockout", action_type="demote"))
 
         role_changed_self = user.id == current_user.id and form.role.data == "user"
@@ -312,6 +326,26 @@ def invite_tokens():
 
     tokens = AdminInviteToken.query.order_by(AdminInviteToken.created_at.desc()).all()
     return render_template("admin/invite_tokens.html", tokens=tokens)
+
+
+@admin_bp.route("/invite-tokens/<int:token_id>/delete", methods=["POST"])
+@admin_required
+def delete_invite_token(token_id):
+    """Delete an invite token."""
+    from app.models import AdminInviteToken
+    token_obj = AdminInviteToken.query.get_or_404(token_id)
+    token_str = token_obj.token
+    db.session.delete(token_obj)
+    db.session.commit()
+    log_admin_action(
+        admin_id=current_user.id,
+        action="delete_invite_token",
+        target_type="AdminInviteToken",
+        target_id=token_id,
+        detail=f"Deleted invite token {token_str[:16]}..."
+    )
+    flash("Invite token removed successfully.", "danger")
+    return redirect(request.referrer or url_for("admin.invite_tokens"))
 
 
 def developer_required(view):

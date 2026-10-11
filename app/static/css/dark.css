@@ -140,3 +140,93 @@ html[data-theme="dark"] .admin-divider {
 html[data-theme="dark"] .admin-dev-item { color: #a78bfa !important; }
 html[data-theme="dark"] .admin-dev-item:hover { background: rgba(167, 139, 250, 0.12) !important; color: #a78bfa !important; }
 html[data-theme="dark"] .admin-dev-item svg { color: #a78bfa; }
+
+/* ─── Dark Theme Overrides for Intervention & Driver Cards ───────────────── */
+html[data-theme="dark"] .intervention-card {
+  background: linear-gradient(135deg, rgba(38, 26, 18, 0.88), rgba(24, 28, 43, 0.88)) !important;
+  border-color: rgba(251, 146, 60, 0.35) !important;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45), 0 0 20px rgba(251, 146, 60, 0.12) !important;
+  backdrop-filter: blur(18px);
+}
+html[data-theme="dark"] .intervention-card::before {
+  background: linear-gradient(90deg, #f97316, #ef4444) !important;
+}
+html[data-theme="dark"] .intervention-icon-box {
+  background: rgba(251, 146, 60, 0.15);
+  color: #ffb74d;
+}
+html[data-theme="dark"] .intervention-badge {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+html[data-theme="dark"] .intervention-title {
+  color: #ffb74d !important;
+}
+html[data-theme="dark"] .intervention-text,
+html[data-theme="dark"] .intervention-text.text-secondary {
+  color: #cbd5e1 !important;
+}
+html[data-theme="dark"] #crisisWarningScreen .intervention-text {
+  color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] .intervention-crisis {
+  border-top-color: rgba(203, 213, 225, 0.12);
+}
+html[data-theme="dark"] .crisis-summary-btn {
+  background: rgba(251, 146, 60, 0.12);
+  color: #ffb74d;
+}
+html[data-theme="dark"] .crisis-summary-btn:hover {
+  background: rgba(251, 146, 60, 0.2);
+}
+html[data-theme="dark"] .crisis-icon-pulse { color: #ffb74d; }
+html[data-theme="dark"] .crisis-chevron { color: #ffb74d; }
+
+html[data-theme="dark"] .crisis-card {
+  background: rgba(18, 28, 43, 0.75);
+  border-color: rgba(203, 213, 225, 0.13);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+html[data-theme="dark"] .crisis-card:hover {
+  background: rgba(24, 38, 58, 0.9);
+  border-color: var(--dt-primary);
+  box-shadow: 0 8px 24px rgba(106, 164, 255, 0.18);
+}
+html[data-theme="dark"] .crisis-region-pill {
+  background: rgba(106, 164, 255, 0.15);
+  color: var(--dt-primary);
+}
+html[data-theme="dark"] .crisis-card-icon {
+  color: var(--dt-muted);
+}
+html[data-theme="dark"] .crisis-card:hover .crisis-card-icon {
+  color: var(--dt-primary);
+}
+html[data-theme="dark"] .crisis-card-label {
+  color: var(--dt-text);
+}
+html[data-theme="dark"] .crisis-disclaimer {
+  color: var(--dt-muted);
+}
+
+/* Dark theme overrides for Explainability Driver Cards */
+html[data-theme="dark"] .driver-section {
+  background: rgba(18, 28, 43, 0.74) !important;
+  border-color: var(--dt-border) !important;
+}
+html[data-theme="dark"] .driver-card {
+  background: rgba(11, 18, 32, 0.72) !important;
+  border-color: var(--dt-border) !important;
+}
+html[data-theme="dark"] .driver-card-text {
+  color: var(--dt-text) !important;
+}
+html[data-theme="dark"] .driver-card-icon {
+  color: var(--dt-primary) !important;
+}
+html[data-theme="dark"] .driver-disclaimer {
+  color: var(--dt-muted) !important;
+}
+

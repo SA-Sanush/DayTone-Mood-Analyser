@@ -1,44 +1,91 @@
 {% extends "base.html" %}
 {% block title %}Developer API Reference — DayTone{% endblock %}
 {% block content %}
-<div class="container py-4" style="max-width: 800px;">
-  <div class="mb-4">
-    <span class="eyebrow">Developer Documentation</span>
-    <h1>DayTone Developer APIs</h1>
-    <p class="text-secondary">Integrate with DayTone logs or audit the machine learning performance metrics.</p>
+<div class="apidocs-shell w-full max-w-5xl mx-auto py-4 space-y-6">
+
+  <!-- ── Developer APIs Header Capsule ────────────────────────────────────── -->
+  <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-6 md:p-8 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5 flex flex-col md:flex-row md:items-center md:justify-between gap-5 animate-fade-in-up">
+    <div class="flex items-center gap-4">
+      <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-sky-500/25 flex-shrink-0">
+        <i data-lucide="code-2" style="width: 26px; height: 26px;"></i>
+      </div>
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-sky-500/15 text-sky-700 dark:text-sky-300 border border-sky-500/25 mb-1.5 backdrop-blur-md">
+          <span class="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
+          <span>Developer Documentation &amp; APIs</span>
+        </div>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white m-0 tracking-tight">DayTone Developer APIs</h1>
+        <p class="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 m-0 mt-1">Integrate with DayTone logs or audit machine learning performance metrics.</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3 self-start md:self-center flex-shrink-0">
+      <a href="{{ url_for('auth.help_view') }}" class="daytone-btn-secondary daytone-btn-sm text-decoration-none whitespace-nowrap flex-shrink-0">
+        <i data-lucide="book-open" style="width: 14px; height: 14px;"></i>
+        <span>Manual</span>
+      </a>
+      {% if current_user.is_authenticated %}
+      <a href="{{ url_for('mood.dashboard') }}" class="daytone-btn-secondary daytone-btn-sm text-decoration-none whitespace-nowrap flex-shrink-0">
+        <i data-lucide="arrow-left" style="width: 14px; height: 14px;"></i>
+        <span>Dashboard</span>
+      </a>
+      {% else %}
+      <a href="{{ url_for('auth.login') }}" class="daytone-btn-primary daytone-btn-sm text-decoration-none whitespace-nowrap flex-shrink-0">
+        <i data-lucide="log-in" style="width: 14px; height: 14px;"></i>
+        <span>Sign In</span>
+      </a>
+      {% endif %}
+    </div>
   </div>
 
   <!-- ── Endpoint 1: Heatmap Data ─────────────────────────────────────── -->
-  <div class="panel elevated-panel mb-4 animate-fade-in-up">
-    <div class="panel-title">
-      <span class="badge bg-success me-2">GET</span>
-      <h2>/api/heatmap</h2>
+  <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-6 md:p-8 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5 space-y-5 animate-fade-in-up">
+    <div class="flex items-center justify-between gap-4 pb-3 border-b border-slate-200/40 dark:border-white/10 flex-wrap">
+      <div class="flex items-center gap-3">
+        <span class="inline-flex items-center px-3 py-1 rounded-xl text-xs font-black tracking-wider uppercase bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 shadow-xs">
+          GET
+        </span>
+        <h2 class="text-lg md:text-xl font-mono font-extrabold text-slate-900 dark:text-white m-0 tracking-tight">/api/heatmap</h2>
+      </div>
+      <span class="text-xs font-bold px-3 py-1 rounded-full bg-slate-900/5 dark:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-300/40 dark:border-white/10">
+        Public / Session Auth
+      </span>
     </div>
-    <p class="text-secondary mt-2">
+    
+    <p class="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 leading-relaxed m-0">
       Fetch daily aggregated mood and burnout risk metrics to render heatmaps.
     </p>
-    <h3 class="h6 mt-3">Request Parameters</h3>
-    <table class="table table-sm" style="font-size: 0.85rem;">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Required</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="font-monospace">year</td>
-          <td>integer</td>
-          <td>No</td>
-          <td>The four-digit calendar year (defaults to the current year).</td>
-        </tr>
-      </tbody>
-    </table>
 
-    <h3 class="h6 mt-3">Response Schema (200 OK)</h3>
-    <pre class="bg-dark p-3 rounded font-monospace text-light" style="font-size: 0.8rem;">{
+    <div class="space-y-2">
+      <div class="apidocs-subhead">Request Parameters</div>
+      <div class="overflow-x-auto rounded-2xl border border-white/60 dark:border-white/10 bg-white/40 dark:bg-slate-800/40 backdrop-blur-md shadow-xs">
+        <table class="apidocs-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Required</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="font-mono font-bold text-sky-600 dark:text-sky-400">year</td>
+              <td>integer</td>
+              <td><span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-500/15 text-slate-700 dark:text-slate-300">No</span></td>
+              <td>The four-digit calendar year (defaults to the current year).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="space-y-2">
+      <div class="flex items-center justify-between">
+        <div class="apidocs-subhead">Response Schema (200 OK)</div>
+        <span class="text-[11px] font-mono font-bold text-emerald-600 dark:text-emerald-400">application/json</span>
+      </div>
+      <div class="relative rounded-2xl bg-slate-950/85 dark:bg-slate-950/95 border border-white/10 p-4 shadow-inner overflow-x-auto">
+        <pre class="m-0 font-mono text-xs text-emerald-400 dark:text-emerald-300 leading-relaxed"><code>{
   "2026-07-01": {
     "id": 42,
     "mood_score": 4,
@@ -49,55 +96,114 @@
     "mood_score": 2,
     "burnout_risk": "Medium"
   }
-}</pre>
+}</code></pre>
+      </div>
+    </div>
   </div>
 
   <!-- ── Endpoint 2: Prediction Feedback ──────────────────────────────── -->
-  <div class="panel elevated-panel mb-4 animate-fade-in-up delay-1">
-    <div class="panel-title">
-      <span class="badge bg-primary me-2">POST</span>
-      <h2>/api/feedback/&lt;history_id&gt;</h2>
+  <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-6 md:p-8 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5 space-y-5 animate-fade-in-up">
+    <div class="flex items-center justify-between gap-4 pb-3 border-b border-slate-200/40 dark:border-white/10 flex-wrap">
+      <div class="flex items-center gap-3">
+        <span class="inline-flex items-center px-3 py-1 rounded-xl text-xs font-black tracking-wider uppercase bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-500/30 shadow-xs">
+          POST
+        </span>
+        <h2 class="text-lg md:text-xl font-mono font-extrabold text-slate-900 dark:text-white m-0 tracking-tight">/api/feedback/&lt;history_id&gt;</h2>
+      </div>
+      <span class="text-xs font-bold px-3 py-1 rounded-full bg-slate-900/5 dark:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-300/40 dark:border-white/10">
+        CSRF Protected
+      </span>
     </div>
-    <p class="text-secondary mt-2">
+
+    <p class="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 leading-relaxed m-0">
       Submit user feedback on the accuracy of a specific ML burnout risk prediction.
     </p>
-    
-    <div class="alert alert-warning d-flex align-items-start gap-2 my-2" style="font-size: 0.8rem;">
-      <i data-lucide="shield-alert" class="flex-shrink-0 mt-0.5" style="color: var(--dt-danger);"></i>
-      <div>
-        <strong>Header Guard:</strong> Requests must send the <code>Content-Type: application/json</code> header.
+
+    <!-- Header Guard Callout -->
+    <div class="p-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 dark:bg-amber-500/15 backdrop-blur-md flex items-start gap-3">
+      <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <i data-lucide="shield-alert" style="width: 18px; height: 18px;"></i>
+      </div>
+      <div class="space-y-0.5">
+        <strong class="text-xs font-extrabold text-amber-900 dark:text-amber-200 block">Header Guard</strong>
+        <p class="text-xs font-semibold text-amber-800/90 dark:text-amber-200/90 leading-normal m-0">
+          Requests must send the <code class="px-1.5 py-0.5 rounded bg-amber-500/20 font-mono text-[11px] font-bold text-amber-900 dark:text-amber-100">Content-Type: application/json</code> header.
+        </p>
       </div>
     </div>
 
-    <h3 class="h6 mt-3">Request Body Schema</h3>
-    <pre class="bg-dark p-3 rounded font-monospace text-light" style="font-size: 0.8rem;">{
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Request Body Schema -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <div class="apidocs-subhead">Request Body Schema</div>
+          <span class="text-[11px] font-mono font-bold text-sky-600 dark:text-sky-400">JSON</span>
+        </div>
+        <div class="relative rounded-2xl bg-slate-950/85 dark:bg-slate-950/95 border border-white/10 p-4 shadow-inner overflow-x-auto min-h-[110px] flex items-center">
+          <pre class="m-0 font-mono text-xs text-sky-400 dark:text-sky-300 leading-relaxed"><code>{
   "accurate": true
-}</pre>
+}</code></pre>
+        </div>
+      </div>
 
-    <h3 class="h6 mt-3">Response Schema (200 OK)</h3>
-    <pre class="bg-dark p-3 rounded font-monospace text-light" style="font-size: 0.8rem;">{
+      <!-- Response Schema -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <div class="apidocs-subhead">Response Schema (200 OK)</div>
+          <span class="text-[11px] font-mono font-bold text-emerald-600 dark:text-emerald-400">JSON</span>
+        </div>
+        <div class="relative rounded-2xl bg-slate-950/85 dark:bg-slate-950/95 border border-white/10 p-4 shadow-inner overflow-x-auto min-h-[110px] flex items-center">
+          <pre class="m-0 font-mono text-xs text-emerald-400 dark:text-emerald-300 leading-relaxed"><code>{
   "success": true,
   "history_id": 128
-}</pre>
+}</code></pre>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ── Model Card Section ────────────────────────────────────────────── -->
-  <div class="panel elevated-panel mb-4 animate-fade-in-up delay-2">
-    <div class="panel-title">
-      <i data-lucide="cpu"></i>
-      <h2>Machine Learning Model Card</h2>
+  <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-6 md:p-8 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5 space-y-5 animate-fade-in-up">
+    <div class="flex items-center gap-3 pb-3 border-b border-slate-200/40 dark:border-white/10">
+      <div class="w-9 h-9 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0">
+        <i data-lucide="cpu" style="width: 20px; height: 20px;"></i>
+      </div>
+      <div>
+        <h2 class="text-lg font-extrabold text-slate-900 dark:text-white m-0">Machine Learning Model Card</h2>
+        <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Model specifications, accuracy metrics &amp; fairness audits</span>
+      </div>
     </div>
-    <p>
-      For details on model features, limitations, and bias audit results, please check:
+    
+    <p class="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 leading-relaxed m-0">
+      DayTone employs machine learning classifiers to predict burnout risk tiers based on self-reported stress, sleep duration, and physical activity telemetry.
     </p>
-    <div class="d-flex gap-2">
-      <a href="{{ url_for('admin.model_diagnostics') }}" class="btn btn-outline-primary">
-        <i data-lucide="line-chart"></i> View Diagnostics Panel
+
+    {% if current_user.is_authenticated and current_user.role in ['admin', 'developer'] %}
+    <div class="flex flex-wrap items-center gap-3 pt-1">
+      <a href="{{ url_for('admin.model_diagnostics') }}" class="daytone-btn-secondary daytone-btn-sm text-decoration-none">
+        <i data-lucide="line-chart" style="width: 14px; height: 14px;"></i>
+        <span>View Diagnostics Panel</span>
       </a>
-      <a href="{{ url_for('admin.bias_audit') }}" class="btn btn-outline-primary">
-        <i data-lucide="scale"></i> View Bias Audit Reports
+      <a href="{{ url_for('admin.bias_audit') }}" class="daytone-btn-secondary daytone-btn-sm text-decoration-none">
+        <i data-lucide="scale" style="width: 14px; height: 14px;"></i>
+        <span>View Bias Audit Reports</span>
       </a>
     </div>
+    {% else %}
+    <div class="p-4 rounded-2xl border border-sky-500/25 bg-sky-500/10 dark:bg-sky-500/15 backdrop-blur-md flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div class="flex items-center gap-2.5">
+        <i data-lucide="shield-check" class="text-sky-600 dark:text-sky-400 flex-shrink-0" style="width: 18px; height: 18px;"></i>
+        <span class="text-xs font-semibold text-slate-700 dark:text-slate-200">
+          Internal ML diagnostics and bias audit reports are accessible to verified administrators and developers.
+        </span>
+      </div>
+      <a href="{{ url_for('auth.help_view') }}" class="daytone-btn-secondary daytone-btn-sm text-decoration-none whitespace-nowrap flex-shrink-0">
+        <i data-lucide="book-open" style="width: 14px; height: 14px;"></i>
+        <span>User Manual</span>
+      </a>
+    </div>
+    {% endif %}
   </div>
+
 </div>
 {% endblock %}

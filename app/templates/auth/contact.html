@@ -1,116 +1,243 @@
 {% extends "base.html" %}
 {% block title %}Contact & Support — DayTone{% endblock %}
 {% block content %}
-<div class="container py-5" style="max-width:640px;">
+<div class="contact-shell w-full max-w-5xl mx-auto py-4 space-y-6">
 
-  <div class="d-flex align-items-center gap-2 mb-2">
-    <i data-lucide="mail" style="width:22px;height:22px;color:var(--dt-primary)"></i>
-    <h1 style="font-size:1.5rem;font-weight:800;margin:0;">Contact & Support</h1>
+  <!-- ── Contact Header Capsule ─────────────────────────────────────────── -->
+  <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-6 md:p-8 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5 flex flex-col md:flex-row md:items-center md:justify-between gap-5 animate-fade-in-up">
+    <div class="flex items-center gap-4">
+      <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-sky-500/25 flex-shrink-0">
+        <i data-lucide="mail" style="width: 26px; height: 26px;"></i>
+      </div>
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-sky-500/15 text-sky-700 dark:text-sky-300 border border-sky-500/25 mb-1.5 backdrop-blur-md">
+          <span class="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
+          <span>Inquiry &amp; Support Sanctuary</span>
+        </div>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white m-0 tracking-tight">Contact &amp; Support</h1>
+        <p class="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 m-0 mt-1">Have a question, found an issue, or want to share feedback? We'd love to hear from you.</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3 self-start md:self-center flex-shrink-0">
+      <a href="{{ url_for('auth.help_view') }}" class="daytone-btn-secondary daytone-btn-sm text-decoration-none whitespace-nowrap flex-shrink-0">
+        <i data-lucide="book-open" style="width: 14px; height: 14px;"></i>
+        <span>Manual</span>
+      </a>
+      {% if current_user.is_authenticated %}
+      <a href="{{ url_for('mood.dashboard') }}" class="daytone-btn-secondary daytone-btn-sm text-decoration-none whitespace-nowrap flex-shrink-0">
+        <i data-lucide="arrow-left" style="width: 14px; height: 14px;"></i>
+        <span>Dashboard</span>
+      </a>
+      {% else %}
+      <a href="{{ url_for('auth.login') }}" class="daytone-btn-primary daytone-btn-sm text-decoration-none whitespace-nowrap flex-shrink-0">
+        <i data-lucide="log-in" style="width: 14px; height: 14px;"></i>
+        <span>Sign In</span>
+      </a>
+      {% endif %}
+    </div>
   </div>
-  <p class="text-secondary mb-4" style="font-size:0.9rem;">
-    Have a question, found a bug, or want to share feedback? We'd love to hear from you.
-  </p>
 
   {% if sent %}
-  <div class="panel elevated-panel p-4 text-center mb-4" style="border-left:4px solid var(--dt-good);">
-    <i data-lucide="check-circle" style="width:36px;height:36px;color:var(--dt-good);margin-bottom:0.75rem;"></i>
-    <h2 style="font-size:1.1rem;font-weight:800;margin-bottom:0.4rem;">Message received!</h2>
-    <p class="text-secondary mb-0" style="font-size:0.9rem;">
-      Thanks for reaching out. We'll get back to you as soon as possible.
-    </p>
+  <!-- ── Success State Capsule ─────────────────────────────────────────── -->
+  <div class="rounded-3xl border border-emerald-500/30 dark:border-emerald-500/20 bg-emerald-500/10 dark:bg-emerald-950/20 p-8 md:p-12 shadow-xl backdrop-blur-xl ring-1 ring-emerald-500/10 text-center space-y-4 animate-fade-in-up">
+    <div class="w-16 h-16 mx-auto rounded-2xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+      <i data-lucide="check-circle" style="width: 32px; height: 32px;"></i>
+    </div>
+    <div class="space-y-1">
+      <h2 class="text-2xl font-extrabold text-slate-900 dark:text-white m-0">Message Received!</h2>
+      <p class="text-sm font-semibold text-slate-700 dark:text-slate-300 max-w-md mx-auto m-0">
+        Thanks for reaching out to DayTone. We have received your inquiry and will respond as swiftly as possible.
+      </p>
+    </div>
+    <div class="pt-4 flex items-center justify-center gap-3">
+      {% if current_user.is_authenticated %}
+      <a href="{{ url_for('mood.dashboard') }}" class="daytone-btn-primary daytone-btn-sm text-decoration-none">
+        <i data-lucide="arrow-left" style="width: 14px; height: 14px;"></i>
+        <span>Return to Dashboard</span>
+      </a>
+      {% else %}
+      <a href="{{ url_for('auth.index') }}" class="daytone-btn-secondary daytone-btn-sm text-decoration-none">
+        <i data-lucide="arrow-left" style="width: 14px; height: 14px;"></i>
+        <span>Return Home</span>
+      </a>
+      <a href="{{ url_for('auth.login') }}" class="daytone-btn-primary daytone-btn-sm text-decoration-none">
+        <i data-lucide="log-in" style="width: 14px; height: 14px;"></i>
+        <span>Sign In</span>
+      </a>
+      {% endif %}
+    </div>
   </div>
-  <a href="{{ url_for('mood.dashboard') if current_user.is_authenticated else url_for('auth.login') }}"
-     class="btn btn-primary">
-    <i data-lucide="arrow-left"></i> Back to DayTone
-  </a>
 
   {% else %}
 
-  {% if error %}
-  <div class="alert alert-danger d-flex align-items-center gap-2 mb-3">
-    <i data-lucide="alert-circle" style="width:16px;height:16px;flex-shrink:0;"></i>
-    {{ error }}
-  </div>
-  {% endif %}
-
-  <div class="panel elevated-panel p-4">
-    <form method="POST" action="{{ url_for('auth.contact') }}" novalidate>
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-      <div class="mb-3">
-        <label for="contact-name" class="form-label" style="font-weight:700;font-size:0.88rem;">
-          Your name <span class="text-danger">*</span>
-        </label>
-        <input
-          id="contact-name"
-          type="text"
-          name="name"
-          class="form-control"
-          placeholder="e.g. Alex Johnson"
-          value="{{ request.form.get('name', '') }}"
-          required
-          autocomplete="name"
-          aria-required="true"
-        >
+  <!-- ── 2-Column Contact & Resources Grid ────────────────────────────── -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    
+    <!-- Left Column: Frosted Contact Form (7 cols) -->
+    <div class="lg:col-span-7 rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-6 md:p-8 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5 space-y-5 animate-fade-in-up">
+      <div class="flex items-center gap-3 pb-3 border-b border-slate-200/40 dark:border-white/10">
+        <div class="w-9 h-9 rounded-xl bg-sky-500/15 text-sky-600 dark:text-sky-400 flex items-center justify-center flex-shrink-0">
+          <i data-lucide="send" style="width: 18px; height: 18px;"></i>
+        </div>
+        <div>
+          <h2 class="text-lg font-extrabold text-slate-900 dark:text-white m-0">Send a Direct Message</h2>
+          <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Submit an inquiry, bug report, or feature request</span>
+        </div>
       </div>
 
-      <div class="mb-3">
-        <label for="contact-email" class="form-label" style="font-weight:700;font-size:0.88rem;">
-          Email address <span class="text-danger">*</span>
-        </label>
-        <input
-          id="contact-email"
-          type="email"
-          name="email"
-          class="form-control"
-          placeholder="you@example.com"
-          value="{{ request.form.get('email', current_user.email if current_user.is_authenticated else '') }}"
-          required
-          autocomplete="email"
-          aria-required="true"
-        >
+      {% if error %}
+      <div class="p-3.5 rounded-2xl border border-rose-500/30 bg-rose-500/10 dark:bg-rose-500/15 backdrop-blur-md flex items-center gap-2.5 text-xs font-bold text-rose-700 dark:text-rose-300">
+        <i data-lucide="alert-circle" style="width: 16px; height: 16px; flex-shrink: 0;"></i>
+        <span>{{ error }}</span>
+      </div>
+      {% endif %}
+
+      <form method="POST" action="{{ url_for('auth.contact') }}" novalidate class="space-y-4">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <!-- Name Input -->
+        <div class="space-y-1.5">
+          <label for="contact-name" class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 m-0">
+            Your Name <span class="text-rose-500">*</span>
+          </label>
+          <input
+            id="contact-name"
+            type="text"
+            name="name"
+            class="form-control w-full"
+            placeholder="e.g. Alex Johnson"
+            value="{{ request.form.get('name', '') }}"
+            required
+            autocomplete="name"
+            aria-required="true"
+          >
+        </div>
+
+        <!-- Email Input -->
+        <div class="space-y-1.5">
+          <label for="contact-email" class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 m-0">
+            Email Address <span class="text-rose-500">*</span>
+          </label>
+          <input
+            id="contact-email"
+            type="email"
+            name="email"
+            class="form-control w-full"
+            placeholder="you@example.com"
+            value="{{ request.form.get('email', current_user.email if current_user.is_authenticated else '') }}"
+            required
+            autocomplete="email"
+            aria-required="true"
+          >
+        </div>
+
+        <!-- Subject Select -->
+        <div class="space-y-1.5">
+          <label for="contact-subject" class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 m-0">
+            Subject
+          </label>
+          <select id="contact-subject" name="subject" class="form-select w-full">
+            <option value="General question">General question</option>
+            <option value="Bug report">Bug report</option>
+            <option value="Feature request">Feature request</option>
+            <option value="Data / Privacy request">Data / Privacy request</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <!-- Message Body -->
+        <div class="space-y-1.5">
+          <label for="contact-body" class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 m-0">
+            Message <span class="text-rose-500">*</span>
+          </label>
+          <textarea
+            id="contact-body"
+            name="body"
+            class="form-control w-full"
+            rows="5"
+            placeholder="Describe your question, issue, or suggestion in detail…"
+            required
+            aria-required="true"
+          >{{ request.form.get('body', '') }}</textarea>
+          <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 m-0 pt-0.5">
+            Please do not include sensitive clinical or medical identifiers.
+          </p>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="pt-2">
+          <button type="submit" class="daytone-btn-primary w-full shadow-lg" id="contact-submit">
+            <i data-lucide="send" style="width: 16px; height: 16px;"></i>
+            <span class="daytone-btn-label">Send Message</span>
+            <span class="daytone-btn-shine"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Right Column: Support Cards & Resources (5 cols) -->
+    <div class="lg:col-span-5 space-y-5">
+      
+      <!-- Direct Email Card -->
+      <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-6 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5 space-y-4 animate-fade-in-up">
+        <div class="flex items-center gap-3 pb-2 border-b border-slate-200/40 dark:border-white/10">
+          <div class="w-9 h-9 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0">
+            <i data-lucide="inbox" style="width: 18px; height: 18px;"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white m-0">Direct Email</h3>
+            <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Fast-track direct communications</span>
+          </div>
+        </div>
+
+        <p class="text-xs font-semibold text-slate-700 dark:text-slate-200 leading-relaxed m-0">
+          Prefer communicating straight from your email client? Write to our primary address anytime:
+        </p>
+
+        <a href="mailto:sasanush86@gmail.com" class="daytone-btn-secondary daytone-btn-sm w-full justify-center text-decoration-none">
+          <i data-lucide="mail" style="width: 14px; height: 14px;"></i>
+          <span class="truncate">sasanush86@gmail.com</span>
+        </a>
+
+        <div class="pt-1 flex items-center gap-2 text-[11px] font-bold text-slate-600 dark:text-slate-300">
+          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span>Responses typically within 24–48 hours</span>
+        </div>
       </div>
 
-      <div class="mb-3">
-        <label for="contact-subject" class="form-label" style="font-weight:700;font-size:0.88rem;">
-          Subject
-        </label>
-        <select id="contact-subject" name="subject" class="form-select">
-          <option value="General question">General question</option>
-          <option value="Bug report">Bug report</option>
-          <option value="Feature request">Feature request</option>
-          <option value="Data / Privacy request">Data / Privacy request</option>
-          <option value="Other">Other</option>
-        </select>
+      <!-- User Manual Card -->
+      <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-6 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5 space-y-3 animate-fade-in-up">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-xl bg-sky-500/15 text-sky-600 dark:text-sky-400 flex items-center justify-center flex-shrink-0">
+            <i data-lucide="book-open" style="width: 16px; height: 16px;"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white m-0">DayTone Manual</h3>
+            <span class="text-[11px] font-semibold text-slate-600 dark:text-slate-300">Self-guided answers &amp; features</span>
+          </div>
+        </div>
+        <p class="text-xs font-semibold text-slate-700 dark:text-slate-200 leading-relaxed m-0">
+          Looking for guidance on 3D Orb mechanics, rolling goal averages, or AI privacy opt-outs?
+        </p>
+        <a href="{{ url_for('auth.help_view') }}" class="daytone-btn-secondary daytone-btn-sm w-full justify-center text-decoration-none">
+          <i data-lucide="file-text" style="width: 14px; height: 14px;"></i>
+          <span>Open Sanctuary Manual</span>
+        </a>
       </div>
 
-      <div class="mb-4">
-        <label for="contact-body" class="form-label" style="font-weight:700;font-size:0.88rem;">
-          Message <span class="text-danger">*</span>
-        </label>
-        <textarea
-          id="contact-body"
-          name="body"
-          class="form-control"
-          rows="6"
-          placeholder="Describe your question or issue…"
-          required
-          aria-required="true"
-        >{{ request.form.get('body', '') }}</textarea>
-        <div class="form-text">Please don't include sensitive health information.</div>
+      <!-- Crisis Guidance Callout -->
+      <div class="rounded-3xl border border-rose-500/25 bg-rose-500/10 dark:bg-rose-950/20 p-5 shadow-lg backdrop-blur-md space-y-2.5 animate-fade-in-up">
+        <div class="flex items-center gap-2.5 text-rose-600 dark:text-rose-400">
+          <i data-lucide="heart-handshake" style="width: 16px; height: 16px;"></i>
+          <span class="text-xs font-extrabold uppercase tracking-wider">Crisis Note</span>
+        </div>
+        <p class="text-xs font-semibold text-slate-700 dark:text-slate-200 leading-normal m-0">
+          DayTone is a wellness reflection platform, not an emergency clinical service. If you are experiencing acute distress, please access 24/7 confidential helplines in the <a href="{{ url_for('auth.help_view') }}" class="font-bold underline text-rose-600 dark:text-rose-400">Help Center</a>.
+        </p>
       </div>
 
-      <button type="submit" class="btn btn-primary w-100" id="contact-submit">
-        <i data-lucide="send"></i> Send message
-      </button>
-    </form>
-  </div>
+    </div>
 
-  <div class="panel p-4 mt-4 text-center">
-    <p class="fw-bold mb-3">Other ways to reach us</p>
-    <a href="mailto:sasanush86@gmail.com" class="btn btn-outline-primary d-inline-flex align-items-center gap-2">
-      <i data-lucide="mail" style="width:16px;height:16px;"></i> Email sasanush86@gmail.com
-    </a>
   </div>
 
   {% endif %}

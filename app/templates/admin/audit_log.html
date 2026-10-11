@@ -1,21 +1,36 @@
 {% extends "base.html" %}
 {% block title %}Admin Audit Log — DayTone{% endblock %}
 {% block content %}
-<div class="container-fluid py-4" style="max-width: 1100px;">
+<div class="admin-shell w-full max-w-5xl mx-auto py-4 space-y-6">
 
-  <div class="d-flex align-items-center gap-2 mb-1">
-    <i data-lucide="scroll-text" style="width:22px;height:22px;color:var(--dt-primary)"></i>
-    <h1 style="font-size:1.45rem;font-weight:800;margin:0;">Admin Audit Log</h1>
+  <!-- ── Audit Log Header Capsule ──────────────────────────────── -->
+  <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-6 md:p-8 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5 flex flex-col md:flex-row md:items-center md:justify-between gap-5 animate-fade-in-up">
+    <div class="flex items-center gap-4">
+      <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-600 flex items-center justify-center text-white shadow-lg shadow-amber-500/25 flex-shrink-0">
+        <i data-lucide="scroll-text" style="width: 26px; height: 26px;"></i>
+      </div>
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/25 mb-1.5 backdrop-blur-md">
+          <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+          <span>Security Ledger</span>
+        </div>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white m-0 tracking-tight">Admin Audit Log</h1>
+        <p class="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 m-0 mt-1">Immutable ledger of administrative actions and destructive operations.</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3 self-start md:self-center flex-shrink-0">
+      <a class="daytone-btn-secondary daytone-btn-sm text-decoration-none" href="{{ url_for('admin.developer_dashboard') if current_user.is_developer else url_for('admin.dashboard') }}">
+        <i data-lucide="layout-dashboard" style="width: 14px; height: 14px;"></i>
+        <span>{{ 'Dev Console' if current_user.is_developer else 'Admin Dashboard' }}</span>
+      </a>
+    </div>
   </div>
-  <p class="text-secondary mb-4" style="font-size:0.9rem;">
-    Last 200 admin actions. All destructive operations are recorded automatically.
-  </p>
 
   {% if entries %}
-  <div class="panel elevated-panel p-0 mb-4" style="overflow:hidden;">
+  <div class="panel elevated-panel p-0 overflow-hidden shadow-xl animate-fade-in-up">
     <div class="table-responsive">
       <table class="table table-hover mb-0" style="font-size:0.84rem;">
-        <thead style="background:var(--dt-surface-2,rgba(255,255,255,0.04));font-weight:700;">
+        <thead style="background:var(--dt-surface-2,rgba(255,255,255,0.06));font-weight:700;">
           <tr>
             <th style="padding:0.75rem 1rem;">When</th>
             <th>Admin</th>
@@ -68,15 +83,11 @@
     </div>
   </div>
   {% else %}
-  <div class="panel elevated-panel p-4 text-center text-secondary">
-    <i data-lucide="inbox" style="width:32px;height:32px;margin-bottom:0.5rem;opacity:0.4;"></i>
-    <p class="mb-0">No audit entries yet. Actions will appear here once admins perform mutations.</p>
+  <div class="panel elevated-panel p-8 text-center text-secondary shadow-xl animate-fade-in-up">
+    <i data-lucide="inbox" style="width:36px;height:36px;margin: 0 auto 0.75rem auto;opacity:0.4;"></i>
+    <p class="mb-0 font-medium">No audit entries yet. Actions will appear here once admins perform mutations.</p>
   </div>
   {% endif %}
-
-  <a href="{{ url_for('admin.dashboard') }}" class="btn btn-glass">
-    <i data-lucide="arrow-left"></i> Admin Dashboard
-  </a>
 
 </div>
 {% endblock %}

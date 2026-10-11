@@ -6,9 +6,9 @@ block content %} {% if data.latest %}
 <div class="intervention-card" role="alert" aria-live="polite" id="interventionCard">
   <!-- Content Warning screen -->
   <div id="crisisWarningScreen" class="p-3 text-center w-100">
-    <i data-lucide="alert-triangle" class="mb-2" style="width:28px;height:28px;color:var(--dt-warning)"></i>
+    <i data-lucide="alert-triangle" class="mb-2" style="width:28px;height:28px;color:var(--dt-warn)"></i>
     <h3 class="intervention-title">Wellness Classification Alert</h3>
-    <p class="intervention-text small text-secondary">
+    <p class="intervention-text small">
       DayTone has compiled today's burnout risk assessment. It contains predictive feedback that may raise stress levels. Would you like to view the details?
     </p>
     <button class="btn btn-sm btn-primary" onclick="document.getElementById('crisisWarningScreen').remove(); document.getElementById('crisisMainContent').classList.remove('d-none');">Reveal Assessment</button>
@@ -16,163 +16,490 @@ block content %} {% if data.latest %}
 
   <!-- Actual content (hidden initially) -->
   <div id="crisisMainContent" class="intervention-inner d-none w-100">
-    <div class="intervention-icon" aria-hidden="true">💛</div>
-    <div class="intervention-body">
-      <h2 class="intervention-title">We're here with you</h2>
+    <div class="intervention-icon-box" aria-hidden="true">
+      <i data-lucide="heart-handshake"></i>
+    </div>
+    <div class="intervention-body flex-grow-1">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-1">
+        <h2 class="intervention-title mb-0">We're here with you</h2>
+        <span class="intervention-badge"><i data-lucide="shield-alert"></i> Elevated Stress Signal</span>
+      </div>
       <p class="intervention-text">
         DayTone has detected elevated stress signals. This isn't a diagnosis — it's a prompt to be kind to yourself today.
         Take a breath, reach out to someone you trust, or use the resources below.
       </p>
       <div class="intervention-actions">
-        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#breathingModal" id="interventionBreathBtn">
+        <button class="btn btn-sm btn-primary d-inline-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#breathingModal" id="interventionBreathBtn">
           <i data-lucide="wind"></i> 60-sec breathing
         </button>
-        <button class="btn btn-sm btn-outline-secondary" id="interventionDismiss">
+        <button class="btn btn-sm btn-glass d-inline-flex align-items-center gap-1" id="interventionDismiss">
           <i data-lucide="x"></i> Dismiss
         </button>
       </div>
-      <details class="intervention-crisis mt-2">
-        <summary class="text-secondary" style="cursor:pointer;font-size:0.82rem">🆘 Crisis support resources</summary>
-        <ul class="crisis-list mt-2">
+      <details class="intervention-crisis mt-3">
+        <summary class="crisis-summary-btn">
+          <span class="d-inline-flex align-items-center gap-2"><i data-lucide="phone-call" class="crisis-icon-pulse"></i> Crisis support resources</span>
+          <i data-lucide="chevron-down" class="crisis-chevron"></i>
+        </summary>
+        <div class="crisis-grid mt-3">
           {% for resource in crisis_resources %}
-          <li><strong>{{ resource.region }}:</strong> <a href="{{ resource.url }}" target="_blank" rel="noopener">{{ resource.label }}</a></li>
+          <a href="{{ resource.url }}" target="_blank" rel="noopener" class="crisis-card">
+            <div class="crisis-card-header">
+              <span class="crisis-region-pill">{{ resource.region }}</span>
+              <i data-lucide="{% if resource.url.startswith('tel:') %}phone{% else %}external-link{% endif %}" class="crisis-card-icon"></i>
+            </div>
+            <span class="crisis-card-label">{{ resource.label }}</span>
+          </a>
           {% endfor %}
-        </ul>
-        <p class="text-secondary mt-1" style="font-size:0.75rem;font-style:italic">DayTone is not a medical service. These resources connect you to trained humans.</p>
+        </div>
+        <p class="crisis-disclaimer mt-2 mb-0">
+          <i data-lucide="info" style="width:14px;height:14px;"></i> DayTone is not a medical service. These resources connect you to trained support specialists.
+        </p>
       </details>
     </div>
   </div>
 </div>
 {% endif %}
-<div class="dashboard-shell">
+<div class="dashboard-shell w-100" style="max-width: 1240px; margin: 0 auto;">
+
+  {# ── 1. Top Sanctuary Status Header & Quick Capsule ── #}
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-2">
+    <div class="glass-pill px-3.5 py-1.5 d-inline-flex align-items-center gap-2">
+      <span class="w-2 h-2 rounded-circle bg-emerald-400 animate-pulse" style="width: 8px; height: 8px; background: #10b981; display: inline-block;"></span>
+      <span class="small-caps fw-bold" style="font-size: 0.72rem; letter-spacing: 0.08em; color: var(--color-muted);">DAYTONE COGNITIVE SANCTUARY &bull; LIVE TELEMETRY</span>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="glass-pill px-3 py-1.5 small fw-medium">
+        <i data-lucide="shield-check" style="width: 13px; height: 13px; color: #10b981;"></i> Private On-Device Enclave
+      </span>
+      <a href="{{ url_for('mood.log_mood') }}" class="glass-btn-primary px-4 py-2 rounded-pill text-white text-xs font-bold text-decoration-none shadow-lg">
+        <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
+        <span>New Micro-Check-In</span>
+      </a>
+    </div>
+  </div>
+
+  {# ── 2. Executive Sanctuary Cockpit (3D Orb Stage + Biometric Telemetry Stack) ── #}
   <section
-    class="orb-cockpit"
+    class="orb-cockpit glass-card p-4 p-md-5 rounded-3xl"
     style="--orb-primary: {{ data.latest_orb_state.primary }}; --orb-secondary: {{ data.latest_orb_state.secondary }};"
+    aria-label="Cognitive Sanctuary Cockpit"
   >
+    <!-- Left Hero Area: Tone State, 3D Canvas Orb & Mood Selector -->
     <div class="orb-copy">
-      <span class="eyebrow">Live wellness signal</span>
-      <h1>Today feels {{ data.latest_orb_state.label|lower }}</h1>
-      <p>{{ data.trend_summary.body }}</p>
-      <div class="mood-pill-row" role="group" aria-label="Preview orb mood">
-        {% set moods = [
-          (1, "Sick", "🤒"),
-          (2, "Sad", "😢"),
-          (3, "Anxious", "😰"),
-          (4, "Calm", "😌"),
-          (5, "Happy", "😊")
-        ] %}
-        {% for score, name, emoji in moods %}
-        <button
-          class="mood-pill{% if score == data.latest_orb_state.mood %} active{% endif %}"
-          type="button"
-          data-mood="{{ score }}"
-          title="{{ name }}"
-          aria-label="{{ name }}"
-        >
-          <span>{{ emoji }}</span>
-        </button>
-        {% endfor %}
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <span class="glass-pill px-3 py-1 small fw-semibold text-sky-400" style="font-size: 0.72rem;">
+          <i data-lucide="activity" style="width: 12px; height: 12px;"></i> DIURNAL AXIS &bull; REAL-TIME SIGNAL
+        </span>
+        <span class="badge rounded-pill {% if data.latest.burnout_risk == 'Low' %}bg-success-subtle text-success{% elif data.latest.burnout_risk == 'Moderate' %}bg-warning-subtle text-warning{% else %}bg-danger-subtle text-danger{% endif %} px-2.5 py-1 text-xs font-mono">
+          {{ data.latest.burnout_risk }} Risk
+        </span>
+      </div>
+      <h1 class="display-title fs-1 fw-bolder mb-2 tracking-tight">
+        Today feels {{ data.latest_orb_state.label|lower }}.
+      </h1>
+      <p class="text-muted-tone fs-6 mb-4" style="line-height: 1.6; max-width: 36rem;">
+        {{ data.trend_summary.body }}
+      </p>
+
+      <!-- Centered 3D Orb Stage with Executive Precision Optics & Ambient Glow -->
+      <div class="orb-stage-wrap position-relative d-flex flex-column align-items-center justify-content-center p-4 rounded-3xl glass-card-sm mb-4" style="min-height: 290px; overflow: hidden;">
+        <!-- Top Stage Telemetry Header -->
+        <div class="position-absolute top-0 start-0 p-3.5 d-flex align-items-center gap-2 pointer-events-none" style="z-index: 3;">
+          <span class="glass-pill px-2.5 py-1 text-[11px] font-mono tracking-wider text-muted-tone d-inline-flex align-items-center gap-1.5">
+            <span class="orb-pulse-dot animate-pulse" style="width: 6px; height: 6px; background: var(--orb-primary, #059669); box-shadow: 0 0 8px var(--orb-primary, #059669); border-radius: 50%; display: inline-block;"></span>
+            3D SPECTRAL RESONANCE
+          </span>
+        </div>
+        <div class="position-absolute top-0 end-0 p-3.5 d-flex align-items-center gap-1.5 text-muted-tone pointer-events-none" style="z-index: 3; font-size: 0.72rem;">
+          <i data-lucide="sparkles" style="width: 12px; height: 12px; opacity: 0.75;"></i>
+          <span class="opacity-75">Kinetic Harmonic Sphere</span>
+        </div>
+
+        <!-- Ambient Chromatic Radial Backlight Halo -->
+        <div class="orb-ambient-glow position-absolute rounded-circle pointer-events-none" style="width: 260px; height: 260px; top: 50%; left: 50%; transform: translate(-50%, -50%); background: radial-gradient(circle, color-mix(in srgb, var(--orb-primary, #059669) 22%, transparent) 0%, transparent 70%); filter: blur(32px); z-index: 1;"></div>
+
+        <canvas id="moodOrb" width="250" height="250" style="width: 250px; height: 250px; aspect-ratio: 1 / 1; position: relative; z-index: 2;" aria-label="Interactive 3D mood orb representing {{ data.latest_orb_state.label|lower }}"></canvas>
+        <div class="visually-hidden" id="orbAriaLive" aria-live="polite">
+          Current wellness signal: {{ data.latest_orb_state.label|lower }} ({{ data.latest_orb_state.mood }}/5) with {{ data.latest.burnout_risk|lower }} burnout risk.
+        </div>
+
+        <!-- Executive Floating Readout Capsule (Centered Bottom) -->
+        <div class="orb-readout position-absolute d-flex align-items-center gap-2 glass-pill shadow-sm" style="bottom: 1rem; left: 50%; transform: translateX(-50%); z-index: 4; white-space: nowrap; padding: 0.4rem 1.15rem;">
+          <span class="orb-pulse-dot" style="width: 7px; height: 7px; border-radius: 50%; background: {{ data.latest_orb_state.primary }}; box-shadow: 0 0 8px {{ data.latest_orb_state.primary }}; display: inline-block;"></span>
+          <span id="orbLabel" class="fw-bold text-xs" style="letter-spacing: 0.02em;">{{ data.latest_orb_state.label }}</span>
+          <span class="opacity-25 text-xs">|</span>
+          <strong id="orbScore" class="font-mono text-xs" style="color: {{ data.latest_orb_state.primary }}; font-weight: 800;">{{ data.latest_orb_state.mood }}/5</strong>
+          <span id="orbDesc" class="text-muted-tone text-xs d-none d-sm-inline font-medium">
+            {% if data.latest_orb_state.mood == 5 %}&bull; Peak Resonance &bull; Radiant Vitality
+            {% elif data.latest_orb_state.mood == 4 %}&bull; Restorative Flow &bull; Balanced Harmony
+            {% elif data.latest_orb_state.mood == 3 %}&bull; Elevated Tension &bull; Grounding Needed
+            {% elif data.latest_orb_state.mood == 2 %}&bull; Low Vitality &bull; Gentle Pacing
+            {% else %}&bull; Acute Fatigue &bull; Immediate Rest{% endif %}
+          </span>
+        </div>
+      </div>
+
+      <!-- 5-Mood Frosted Selector Row -->
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <span class="small-caps text-muted-tone me-2" style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em;">CALIBRATION:</span>
+        <div class="mood-pill-row d-flex align-items-center gap-2 flex-wrap" role="group" aria-label="Preview orb mood">
+          {% set moods = [
+            (1, "Sick", "heart-pulse", "#ff2222"),
+            (2, "Sad", "cloud-rain", "#ff7700"),
+            (3, "Anxious", "activity", "#eab308"),
+            (4, "Calm", "waves", "#22c55e"),
+            (5, "Happy", "sun", "#059669")
+          ] %}
+          {% for score, name, icon_name, icon_color in moods %}
+          <button
+            class="mood-pill glass-pill px-3 py-1.5 btn-sm border-0 cursor-pointer d-flex align-items-center gap-1.5{% if score == data.latest_orb_state.mood %} active{% endif %}"
+            type="button"
+            data-mood="{{ score }}"
+            style="--btn-tone: {{ icon_color }};"
+            title="Preview {{ name }} state"
+            aria-label="{{ name }}"
+          >
+            <i data-lucide="{{ icon_name }}" style="width:14px;height:14px;color:{{ icon_color }};"></i>
+            <span class="small fw-semibold">{{ name }}</span>
+          </button>
+          {% endfor %}
+        </div>
       </div>
     </div>
-    <div class="orb-stage-wrap">
-      <canvas id="moodOrb" aria-label="Interactive 3D mood orb representing a {{ data.latest_orb_state.label|lower }} mood state of {{ data.latest_orb_state.mood }} out of 5."></canvas>
-      <div class="visually-hidden" id="orbAriaLive" aria-live="polite">
-        Today's wellness signal indicates a {{ data.latest_orb_state.label|lower }} mood state ({{ data.latest_orb_state.mood }}/5) with {{ data.latest.burnout_risk|lower }} burnout risk.
+
+    <!-- Right Hero Area: 4 Luminous Biometric Telemetry Cards -->
+    <aside class="orb-side d-flex flex-column gap-3" aria-label="Latest check-in summary">
+      <!-- Card 1: Burnout Risk -->
+      <div class="orb-metric glass-card-sm p-3.5 d-flex align-items-start gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-sky-500 bg-opacity-15 border border-sky-400 border-opacity-30 d-flex align-items-center justify-content-center shrink-0" style="width: 40px; height: 40px; border-radius: 14px;">
+          <i data-lucide="shield-alert" class="text-sky-400" style="width: 20px; height: 20px;"></i>
+        </div>
+        <div class="flex-grow-1">
+          <div class="d-flex align-items-center justify-content-between mb-0.5">
+            <span class="small-caps" style="font-size: 0.68rem;">BURNOUT TRAJECTORY</span>
+            <strong class="risk-{{ data.latest.burnout_risk|lower }} font-mono text-xs">{{ data.latest.burnout_risk }}</strong>
+          </div>
+          <h4 class="fs-6 fw-bold mb-0">Predicted {{ data.latest.burnout_risk }} Exhaustion</h4>
+          <p class="text-muted-tone small mb-0 mt-0.5" style="font-size: 0.78rem;">
+            Logged {{ data.latest.log_date.strftime("%b %d") }}. Machine learning active.
+          </p>
+        </div>
       </div>
-      <div class="orb-readout">
-        <span id="orbLabel">{{ data.latest_orb_state.label }}</span>
-        <strong id="orbScore">{{ data.latest_orb_state.mood }}/5</strong>
+
+      <!-- Card 2: Restorative Sleep -->
+      <div class="orb-metric glass-card-sm p-3.5 d-flex align-items-start gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-indigo-500 bg-opacity-15 border border-indigo-400 border-opacity-30 d-flex align-items-center justify-content-center shrink-0" style="width: 40px; height: 40px; border-radius: 14px;">
+          <i data-lucide="moon" class="text-indigo-400" style="width: 20px; height: 20px;"></i>
+        </div>
+        <div class="flex-grow-1">
+          <div class="d-flex align-items-center justify-content-between mb-0.5">
+            <span class="small-caps" style="font-size: 0.68rem;">SLEEP CALIBRATION</span>
+            <strong class="text-indigo-400 font-mono text-xs">{{ data.avg_sleep }}h avg</strong>
+          </div>
+          <h4 class="fs-6 fw-bold mb-0">{{ data.latest.sleep_hours }} Hours Rest</h4>
+          <p class="text-muted-tone small mb-0 mt-0.5" style="font-size: 0.78rem;">
+            {% if data.latest.sleep_hours >= 7.5 %}Optimal REM & restorative sleep.{% else %}Sleep deficit detected. Wind down earlier.{% endif %}
+          </p>
+        </div>
       </div>
-    </div>
-    <aside class="orb-side" aria-label="Latest check-in summary">
-      <a class="btn btn-primary" href="{{ url_for('mood.log_mood') }}"
-        ><i data-lucide="plus"></i>New log</a
-      >
-      <div class="orb-metric">
-        <span>Burnout risk</span
-        ><strong class="risk-{{ data.latest.burnout_risk|lower }}"
-          >{{ data.latest.burnout_risk }}</strong
-        >
+
+      <!-- Card 3: Somatic Calm -->
+      <div class="orb-metric glass-card-sm p-3.5 d-flex align-items-start gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-teal-500 bg-opacity-15 border border-teal-400 border-opacity-30 d-flex align-items-center justify-content-center shrink-0" style="width: 40px; height: 40px; border-radius: 14px;">
+          <i data-lucide="wind" class="text-teal-400" style="width: 20px; height: 20px;"></i>
+        </div>
+        <div class="flex-grow-1">
+          <div class="d-flex align-items-center justify-content-between mb-0.5">
+            <span class="small-caps" style="font-size: 0.68rem;">SOMATIC CALM</span>
+            <strong class="text-teal-400 font-mono text-xs">{{ data.avg_stress }}/5 stress</strong>
+          </div>
+          <h4 class="fs-6 fw-bold mb-0">Level {{ data.latest.stress_level }}/5 Stress</h4>
+          <p class="text-muted-tone small mb-0 mt-0.5" style="font-size: 0.78rem;">
+            Parasympathetic diurnal equilibrium.
+          </p>
+        </div>
       </div>
-      <div class="orb-metric">
-        <span>Logged</span
-        ><strong>{{ data.latest.log_date.strftime("%b %d") }}</strong>
+
+      <!-- Card 4: Rhythm Continuity -->
+      <div class="orb-metric glass-card-sm p-3.5 d-flex align-items-start gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-amber-500 bg-opacity-15 border border-amber-400 border-opacity-30 d-flex align-items-center justify-content-center shrink-0" style="width: 40px; height: 40px; border-radius: 14px;">
+          <i data-lucide="flame" class="text-amber-400" style="width: 20px; height: 20px;"></i>
+        </div>
+        <div class="flex-grow-1">
+          <div class="d-flex align-items-center justify-content-between mb-0.5">
+            <span class="small-caps" style="font-size: 0.68rem;">RHYTHM CONTINUITY</span>
+            <strong class="text-amber-400 font-mono text-xs">{{ data.streak_count }} Day streak</strong>
+          </div>
+          <h4 class="fs-6 fw-bold mb-0">{{ data.streak_count }}-Day streak &bull; Reflection Flow</h4>
+          <p class="text-muted-tone small mb-0 mt-0.5" style="font-size: 0.78rem;">
+            Zero streak guilt. Return anytime without pressure.
+          </p>
+        </div>
       </div>
     </aside>
   </section>
 
-  {# ── Explainability Driver Cards ── #}
-  {% if dashboard_state.drivers %}
-  <section class="driver-section" aria-label="Why this prediction?">
-    <div class="driver-section-header">
-      <i data-lucide="search" style="width:18px;height:18px;color:var(--dt-primary)"></i>
-      <h2>Why am I {{ data.latest.burnout_risk|lower }}-risk?</h2>
+  {# ── 3. Quick Micro-Action Bar & Prediction Feedback ── #}
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 p-3.5 rounded-2xl glass-card">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+      <button class="glass-btn-secondary px-3.5 py-2 text-xs font-bold rounded-pill" type="button" data-bs-toggle="modal" data-bs-target="#breathingModal" id="breathCardTrigger">
+        <i data-lucide="wind" style="width: 14px; height: 14px; color: #14b8a6;"></i>
+        <span>60-Sec Box Breathing Room</span>
+      </button>
+      <div class="glass-pill px-3 py-1.5 small d-inline-flex align-items-center gap-2">
+        <i data-lucide="target" style="width: 13px; height: 13px; color: #38bdf8;"></i>
+        <span>Daily Challenge: <strong>{{ data.challenge_progress }}%</strong></span>
+      </div>
     </div>
-    <div class="driver-cards">
+
+    {% if data.latest_history %}
+    <div class="feedback-widget d-flex align-items-center gap-2 flex-wrap" id="feedbackWidget" data-history-id="{{ data.latest_history.id }}">
+      <span class="small text-muted-tone">Does <strong>{{ data.latest.burnout_risk }}</strong> risk match reality?</span>
+      <div class="d-flex gap-1.5" id="feedbackBtns">
+        <button class="btn btn-sm btn-outline-success rounded-pill px-2.5 py-1 text-xs" id="feedbackYes" type="button">
+          <i data-lucide="thumbs-up" style="width: 12px; height: 12px;"></i> Yes
+        </button>
+        <button class="btn btn-sm btn-outline-danger rounded-pill px-2.5 py-1 text-xs" id="feedbackNo" type="button">
+          <i data-lucide="thumbs-down" style="width: 12px; height: 12px;"></i> No
+        </button>
+      </div>
+      <span class="feedback-thanks d-none small text-success" id="feedbackThanks" aria-live="polite">
+        <i data-lucide="check-circle" style="width: 13px; height: 13px;"></i> Thanks!
+      </span>
+    </div>
+    {% endif %}
+  </div>
+
+  {# ── 3.5. Diurnal Sanctuary Mindfulness Focus Panorama ── #}
+  <section class="glass-card p-0 rounded-3xl overflow-hidden my-4 position-relative" aria-label="Diurnal Equanimity Sanctuary">
+    <div class="row g-0 align-items-stretch">
+      <div class="col-12 col-md-5 position-relative overflow-hidden" style="min-height: 230px;">
+        <img
+          src="{{ url_for('static', filename='img/sanctuary-dawn.jpg') }}"
+          alt="Serene mountain lake at dawn with golden morning mist"
+          class="w-100 h-100 object-fit-cover sanctuary-hero-dawn position-absolute inset-0"
+          style="object-position: center 35%; filter: saturate(115%);"
+          loading="lazy"
+        />
+        <img
+          src="{{ url_for('static', filename='img/sanctuary-night.jpg') }}"
+          alt="Tranquil alpine lake at night with aurora and glowing cabin"
+          class="w-100 h-100 object-fit-cover sanctuary-hero-night position-absolute inset-0"
+          style="object-position: center 35%; filter: saturate(120%);"
+          loading="lazy"
+        />
+        <div class="position-absolute inset-0" style="background: linear-gradient(180deg, rgba(15,23,42,0.1) 0%, rgba(15,23,42,0.45) 100%);"></div>
+        <div class="position-absolute top-0 start-0 p-3" style="z-index: 2;">
+          <span class="glass-pill-badge">
+            <i data-lucide="compass" style="width: 12px; height: 12px; color: #0284c7;"></i>
+            Mindful Horizon
+          </span>
+        </div>
+      </div>
+      <div class="col-12 col-md-7 p-4 p-lg-5 d-flex flex-column justify-content-center">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+          <div class="d-flex align-items-center gap-2">
+            <span class="w-2 h-2 rounded-circle bg-sky-400 animate-pulse" style="width: 8px; height: 8px; background: #38bdf8; display: inline-block;"></span>
+            <span class="small-caps fw-bold text-muted-tone" style="font-size: 0.72rem; letter-spacing: 0.08em;">CIRCADIAN EQUANINITY &bull; VISUAL SANCTUARY</span>
+          </div>
+          <span class="glass-pill px-2.5 py-1 text-[11px] font-mono text-muted-tone">
+            <i data-lucide="sun-medium" style="width: 12px; height: 12px; color: #f59e0b;"></i> Sol Horizon
+          </span>
+        </div>
+        <h3 class="fs-4 fw-bold mb-2 tracking-tight">"Stillness is where clarity begins."</h3>
+        <p class="text-muted-tone small mb-3" style="line-height: 1.65; max-width: 38rem;">
+          Your nervous system syncs naturally with environmental horizons. Pause for three steady diaphragmatic breaths, notice the reflective stillness of the water, and restore diurnal balance.
+        </p>
+        <div class="d-flex align-items-center gap-2.5 flex-wrap">
+          <button class="glass-btn-secondary px-4 py-2 text-xs font-bold rounded-pill" type="button" data-bs-toggle="modal" data-bs-target="#breathingModal">
+            <i data-lucide="wind" style="width: 14px; height: 14px; color: #14b8a6;"></i>
+            <span>60s Guided Reset</span>
+          </button>
+          <a href="{{ url_for('mood.log_mood') }}" class="glass-pill px-3.5 py-2 text-xs font-semibold text-decoration-none text-muted-tone hover:text-sky-500">
+            <i data-lucide="feather" style="width: 13px; height: 13px;"></i>
+            <span>Log Micro-Reflection</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# ── 4. Circadian Wellness & Recovery Pillars (Using img/ Images) ── #}
+  <section class="wellness-pillars-section" aria-label="Circadian Wellness & Recovery Pillars">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+      <div class="d-flex align-items-center gap-2">
+        <div class="w-8 h-8 rounded-xl bg-sky-500 bg-opacity-15 border border-sky-400 border-opacity-30 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; border-radius: 10px;">
+          <i data-lucide="sparkles" class="text-sky-400" style="width: 16px; height: 16px;"></i>
+        </div>
+        <div>
+          <h2 class="mb-0 fs-5 fw-bold tracking-tight">Circadian Wellness Pillars</h2>
+          <p class="text-muted-tone small mb-0">Evidence-based diurnal recovery, mindfulness, and community connection</p>
+        </div>
+      </div>
+      <span class="glass-pill px-3 py-1 text-xs fw-semibold">
+        <i data-lucide="activity" style="width: 12px; height: 12px; color: #38bdf8;"></i> Adaptive Guidance
+      </span>
+    </div>
+
+    <div class="wellness-pillars-grid">
+      <!-- Pillar 1: Restorative Recovery -->
+      <article class="glass-media-card p-3.5">
+        <div class="glass-media-img-wrap mb-3">
+          <img
+            src="{{ url_for('static', filename='img/peace-and-quiet.png') }}"
+            alt="Restorative quiet, deep recovery and sleep hygiene"
+            class="glass-media-img"
+            loading="lazy"
+          />
+          <div class="glass-media-overlay">
+            <span class="glass-pill-badge">
+              <i data-lucide="moon" style="width: 13px; height: 13px; color: #6366f1;"></i>
+              Parasympathetic Reset
+            </span>
+          </div>
+        </div>
+        <div class="d-flex flex-column flex-grow-1">
+          <h3 class="fs-5 fw-bold mb-1.5">Restorative Recovery</h3>
+          <p class="text-muted-tone small mb-3 flex-grow-1" style="line-height: 1.55;">
+            Calibrate your autonomic nervous system with intentional micro-pauses. Prioritizing restful sleep hygiene buffers against diurnal exhaustion.
+          </p>
+          <div class="mt-auto">
+            <button
+              class="glass-btn-secondary w-100 py-2 text-xs font-bold"
+              type="button"
+              data-bs-toggle="modal"
+              data-bs-target="#breathingModal"
+              id="pillarBreathingBtn"
+            >
+              <i data-lucide="wind" style="width: 14px; height: 14px; color: #14b8a6;"></i>
+              <span>60s Breathing Room</span>
+            </button>
+          </div>
+        </div>
+      </article>
+
+      <!-- Pillar 2: Circadian Vitality -->
+      <article class="glass-media-card p-3.5">
+        <div class="glass-media-img-wrap mb-3">
+          <img
+            src="{{ url_for('static', filename='img/zen-freedom-and-black-woman-with-open-arms-nature-and-peace-with-smile-balance-and-joyful.png') }}"
+            alt="Circadian vitality and outdoor diurnal alignment"
+            class="glass-media-img"
+            loading="lazy"
+          />
+          <div class="glass-media-overlay">
+            <span class="glass-pill-badge">
+              <i data-lucide="sun" style="width: 13px; height: 13px; color: #f59e0b;"></i>
+              Diurnal Vitality
+            </span>
+          </div>
+        </div>
+        <div class="d-flex flex-column flex-grow-1">
+          <h3 class="fs-5 fw-bold mb-1.5">Circadian Vitality</h3>
+          <p class="text-muted-tone small mb-3 flex-grow-1" style="line-height: 1.55;">
+            Synchronize cortisol and energy curves through morning daylight exposure, outdoor movement, and mindful diurnal pacing.
+          </p>
+          <div class="mt-auto">
+            <a
+              class="glass-btn-primary w-100 py-2 text-xs font-bold text-decoration-none"
+              href="{{ url_for('mood.log_mood') }}"
+              id="pillarLogMoodBtn"
+            >
+              <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
+              <span>Log Daily Signal</span>
+            </a>
+          </div>
+        </div>
+      </article>
+
+      <!-- Pillar 3: Social Resonance -->
+      <article class="glass-media-card p-3.5">
+        <div class="glass-media-img-wrap mb-3">
+          <img
+            src="{{ url_for('static', filename='img/mental-wellness.png') }}"
+            alt="Social resonance, emotional connection, and group wellness"
+            class="glass-media-img"
+            loading="lazy"
+          />
+          <div class="glass-media-overlay">
+            <span class="glass-pill-badge">
+              <i data-lucide="users" style="width: 13px; height: 13px; color: #10b981;"></i>
+              Social Resonance
+            </span>
+          </div>
+        </div>
+        <div class="d-flex flex-column flex-grow-1">
+          <h3 class="fs-5 fw-bold mb-1.5">Social Connection</h3>
+          <p class="text-muted-tone small mb-3 flex-grow-1" style="line-height: 1.55;">
+            Deep interpersonal connections and community support serve as biological stabilizers against chronic burnout and emotional fatigue.
+          </p>
+          <div class="mt-auto">
+            <a
+              class="glass-btn-secondary w-100 py-2 text-xs font-bold text-decoration-none"
+              href="{{ url_for('mood.heatmap') }}"
+              id="pillarHeatmapBtn"
+            >
+              <i data-lucide="calendar" style="width: 14px; height: 14px; color: #6366f1;"></i>
+              <span>Explore Rhythm Heatmap</span>
+            </a>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  {# ── 5. Explainability Drivers & Pattern Diagnostics ── #}
+  {% if dashboard_state.drivers or dashboard_state.correlation_insight %}
+  <section class="glass-card p-4 rounded-3xl" aria-label="Explainability Diagnostics">
+    <div class="d-flex align-items-center gap-2 mb-3">
+      <i data-lucide="search" class="text-sky-400" style="width: 18px; height: 18px;"></i>
+      <h3 class="fs-6 fw-bold mb-0">Diagnostic Explanations &bull; Why am I {{ data.latest.burnout_risk|lower }}-risk?</h3>
+    </div>
+    {% if dashboard_state.drivers %}
+    <div class="d-flex flex-wrap gap-2 mb-3">
       {% for driver in dashboard_state.drivers %}
-      <div class="driver-card">
-        <i data-lucide="{% if 'sleep' in driver|lower %}moon{% elif 'stress' in driver|lower %}zap{% elif 'mood' in driver|lower %}activity{% elif 'sentiment' in driver|lower %}message-square{% elif 'social' in driver|lower %}users{% else %}alert-circle{% endif %}" class="driver-card-icon"></i>
-        <span class="driver-card-text">{{ driver }}</span>
+      <div class="glass-pill px-3 py-1.5 text-xs d-inline-flex align-items-center gap-2">
+        <i data-lucide="{% if 'sleep' in driver|lower %}moon{% elif 'stress' in driver|lower %}zap{% elif 'mood' in driver|lower %}activity{% elif 'sentiment' in driver|lower %}message-square{% elif 'social' in driver|lower %}users{% else %}alert-circle{% endif %}" style="width: 14px; height: 14px; color: #38bdf8;"></i>
+        <span>{{ driver }}</span>
       </div>
       {% endfor %}
     </div>
-    <p class="driver-disclaimer">These signals are the top contributing factors in today's assessment. They are not a medical diagnosis.</p>
+    {% endif %}
+    {% if dashboard_state.correlation_insight %}
+    <div class="p-3 rounded-2xl glass-card-sm d-flex align-items-center gap-3">
+      <i data-lucide="trending-up" class="text-emerald-400" style="width: 20px; height: 20px; flex-shrink: 0;"></i>
+      <p class="small mb-0 text-muted-tone">{{ dashboard_state.correlation_insight.text }}</p>
+    </div>
+    {% endif %}
   </section>
   {% endif %}
 
-  {# ── Prediction Feedback Widget ── #}
-  {% if data.latest_history %}
-  <div class="feedback-widget panel" id="feedbackWidget" data-history-id="{{ data.latest_history.id }}">
-    <div class="feedback-prompt">
-      <i data-lucide="message-square-heart" style="width:18px;height:18px;color:var(--dt-primary)"></i>
-      <span>Does the <strong>{{ data.latest.burnout_risk }}</strong> risk prediction match how you actually feel?</span>
-    </div>
-    <div class="feedback-btns" id="feedbackBtns">
-      <button class="btn btn-sm btn-outline-success" id="feedbackYes" type="button">
-        <i data-lucide="thumbs-up"></i> Yes, accurate
-      </button>
-      <button class="btn btn-sm btn-outline-danger" id="feedbackNo" type="button">
-        <i data-lucide="thumbs-down"></i> Not quite
-      </button>
-    </div>
-    <span class="feedback-thanks d-none" id="feedbackThanks" aria-live="polite">
-      <i data-lucide="check-circle" style="color:var(--dt-good)"></i> Thanks for your feedback!
-    </span>
-  </div>
-  {% endif %}
-
-  {# ── Correlation Insight Card ── #}
-  {% if dashboard_state.correlation_insight %}
-  <div class="panel correlation-insight-card">
-    <i data-lucide="trending-up" class="corr-icon"></i>
-    <div>
-      <span class="corr-label">Pattern insight</span>
-      <p class="corr-text mb-0">{{ dashboard_state.correlation_insight.text }}</p>
-    </div>
-  </div>
-  {% endif %}
-
-  {# ── Active Goals Progress ── #}
+  {# ── 6. Active Goals Progress (if present) ── #}
   {% if goals_with_progress %}
-  <section class="goals-section" aria-label="Your active goals">
-    <div class="goals-section-header">
-      <i data-lucide="target" style="width:18px;height:18px;color:var(--dt-primary)"></i>
-      <h2>Active Goals</h2>
-      <a href="{{ url_for('mood.goals') }}" class="btn btn-sm btn-outline-primary ms-auto"><i data-lucide="settings-2"></i> Manage</a>
+  <section class="glass-card p-4 rounded-3xl" aria-label="Your active goals">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <div class="d-flex align-items-center gap-2">
+        <i data-lucide="target" class="text-sky-400" style="width: 18px; height: 18px;"></i>
+        <h3 class="fs-6 fw-bold mb-0">Active Goals</h3>
+      </div>
+      <a href="{{ url_for('mood.goals') }}" class="glass-btn-secondary px-3 py-1 text-xs text-decoration-none">
+        <i data-lucide="settings-2" style="width: 13px; height: 13px;"></i> Manage
+      </a>
     </div>
     <div class="goals-grid">
       {% for goal, progress in goals_with_progress %}
-      <div class="goal-card panel">
-        <div class="goal-card-header">
-          <span class="goal-name">{{ goal.display_name }}</span>
-          <span class="goal-status status-{{ progress.status }}">{{ progress.status|replace('_',' ')|title }}</span>
+      <div class="goal-card glass-card-sm p-3 rounded-2xl">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <span class="goal-name fw-bold small">{{ goal.display_name }}</span>
+          <span class="badge rounded-pill bg-sky-500 bg-opacity-20 text-sky-400 text-xs px-2 py-0.5">{{ progress.status|replace('_',' ')|title }}</span>
         </div>
-        <div class="goal-bar-wrap">
-          <div class="goal-bar" style="--goal-pct:{{ progress.pct }}%"></div>
+        <div class="goal-bar-wrap mb-2" style="background: rgba(255,255,255,0.1); height: 6px; border-radius: 9999px; overflow: hidden;">
+          <div class="goal-bar" style="width: {{ progress.pct }}%; height: 100%; background: linear-gradient(90deg, #38bdf8, #6366f1); border-radius: 9999px;"></div>
         </div>
-        <div class="goal-card-footer">
-          <span class="goal-current">{{ progress.current_value }} {{ goal.unit }}</span>
-          <span class="goal-target">Goal: {{ goal.target_value }} {{ goal.unit }}</span>
+        <div class="d-flex align-items-center justify-content-between text-muted-tone small" style="font-size: 0.75rem;">
+          <span>{{ progress.current_value }} {{ goal.unit }}</span>
+          <span>Goal: {{ goal.target_value }} {{ goal.unit }}</span>
         </div>
       </div>
       {% endfor %}
@@ -180,109 +507,89 @@ block content %} {% if data.latest %}
   </section>
   {% endif %}
 
-  <section class="dashboard-grid" aria-label="Today at a glance">
-    <button class="panel motion-card breath-card" id="breathCardTrigger" type="button" data-bs-toggle="modal" data-bs-target="#breathingModal" aria-label="Start Guided Box Breathing Session" aria-haspopup="dialog" aria-controls="breathingModal">
-      <div class="motion-orb breath-orb" aria-hidden="true">
-        <i data-lucide="wind"></i>
-      </div>
-      <span>Breathing room</span>
-      <strong>60 sec</strong>
-    </button>
-    <div class="panel motion-card">
-      <div class="motion-orb streak-orb" aria-hidden="true">
-        <i data-lucide="flame"></i>
-      </div>
-      <span>Day streak</span>
-      <strong>{{ data.streak_count }}</strong>
-    </div>
-    <div
-      class="panel motion-card challenge-card"
-      style="--challenge-val: {{ data.challenge_progress }}%;"
-    >
-      <div class="challenge-ring">
-        <div class="challenge-ring-inner">
-          <i data-lucide="target"></i>
+  {# ── 7. Coach Signals & Achievement Badges ── #}
+  <div class="row g-4">
+    <div class="col-12 col-lg-6">
+      <div class="glass-card p-4 rounded-3xl h-100">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <i data-lucide="sparkles" class="text-sky-400" style="width: 18px; height: 18px;"></i>
+          <h3 class="fs-6 fw-bold mb-0">Coach Signal &bull; Trend Summary</h3>
         </div>
-      </div>
-      <span>Daily challenge</span>
-      <strong>{{ data.challenge_progress }}%</strong>
-    </div>
-    <div class="panel motion-card">
-      <div class="motion-orb badges-orb" aria-hidden="true">
-        <i data-lucide="trophy"></i>
-      </div>
-      <span>Badges unlocked</span>
-      <strong
-        >{{ data.badges|selectattr("unlocked")|list|length }}/{{
-        data.badges|length }}</strong
-      >
-    </div>
-  </section>
-
-  <section class="dashboard-grid">
-    <div class="panel insight-panel">
-      <div class="panel-title">
-        <i data-lucide="sparkles"></i>
-        <h2>Coach signal</h2>
-      </div>
-      <h3>{{ data.trend_summary.title }}</h3>
-      <p>{{ data.trend_summary.body }}</p>
-      <div class="insight-bars">
-        <div>
-          <span>Mood</span
-          ><i style="--value: {{ data.insight_bars.mood }}%;"></i
-          ><strong>{{ data.avg_mood }}/5</strong>
-        </div>
-        <div>
-          <span>Sleep</span
-          ><i style="--value: {{ data.insight_bars.sleep }}%;"></i
-          ><strong>{{ data.avg_sleep }}h</strong>
-        </div>
-        <div>
-          <span>Calm</span
-          ><i style="--value: {{ data.insight_bars.stress }}%;"></i
-          ><strong>{{ data.avg_stress }}/5 stress</strong>
-        </div>
-      </div>
-    </div>
-    <div class="panel badge-panel">
-      <div class="panel-title">
-        <i data-lucide="badge-check"></i>
-        <h2>Achievement badges</h2>
-      </div>
-      <div class="badge-grid">
-        {% for badge in data.badges %}
-        <div class="badge-card-container">
-          <div class="badge-card-inner">
-            <!-- Front Face -->
-            <div class="badge-card-front{% if badge.unlocked %} unlocked{% endif %}">
-              <i data-lucide="{{ badge.icon }}"></i>
-              <span>{{ badge.name }}</span>
-              <span class="badge-status-pill">
-                {% if badge.unlocked %}Unlocked{% else %}Locked{% endif %}
-              </span>
+        <h4 class="fs-5 fw-bold mb-2">{{ data.trend_summary.title }}</h4>
+        <p class="text-muted-tone small mb-4" style="line-height: 1.6;">{{ data.trend_summary.body }}</p>
+        <div class="d-flex flex-column gap-3">
+          <div>
+            <div class="d-flex justify-content-between small mb-1">
+              <span>Mood Frequency</span>
+              <strong class="text-sky-400">{{ data.avg_mood }}/5</strong>
             </div>
-            <!-- Back Face -->
-            <div class="badge-card-back{% if badge.unlocked %} unlocked{% endif %}">
-              <strong>{{ badge.name }}</strong>
-              <p class="badge-detail-text">{{ badge.detail }}</p>
-              {% if badge.unlocked %}
-              <div class="badge-unlock-date"><i data-lucide="check" style="width:12px; height:12px;"></i> Active</div>
-              {% else %}
-              <div class="badge-lock-hint"><i data-lucide="lock" style="width:12px; height:12px;"></i> Locked</div>
-              {% endif %}
+            <div style="background: rgba(255,255,255,0.1); height: 6px; border-radius: 9999px; overflow: hidden;">
+              <div style="width: {{ data.insight_bars.mood }}%; height: 100%; background: linear-gradient(90deg, #38bdf8, #6366f1); border-radius: 9999px;"></div>
+            </div>
+          </div>
+          <div>
+            <div class="d-flex justify-content-between small mb-1">
+              <span>Restorative Sleep</span>
+              <strong class="text-indigo-400">{{ data.avg_sleep }}h</strong>
+            </div>
+            <div style="background: rgba(255,255,255,0.1); height: 6px; border-radius: 9999px; overflow: hidden;">
+              <div style="width: {{ data.insight_bars.sleep }}%; height: 100%; background: linear-gradient(90deg, #6366f1, #a855f7); border-radius: 9999px;"></div>
+            </div>
+          </div>
+          <div>
+            <div class="d-flex justify-content-between small mb-1">
+              <span>Calm Index</span>
+              <strong class="text-teal-400">{{ data.avg_stress }}/5 stress</strong>
+            </div>
+            <div style="background: rgba(255,255,255,0.1); height: 6px; border-radius: 9999px; overflow: hidden;">
+              <div style="width: {{ data.insight_bars.stress }}%; height: 100%; background: linear-gradient(90deg, #14b8a6, #10b981); border-radius: 9999px;"></div>
             </div>
           </div>
         </div>
-        {% endfor %}
       </div>
     </div>
-  </section>
 
-  <div class="analytics-header-row d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1 mt-3">
+    <div class="col-12 col-lg-6">
+      <div class="glass-card p-4 rounded-3xl h-100">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <i data-lucide="badge-check" class="text-emerald-400" style="width: 18px; height: 18px;"></i>
+          <h3 class="fs-6 fw-bold mb-0">Achievement Badges</h3>
+        </div>
+        <div class="badge-grid">
+          {% for badge in data.badges %}
+          <div class="badge-card-container">
+            <div class="badge-card-inner">
+              <div class="badge-card-front{% if badge.unlocked %} unlocked{% endif %}">
+                <i data-lucide="{{ badge.icon }}"></i>
+                <span>{{ badge.name }}</span>
+                <span class="badge-status-pill">
+                  {% if badge.unlocked %}Unlocked{% else %}Locked{% endif %}
+                </span>
+              </div>
+              <div class="badge-card-back{% if badge.unlocked %} unlocked{% endif %}">
+                <strong>{{ badge.name }}</strong>
+                <p class="badge-detail-text">{{ badge.detail }}</p>
+                {% if badge.unlocked %}
+                <div class="badge-unlock-date"><i data-lucide="check" style="width:12px; height:12px;"></i> Active</div>
+                {% else %}
+                <div class="badge-lock-hint"><i data-lucide="lock" style="width:12px; height:12px;"></i> Locked</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# ── 8. Analytics & Trends ── #}
+  <div class="analytics-header-row d-flex justify-content-between align-items-center flex-wrap gap-2 mt-2">
     <div class="d-flex align-items-center gap-2">
-      <i data-lucide="line-chart" class="text-primary" style="width: 22px; height: 22px;"></i>
-      <h2 class="mb-0" style="font-size: 1.25rem; font-weight: 800;">Analytics & Trends</h2>
+      <div class="w-8 h-8 rounded-xl bg-sky-500 bg-opacity-15 border border-sky-400 border-opacity-30 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; border-radius: 10px;">
+        <i data-lucide="line-chart" class="text-sky-400" style="width: 16px; height: 16px;"></i>
+      </div>
+      <h2 class="mb-0 fs-5 fw-bold tracking-tight">Analytics & Trends</h2>
     </div>
     <div class="time-range-selector" role="group" aria-label="Select timeframe">
       <button type="button" class="range-btn active" data-range="7">7 Days</button>
@@ -293,150 +600,278 @@ block content %} {% if data.latest %}
   <section class="analytics-layout" aria-label="Analytics">
     <div class="analytics-main">
       <div class="panel chart-panel chart-panel-large">
-        <div class="panel-title">
-          <i data-lucide="activity"></i>
-          <h2>Mood Score</h2>
+        <div class="panel-title d-flex align-items-center gap-2 mb-3">
+          <i data-lucide="activity" class="text-sky-400"></i>
+          <h3 class="fs-6 fw-bold mb-0">Mood Score</h3>
         </div>
-        <canvas id="moodChart" aria-label="Mood score over time chart"></canvas>
+        <div class="chart-canvas-wrapper" style="position: relative; height: 260px; width: 100%;">
+          <canvas id="moodChart" aria-label="Mood score over time chart"></canvas>
+        </div>
       </div>
       <div class="panel chart-panel">
-        <div class="panel-title">
-          <i data-lucide="moon"></i>
-          <h2>Sleep Hours</h2>
+        <div class="panel-title d-flex align-items-center gap-2 mb-3">
+          <i data-lucide="moon" class="text-indigo-400"></i>
+          <h3 class="fs-6 fw-bold mb-0">Sleep Hours</h3>
         </div>
-        <canvas id="sleepChart" aria-label="Sleep hours over time chart"></canvas>
+        <div class="chart-canvas-wrapper" style="position: relative; height: 210px; width: 100%;">
+          <canvas id="sleepChart" aria-label="Sleep hours over time chart"></canvas>
+        </div>
       </div>
       <div class="panel chart-panel">
-        <div class="panel-title">
-          <i data-lucide="zap"></i>
-          <h2>Stress Trend</h2>
+        <div class="panel-title d-flex align-items-center gap-2 mb-3">
+          <i data-lucide="zap" class="text-amber-400"></i>
+          <h3 class="fs-6 fw-bold mb-0">Stress Trend</h3>
         </div>
-        <canvas id="stressChart" aria-label="Stress trend chart"></canvas>
+        <div class="chart-canvas-wrapper" style="position: relative; height: 210px; width: 100%;">
+          <canvas id="stressChart" aria-label="Stress trend chart"></canvas>
+        </div>
       </div>
       <div class="panel chart-panel">
-        <div class="panel-title">
-          <i data-lucide="scatter-chart"></i>
-          <h2>Sleep vs Mood</h2>
+        <div class="panel-title d-flex align-items-center gap-2 mb-3">
+          <i data-lucide="scatter-chart" class="text-teal-400"></i>
+          <h3 class="fs-6 fw-bold mb-0">Sleep vs Mood</h3>
         </div>
-        <canvas id="scatterChart" aria-label="Sleep versus mood scatter chart"></canvas>
+        <div class="chart-canvas-wrapper" style="position: relative; height: 210px; width: 100%;">
+          <canvas id="scatterChart" aria-label="Sleep versus mood scatter chart"></canvas>
+        </div>
       </div>
     </div>
+
     <aside class="analytics-side">
       <div class="panel chart-panel donut-panel">
-        <div class="panel-title">
-          <i data-lucide="pie-chart"></i>
-          <h2>Burnout Distribution</h2>
+        <div class="panel-title d-flex align-items-center gap-2 mb-3">
+          <i data-lucide="pie-chart" class="text-emerald-400"></i>
+          <h3 class="fs-6 fw-bold mb-0">Burnout Distribution</h3>
         </div>
-        <canvas id="burnoutChart" aria-label="Burnout risk distribution chart"></canvas>
+        <div class="chart-canvas-wrapper donut-canvas-wrapper" style="position: relative; height: 210px; width: 100%; max-width: 240px; margin: 0 auto;">
+          <canvas id="burnoutChart" aria-label="Burnout risk distribution chart"></canvas>
+        </div>
       </div>
-      <div class="panel suggestions-panel">
-        <div class="panel-title">
-          <i data-lucide="message-circle-heart"></i>
-          <h2>Suggestions</h2>
+
+      <div class="panel suggestions-panel glass-card p-4 rounded-3xl">
+        <div class="d-flex align-items-center justify-content-between mb-3.5 flex-wrap gap-2">
+          <div class="d-flex align-items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-sky-500 bg-opacity-15 border border-sky-400 border-opacity-30 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px; border-radius: 12px;">
+              <i data-lucide="sparkles" class="text-sky-400" style="width: 17px; height: 17px;"></i>
+            </div>
+            <div>
+              <h3 class="fs-6 fw-bold mb-0 tracking-tight" style="color: var(--color-primary);">Adaptive Guidance</h3>
+              <span class="text-muted-tone text-xs font-medium" style="font-size: 0.72rem;">Diurnal Habit Interventions</span>
+            </div>
+          </div>
+          <span class="glass-pill px-2.5 py-1 text-[11px] font-mono text-muted-tone d-inline-flex align-items-center gap-1.5" id="suggestionsProgressBadge">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400" style="width: 6px; height: 6px; border-radius: 50%;"></span>
+            <span>Daily Protocol</span>
+          </span>
         </div>
+
         <div class="suggestions-checklist">
           {% for suggestion in data.suggestions %}
           {% set is_do = suggestion.startswith("DO: ") %}
           {% set is_dont = suggestion.startswith("DON'T: ") %}
           {% set clean_suggestion = suggestion[4:] if is_do else (suggestion[7:] if is_dont else suggestion) %}
-          <div class="suggestion-item d-flex align-items-start gap-2 mb-2 p-2 rounded cursor-pointer {% if is_dont %}suggestion-dont{% else %}suggestion-do{% endif %}" data-suggestion-index="{{ loop.index }}">
-            <input type="checkbox" class="suggestion-checkbox mt-1" id="sugg-{{ loop.index }}" aria-label="Mark suggestion as done">
+          <div class="suggestion-item d-flex align-items-start gap-3 mb-2.5 cursor-pointer {% if is_dont %}suggestion-dont{% else %}suggestion-do{% endif %}" data-suggestion-index="{{ loop.index }}">
+            <input type="checkbox" class="suggestion-checkbox" id="sugg-{{ loop.index }}" aria-label="Mark suggestion as done">
             <div class="d-flex flex-column flex-grow-1">
-              <span class="badge {% if is_dont %}bg-danger-subtle text-danger{% else %}bg-success-subtle text-success{% endif %} mb-1" style="font-size: 0.68rem; font-weight: 800; width: fit-content; text-transform: uppercase; padding: 0.25rem 0.5rem; border-radius: 4px;">
-                {% if is_dont %}Avoid{% else %}Action{% endif %}
-              </span>
-              <label class="suggestion-label mb-0 cursor-pointer" for="sugg-{{ loop.index }}" style="font-weight: 650; font-size: 0.88rem;">
+              <div class="d-flex align-items-center justify-content-between mb-1.5 flex-wrap gap-2">
+                <span class="suggestion-type-pill {% if is_dont %}pill-avoid{% else %}pill-action{% endif %}">
+                  <span class="pill-dot"></span>
+                  <span>{% if is_dont %}Avoid{% else %}Action Item{% endif %}</span>
+                </span>
+                <span class="suggestion-xp-pill">+20 XP</span>
+              </div>
+              <label class="suggestion-label mb-0 cursor-pointer small" for="sugg-{{ loop.index }}" style="font-weight: 600; line-height: 1.5; color: var(--color-primary);">
                 {{ clean_suggestion }}
               </label>
             </div>
           </div>
           {% endfor %}
         </div>
-        <div class="d-flex gap-2 flex-wrap">
-          <a
-            class="btn btn-outline-primary"
-            href="{{ url_for('mood.report_pdf') }}"
-            ><i data-lucide="file-down"></i>PDF report</a
-          >
-          <a
-            class="btn btn-outline-primary"
-            href="{{ url_for('mood.export_csv') }}"
-            ><i data-lucide="download"></i>CSV export</a
-          >
+
+        <div class="d-flex gap-2 flex-wrap pt-3 mt-2 border-top border-slate-200 border-opacity-40 dark:border-white dark:border-opacity-10">
+          <a class="glass-pill px-3 py-1.5 text-xs font-semibold text-decoration-none hover:text-sky-500 transition d-inline-flex align-items-center gap-1.5 shadow-sm" href="{{ url_for('mood.report_pdf') }}">
+            <i data-lucide="file-text" style="width: 13px; height: 13px; color: #0284c7;"></i>
+            <span>PDF Report</span>
+          </a>
+          <a class="glass-pill px-3 py-1.5 text-xs font-semibold text-decoration-none hover:text-emerald-500 transition d-inline-flex align-items-center gap-1.5 shadow-sm" href="{{ url_for('mood.export_csv') }}">
+            <i data-lucide="table" style="width: 13px; height: 13px; color: #10b981;"></i>
+            <span>CSV Export</span>
+          </a>
         </div>
       </div>
     </aside>
   </section>
 
+  {# ── 9. Mindful Sanctuary Wisdom Footer (Login Theme Sync) ── #}
+  <div class="glass-card p-4 rounded-2xl w-100 mt-2">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="w-8 h-8 rounded-xl bg-emerald-500 bg-opacity-15 border border-emerald-400 border-opacity-30 d-flex align-items-center justify-content-center" style="width:34px;height:34px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);border-radius:12px;">
+          <i data-lucide="compass" style="width:18px;height:18px;color:#34d399;"></i>
+        </div>
+        <div>
+          <div class="fst-italic small" style="font-family: Georgia, serif;">&ldquo;Your rhythm is a compass, not a race. Return to yourself without pressure.&rdquo;</div>
+          <div class="d-flex align-items-center gap-3 text-muted-tone small mt-0.5" style="font-size:0.75rem;">
+            <span>&bull; Zero Streak Guilt</span>
+            <span>&bull; Private On-Device Enclave</span>
+            <span>&bull; Circadian Harmony</span>
+          </div>
+        </div>
+      </div>
+      <a href="#main-content" class="glass-btn-secondary px-3 py-1.5 text-xs text-decoration-none">
+        Back to Top &uarr;
+      </a>
+    </div>
+  </div>
+
   <!-- Guided Box Breathing Modal -->
   <div class="modal fade" id="breathingModal" tabindex="-1" role="dialog" aria-labelledby="breathingModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
-      <div class="modal-content panel elevated-panel" style="background: var(--dt-glass-modal-bg); backdrop-filter: blur(20px); border: 1px solid var(--dt-border);">
-        <div class="modal-header border-0">
-          <h5 class="modal-title" id="breathingModalLabel">Guided Box Breathing</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="closeBreathingModalBtn"></button>
+      <div class="modal-content glass-card p-2" style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(28px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 1.75rem;">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fs-5 fw-bold text-white" id="breathingModalLabel">Guided Box Breathing</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" id="closeBreathingModalBtn"></button>
         </div>
-        <div class="modal-body text-center py-5">
+        <div class="modal-body text-center py-4">
           <div class="breathing-circle-wrap">
             <div id="breathingCircle" class="breathing-circle"></div>
             <div id="breathingPhase" class="breathing-phase-label text-white">Get Ready</div>
           </div>
-          <div id="breathingTimer" class="breathing-timer text-primary">60s</div>
-          <p class="text-secondary mt-3 px-3">Follow the prompt to inhale, hold, exhale, and hold. Box breathing helps reduce anxiety and lower stress levels.</p>
-          <button type="button" class="btn btn-primary mt-3 px-4" id="startBreathingBtn">Start Session</button>
+          <div id="breathingTimer" class="breathing-timer text-sky-400 fs-1 fw-bold font-mono">60s</div>
+          <p class="text-slate-300 small mt-3 px-3">Follow the prompt to inhale, hold, exhale, and hold. Box breathing triggers parasympathetic calming and reduces acute cortisol spikes.</p>
+          <button type="button" class="glass-btn-primary px-5 py-2.5 rounded-pill text-white font-bold text-xs shadow-lg mt-2" id="startBreathingBtn">Start Session</button>
         </div>
       </div>
     </div>
   </div>
 </div>
+
 {% else %}
-<div class="onboarding-empty">
-  <div class="onboarding-hero">
-    <div class="onboarding-orb-placeholder" aria-hidden="true">
-      <div class="onb-orb-ring"></div>
-      <span class="onb-orb-emoji">🌀</span>
+<!-- 4-Act Pinned Scrollytelling Onboarding Experience -->
+<div class="scrolly-container position-relative w-100" id="scrollyOnboarding" style="min-height: 400vh;">
+  <!-- Sticky Viewport Stage (height: 100vh) -->
+  <div class="position-sticky top-0 w-100 vh-100 d-flex align-items-center justify-content-center overflow-hidden" id="scrollyStage" style="pointer-events: none;">
+
+    <!-- Act 1: The Welcome Breath -->
+    <div class="scrolly-act text-center px-4" id="act1" style="pointer-events: auto; max-width: 38rem;">
+      <div class="position-relative d-inline-flex align-items-center justify-content-center mb-4">
+        <!-- Soft pulsing breathing ring -->
+        <div class="breathing-ring position-absolute rounded-circle" style="width: 220px; height: 220px; border: 2px solid var(--color-accent); pointer-events: none;"></div>
+        <div class="glass-pill px-4 py-2 d-flex align-items-center gap-2 shadow-sm">
+          <i data-lucide="wind" style="width: 18px; height: 18px; color: var(--color-accent);"></i>
+          <span class="small fw-semibold" id="breathInstruction">Inhale steadily...</span>
+        </div>
+      </div>
+      <h1 class="display-title fw-bolder fs-1 mb-3 tracking-tight">
+        Welcome to DayTone
+      </h1>
+      <p class="fs-5 text-muted-tone mb-4" style="line-height: 1.6;">
+        Take one steady breath. DayTone harmonizes your circadian rhythm, detects stress patterns, and safeguards your mental wellness.
+      </p>
+      <div class="d-inline-flex align-items-center gap-2 text-muted-tone small">
+        <span>Scroll down to explore your rhythm</span>
+        <i data-lucide="chevron-down" class="animate-bounce" style="width: 16px; height: 16px;"></i>
+      </div>
     </div>
-    <div class="onboarding-copy">
-      <h1>Welcome to DayTone</h1>
-      <p>Your AI-powered mental wellness companion. Log your mood, sleep, and stress daily — DayTone will detect patterns, flag burnout risk, and deliver personalised recovery nudges.</p>
+
+    <!-- Act 2: AI Burnout Risk -->
+    <div class="scrolly-act position-absolute px-4" id="act2" style="pointer-events: auto; opacity: 0; transform: translateY(40px); max-width: 32rem; left: 8%;">
+      <div class="glass-panel p-4 p-md-5 rounded-4 shadow-2xl">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <span class="small-caps text-accent">Act 02 &bull; Predictive Intelligence</span>
+          <span class="badge rounded-pill bg-accent-subtle text-accent px-2.5 py-1" style="font-size: 0.72rem;">ML Classifier</span>
+        </div>
+        <div class="glass-media-img-wrap mb-3" style="height: 140px;">
+          <img src="{{ url_for('static', filename='img/zen-freedom-and-black-woman-with-open-arms-nature-and-peace-with-smile-balance-and-joyful.png') }}" alt="Circadian Vitality" class="glass-media-img" loading="lazy">
+          <div class="glass-media-overlay" style="justify-content: flex-end; padding: 0.5rem 0.75rem;">
+            <span class="glass-pill-badge" style="font-size: 0.68rem; padding: 0.25rem 0.6rem;">
+              <i data-lucide="sun" style="width: 12px; height: 12px; color: #f59e0b;"></i> Diurnal Equilibrium
+            </span>
+          </div>
+        </div>
+        <h2 class="display-title fs-2 fw-bold mb-3 tracking-tight">AI Burnout Risk Prediction</h2>
+        <p class="text-muted-tone mb-4" style="line-height: 1.6;">
+          As daily life fluctuates, subtle signals emerge. DayTone ingests sleep, subjective stress, physical activity, and journal sentiment through a comparative machine learning pipeline.
+        </p>
+        <div class="d-flex flex-column gap-2 mb-2">
+          <div class="d-flex align-items-center gap-2.5 p-2 rounded-3 bg-white bg-opacity-25 border border-white border-opacity-20">
+            <i data-lucide="activity" class="text-accent" style="width: 16px; height: 16px;"></i>
+            <span class="small fw-medium">Random Forest &bull; Logistic &bull; Decision Tree</span>
+          </div>
+          <div class="d-flex align-items-center gap-2.5 p-2 rounded-3 bg-white bg-opacity-25 border border-white border-opacity-20">
+            <i data-lucide="eye" class="text-accent" style="width: 16px; height: 16px;"></i>
+            <span class="small fw-medium">Explainable risk drivers without black-box confusion</span>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <!-- Act 3: Personalized Recovery -->
+    <div class="scrolly-act position-absolute px-4" id="act3" style="pointer-events: auto; opacity: 0; transform: translateY(40px); max-width: 34rem; right: 8%;">
+      <div class="glass-panel p-4 p-md-5 rounded-4 shadow-2xl position-relative">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <span class="small-caps text-accent">Act 03 &bull; Circadian Support</span>
+          <span class="badge rounded-pill bg-accent-subtle text-accent px-2.5 py-1" style="font-size: 0.72rem;">Targeted Recovery</span>
+        </div>
+        <div class="glass-media-img-wrap mb-3" style="height: 140px;">
+          <img src="{{ url_for('static', filename='img/peace-and-quiet.png') }}" alt="Restorative recovery" class="glass-media-img" loading="lazy">
+          <div class="glass-media-overlay" style="justify-content: flex-end; padding: 0.5rem 0.75rem;">
+            <span class="glass-pill-badge" style="font-size: 0.68rem; padding: 0.25rem 0.6rem;">
+              <i data-lucide="moon" style="width: 12px; height: 12px; color: #6366f1;"></i> Restorative Silence
+            </span>
+          </div>
+        </div>
+        <h2 class="display-title fs-2 fw-bold mb-3 tracking-tight">Personalized Recovery Nudges</h2>
+        <p class="text-muted-tone mb-4" style="line-height: 1.6;">
+          Your recovery isn't one-size-fits-all. When fatigue or stress spikes, receive rule-based micro-interventions tuned to your specific behavioral patterns.
+        </p>
+
+        <!-- Floating Sample Nudge Chips -->
+        <div class="d-flex flex-wrap gap-2 pt-1" id="driftingChips">
+          <span class="glass-pill px-3 py-1.5 small fw-semibold d-inline-flex align-items-center gap-1.5 shadow-sm">
+            <i data-lucide="footprints" class="text-emerald-500" style="width:14px;height:14px;"></i> 15-min restorative walk
+          </span>
+          <span class="glass-pill px-3 py-1.5 small fw-semibold d-inline-flex align-items-center gap-1.5 shadow-sm">
+            <i data-lucide="droplet" class="text-sky-500" style="width:14px;height:14px;"></i> Circadian hydration rhythm
+          </span>
+          <span class="glass-pill px-3 py-1.5 small fw-semibold d-inline-flex align-items-center gap-1.5 shadow-sm">
+            <i data-lucide="moon" class="text-indigo-500" style="width:14px;height:14px;"></i> 22:00 screen-free wind-down
+          </span>
+          <span class="glass-pill px-3 py-1.5 small fw-semibold d-inline-flex align-items-center gap-1.5 shadow-sm">
+            <i data-lucide="wind" class="text-teal-500" style="width:14px;height:14px;"></i> 60-sec box breathing
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Act 4: Launchpad -->
+    <div class="scrolly-act position-absolute text-center px-4" id="act4" style="pointer-events: auto; opacity: 0; transform: scale(0.92); max-width: 32rem;">
+      <div class="glass-panel p-4 p-md-5 rounded-4 shadow-2xl">
+        <div class="glass-media-img-wrap mb-3" style="height: 130px;">
+          <img src="{{ url_for('static', filename='img/mental-wellness.png') }}" alt="Mental wellness and community connection" class="glass-media-img" loading="lazy">
+          <div class="glass-media-overlay" style="justify-content: flex-end; padding: 0.5rem 0.75rem;">
+            <span class="glass-pill-badge" style="font-size: 0.68rem; padding: 0.25rem 0.6rem;">
+              <i data-lucide="users" style="width: 12px; height: 12px; color: #10b981;"></i> Community Resilience
+            </span>
+          </div>
+        </div>
+        <h2 class="display-title fs-2 fw-bold mb-2 tracking-tight">Your Launchpad</h2>
+        <p class="text-muted-tone mb-4" style="line-height: 1.55;">
+          You're ready to start your circadian wellness journal. Your daily check-in takes less than 60 seconds.
+        </p>
+        <div class="d-flex flex-column gap-2.5">
+          <a class="btn btn-primary btn-lg rounded-pill py-3 px-4 fw-bold shadow-lg d-flex align-items-center justify-content-center gap-2" href="{{ url_for('mood.log_mood') }}">
+            <i data-lucide="plus-circle" style="width: 20px; height: 20px;"></i>
+            <span>Begin First Check-In</span>
+          </a>
+          <a class="btn btn-glass rounded-pill py-2 px-3 small text-muted-tone text-decoration-none" href="{{ url_for('mood.goals') }}">
+            <i data-lucide="target" style="width: 14px; height: 14px; margin-right: 4px;"></i> Set a wellness goal first
+          </a>
+        </div>
+      </div>
+    </div>
+
   </div>
-  <div class="onboarding-steps">
-    <div class="onb-step">
-      <span class="onb-step-num">1</span>
-      <div>
-        <strong>Log your first check-in</strong>
-        <p class="text-secondary mb-0">Takes about 60 seconds. Include your mood, sleep hours, stress level, and an optional journal note.</p>
-      </div>
-    </div>
-    <div class="onb-step">
-      <span class="onb-step-num">2</span>
-      <div>
-        <strong>Get your AI burnout risk score</strong>
-        <p class="text-secondary mb-0">DayTone uses a trained ML model to classify your risk as Low, Medium, or High — with a plain-English explanation of why.</p>
-      </div>
-    </div>
-    <div class="onb-step">
-      <span class="onb-step-num">3</span>
-      <div>
-        <strong>Receive personalised nudges</strong>
-        <p class="text-secondary mb-0">Rule-based suggestions covering sleep hygiene, stress relief, and activity. Built for your specific pattern — not generic advice.</p>
-      </div>
-    </div>
-    <div class="onb-step">
-      <span class="onb-step-num">4</span>
-      <div>
-        <strong>Track streaks, earn badges, set goals</strong>
-        <p class="text-secondary mb-0">Build consistency with daily streaks and visual achievement badges. Set personal targets for sleep, mood, and activity.</p>
-      </div>
-    </div>
-  </div>
-  <a class="btn btn-primary btn-lg" href="{{ url_for('mood.log_mood') }}">
-    <i data-lucide="plus"></i> Log your first check-in
-  </a>
-  <a class="btn btn-outline-secondary ms-2" href="{{ url_for('mood.goals') }}">
-    <i data-lucide="target"></i> Set a goal first
-  </a>
 </div>
 {% endif %} {% endblock %} {% block scripts %} {% if data.latest %}
 <script>
@@ -730,7 +1165,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(container);
       }
       
-      const emojis = ['🔥', '✨', '⚡', '🎉', '🌟', '🧡'];
+      const emojis = ['✦', '★', '✧', '◆', '✶', '•'];
       const particleCount = 24;
       
       for (let i = 0; i < particleCount; i++) {
@@ -967,6 +1402,124 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   {% endif %}
+});
+</script>
+{% else %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Breathing cycle text ticker for Act 1
+  const breathEl = document.getElementById('breathInstruction');
+  if (breathEl) {
+    const phases = ['Inhale steadily...', 'Hold gently...', 'Exhale slowly...', 'Rest & pause...'];
+    let idx = 0;
+    setInterval(() => {
+      idx = (idx + 1) % phases.length;
+      breathEl.textContent = phases[idx];
+    }, 2200);
+  }
+
+  // Ensure Three.js Tone mesh is centered on boot
+  if (window.DaytoneScene) {
+    window.DaytoneScene.setMeshPos(0, 0, 0, 0.5);
+    window.DaytoneScene.setDeform(0.14, 0.5);
+  }
+
+  // Scrollytelling Timeline with GSAP ScrollTrigger & Lenis
+  if (window.gsap && window.ScrollTrigger) {
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: '#scrollyOnboarding',
+        start: 'top top',
+        end: 'bottom bottom',
+        scrub: 1.2,
+      }
+    });
+
+    // Act 1 -> Act 2 transition
+    tl.to('#act1', {
+      opacity: 0,
+      scale: 0.9,
+      y: -40,
+      ease: 'power2.inOut',
+      duration: 1
+    }, 0);
+
+    tl.to('#act2', {
+      opacity: 1,
+      y: 0,
+      ease: 'power2.out',
+      duration: 1
+    }, 0.8);
+
+    // Callbacks to scrub WebGL shader uniforms and Tone Mesh positioning
+    tl.call(() => {
+      if (window.DaytoneScene) {
+        window.DaytoneScene.setMeshPos(1.5, 0.2, 0, 1.0);
+        window.DaytoneScene.setDeform(0.52, 1.2); // Surface turbulence (stress ripples)
+        window.DaytoneScene.setColorPalette('#f59e0b', '#0284c7', 1.0);
+      }
+    }, null, 1.0);
+
+    // Act 2 -> Act 3 transition
+    tl.to('#act2', {
+      opacity: 0,
+      y: -40,
+      ease: 'power2.in',
+      duration: 1
+    }, 2);
+
+    tl.to('#act3', {
+      opacity: 1,
+      y: 0,
+      ease: 'power2.out',
+      duration: 1
+    }, 2.8);
+
+    // Act 3 Tone Mesh Stabilization & Harmonization
+    tl.call(() => {
+      if (window.DaytoneScene) {
+        window.DaytoneScene.setMeshPos(-1.4, -0.1, 0, 1.0);
+        window.DaytoneScene.setDeform(0.18, 1.2); // Harmonic stabilization
+        window.DaytoneScene.setColorPalette('#10b981', '#38bdf8', 1.0);
+      }
+    }, null, 3.0);
+
+    // Stagger drift on recovery nudge chips in Act 3
+    tl.fromTo('#driftingChips span', {
+      opacity: 0,
+      y: 20
+    }, {
+      opacity: 1,
+      y: 0,
+      stagger: 0.15,
+      duration: 0.8
+    }, 3.1);
+
+    // Act 3 -> Act 4 transition
+    tl.to('#act3', {
+      opacity: 0,
+      scale: 0.95,
+      y: -40,
+      ease: 'power2.in',
+      duration: 1
+    }, 4.2);
+
+    tl.to('#act4', {
+      opacity: 1,
+      scale: 1,
+      ease: 'power2.out',
+      duration: 1.2
+    }, 5);
+
+    // Act 4: Docking Tone Mesh into Launchpad Center
+    tl.call(() => {
+      if (window.DaytoneScene) {
+        window.DaytoneScene.setMeshPos(0, 1.25, 0, 1.0);
+        window.DaytoneScene.setDeform(0.16, 1.0);
+        window.DaytoneScene.setColorPalette('#38bdf8', '#6366f1', 1.0);
+      }
+    }, null, 5.2);
+  }
 });
 </script>
 {% endif %} {% endblock %}

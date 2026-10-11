@@ -131,11 +131,11 @@ def orb_state(log):
 
     mood = max(1, min(5, int(log.mood_score)))
     palette = {
-        1: {"primary": "#ef4444", "secondary": "#ea580c", "label": "Sick"},
-        2: {"primary": "#f97316", "secondary": "#d97706", "label": "Sad"},
-        3: {"primary": "#eab308", "secondary": "#ca8a04", "label": "Anxious"},
-        4: {"primary": "#10b981", "secondary": "#34d399", "label": "Calm"},
-        5: {"primary": "#22c55e", "secondary": "#16a34a", "label": "Happy"},
+        1: {"primary": "#ff2222", "secondary": "#ff5555", "label": "Sick"},
+        2: {"primary": "#ff7700", "secondary": "#ffa333", "label": "Sad"},
+        3: {"primary": "#eab308", "secondary": "#fde047", "label": "Anxious"},
+        4: {"primary": "#22c55e", "secondary": "#86efac", "label": "Calm"},
+        5: {"primary": "#059669", "secondary": "#34d399", "label": "Happy"},
     }
     sharpness = round((6 - mood) / 5, 2)
     calm = round(mood / 5, 2)

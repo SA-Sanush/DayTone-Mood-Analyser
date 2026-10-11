@@ -1,36 +1,43 @@
 {% extends "base.html" %}
 {% block title %}ML Bias & Fairness Audit — DayTone Admin{% endblock %}
 {% block content %}
-<div class="container-fluid py-4" style="max-width: 960px;">
+<div class="admin-shell w-full max-w-5xl mx-auto py-4 space-y-6">
 
-  <div class="d-flex align-items-center gap-2 mb-1">
-    <i data-lucide="shield-check" style="width:22px;height:22px;color:var(--dt-primary)"></i>
-    <h1 style="font-size:1.45rem;font-weight:800;margin:0;">ML Bias &amp; Fairness Audit</h1>
+  <!-- ── Bias Audit Header Capsule ──────────────────────────────── -->
+  <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-6 md:p-8 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5 flex flex-col md:flex-row md:items-center md:justify-between gap-5 animate-fade-in-up">
+    <div class="flex items-center gap-4">
+      <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/25 flex-shrink-0">
+        <i data-lucide="scale" style="width: 26px; height: 26px;"></i>
+      </div>
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/25 mb-1.5 backdrop-blur-md">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Algorithmic Equity</span>
+        </div>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white m-0 tracking-tight">ML Bias &amp; Fairness Audit</h1>
+        <p class="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 m-0 mt-1">Accuracy parity evaluation across synthetic demographic cohorts.</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3 self-start md:self-center flex-shrink-0">
+      <a class="daytone-btn-secondary daytone-btn-sm text-decoration-none" href="{{ url_for('admin.model_diagnostics') }}">
+        <i data-lucide="cpu" style="width: 14px; height: 14px;"></i>
+        <span>ML Diagnostics</span>
+      </a>
+      <a class="daytone-btn-secondary daytone-btn-sm text-decoration-none" href="{{ url_for('admin.developer_dashboard') if current_user.is_developer else url_for('admin.dashboard') }}">
+        <i data-lucide="layout-dashboard" style="width: 14px; height: 14px;"></i>
+        <span>{{ 'Dev Console' if current_user.is_developer else 'Admin' }}</span>
+      </a>
+    </div>
   </div>
-  <p class="text-secondary mb-4" style="font-size:0.9rem;">
-    This audit evaluates the burnout predictor for accuracy disparities across synthetic
-    demographic groups (stress levels, sleep duration, activity, social interaction).
-    Groups whose accuracy falls more than <strong>5%</strong> below the overall accuracy
-    are flagged with <code>⚠ BIAS_FLAG</code>.
-  </p>
 
-  <div class="panel elevated-panel p-3 mb-4">
-    <div class="panel-title mb-2">
-      <i data-lucide="terminal"></i>
-      <h2 style="font-size:1rem;font-weight:700;">Audit Output</h2>
+  <div class="panel elevated-panel p-4 shadow-xl animate-fade-in-up">
+    <div class="panel-title mb-3 d-flex align-items-center gap-2 font-bold">
+      <i data-lucide="terminal" style="width: 18px; height: 18px; color: var(--dt-primary);"></i>
+      <h2 style="font-size:1rem;font-weight:700;margin:0;">Audit Telemetry Output</h2>
     </div>
     <pre style="white-space:pre-wrap;word-break:break-word;font-size:0.78rem;line-height:1.55;
                 background:var(--dt-surface,#0f172a);color:var(--dt-text,#e2e8f0);
-                border-radius:8px;padding:1.25rem;margin:0;overflow-x:auto;">{{ output or "No output produced." }}</pre>
-  </div>
-
-  <div class="d-flex gap-2 flex-wrap">
-    <a href="{{ url_for('admin.model_diagnostics') }}" class="btn btn-outline-primary">
-      <i data-lucide="cpu"></i> ML Diagnostics
-    </a>
-    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-glass">
-      <i data-lucide="arrow-left"></i> Admin Dashboard
-    </a>
+                border-radius:12px;padding:1.25rem;margin:0;overflow-x:auto;">{{ output or "No output produced." }}</pre>
   </div>
 
 </div>

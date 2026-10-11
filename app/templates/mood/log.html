@@ -1,175 +1,256 @@
 {% extends "base.html" %}
-{% block title %}Log Mood - DayTone{% endblock %}
+{% block title %}Log Mood — DayTone{% endblock %}
+
 {% block content %}
 <style>
   .error-ring {
-    outline: 2px solid var(--dt-bad, #c2413d) !important;
+    outline: 2px solid #ef4444 !important;
     outline-offset: 4px;
-    border-radius: 12px;
+    border-radius: 1rem;
     animation: fieldShake 0.4s ease;
   }
   .field-error-msg {
-    color: var(--dt-bad, #c2413d);
+    color: #ef4444;
     font-size: 0.82rem;
     margin-top: 0.4rem;
     display: flex;
     align-items: center;
-    gap: 0.3rem;
+    gap: 0.4rem;
+    font-weight: 600;
   }
   @keyframes fieldShake {
-    0%,100% { transform: translateX(0); }
+    0%, 100% { transform: translateX(0); }
     20% { transform: translateX(-6px); }
     40% { transform: translateX(6px); }
     60% { transform: translateX(-4px); }
     80% { transform: translateX(4px); }
   }
-  .mood-selection-grid.error-ring { border-radius: 14px; }
-  .stress-btn-group.error-ring { border-radius: 8px; }
-  .social-btn-group.error-ring { border-radius: 8px; }
 </style>
-<form method="post" id="checkinForm" class="panel form-panel elevated-panel checkin-panel" novalidate>
-  {{ form.hidden_tag() }}
-  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 animate-fade-in-up">
-    <div class="form-heading">
-      <span class="eyebrow">Daily signal</span>
-      <h1>{{ "Edit check-in" if editing else "Daily check-in" }}</h1>
-    </div>
-    {{ form.log_date(class="form-control date-input") }}
-  </div>
-  <div class="row g-3">
-    <div class="col-12 mb-3 animate-fade-in-up delay-1" id="mood-field-container">
-      <label class="form-label d-block mb-3">How are you feeling today?</label>
-      <div class="mood-selection-grid">
-        <input type="hidden" name="mood_score" id="mood_score" value="{{ form.mood_score.data or '' }}">
-        <button type="button" class="mood-btn-option" data-value="5" title="Happy">
-          <span class="mood-emoji">😊</span>
-          <span class="mood-label">Happy</span>
-        </button>
-        <button type="button" class="mood-btn-option" data-value="4" title="Calm">
-          <span class="mood-emoji">😌</span>
-          <span class="mood-label">Calm</span>
-        </button>
-        <button type="button" class="mood-btn-option" data-value="3" title="Anxious">
-          <span class="mood-emoji">😰</span>
-          <span class="mood-label">Anxious</span>
-        </button>
-        <button type="button" class="mood-btn-option" data-value="2" title="Sad">
-          <span class="mood-emoji">😢</span>
-          <span class="mood-label">Sad</span>
-        </button>
-        <button type="button" class="mood-btn-option" data-value="1" title="Sick">
-          <span class="mood-emoji">🤒</span>
-          <span class="mood-label">Sick</span>
-        </button>
-      </div>
-      {% if form.mood_score.errors %}
-        <div class="field-error-msg">
-          <span>⚠</span>
-          {% for error in form.mood_score.errors %}
-            <span>Please select how you're feeling today.</span>
-          {% endfor %}
+
+<div class="w-full max-w-4xl mx-auto py-4">
+  <form method="post" id="checkinForm" class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-6 md:p-10 shadow-2xl backdrop-blur-xl ring-1 ring-slate-900/5 transition-all" novalidate>
+    {{ form.hidden_tag() }}
+
+    <!-- Header Row -->
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-slate-200/80 dark:border-white/10 mb-8">
+      <div>
+        <div class="inline-flex items-center gap-2 rounded-full border border-sky-400/30 bg-sky-500/10 px-3 py-1 text-xs font-bold text-sky-700 dark:text-sky-300 mb-2.5">
+          <span class="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
+          Daily Circadian Signal
         </div>
-      {% endif %}
-      <div id="mood-error" class="field-error-msg" style="display:none">⚠ Please select your mood before saving.</div>
+        <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white" style="font-family: var(--font-display);">
+          {{ "Edit Daily Check-in" if editing else "Daily Check-in" }}
+        </h1>
+        <p class="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 m-0 leading-normal">
+          Record your current emotional frequency and physiological rhythm
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2.5 self-start sm:self-end pb-0.5">
+        <label for="log_date" class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0">Date</label>
+        {{ form.log_date(class="rounded-xl border border-slate-200/80 dark:border-white/10 bg-white/35 dark:bg-slate-800/90 px-3.5 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400 backdrop-blur-md cursor-pointer", id="log_date") }}
+      </div>
     </div>
 
-    <div class="col-md-4 animate-fade-in-up delay-2">
-      <div class="d-flex justify-content-between align-items-center mb-1">
-        <label class="form-label mb-0">{{ form.sleep_hours.label }}</label>
-        <span id="sleep_value" class="text-primary fw-extrabold" style="font-size: 0.9rem;">8.0 hrs</span>
+    <!-- Mood Score Section (Lucide Icons, Zero Emojis) -->
+    <div class="mb-8" id="mood-field-container">
+      <label class="block text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-3">
+        How are you feeling right now?
+      </label>
+      <input type="hidden" name="mood_score" id="mood_score" value="{{ form.mood_score.data or '' }}">
+
+      <div class="mood-selection-grid grid grid-cols-2 sm:grid-cols-5 gap-3">
+        <!-- 5: Happy -->
+        <button type="button" class="mood-btn-option group" data-value="5" title="Happy">
+          <i data-lucide="sun" class="mood-glyph-icon text-amber-500"></i>
+          <span class="mood-label text-slate-800 dark:text-slate-200">Happy</span>
+          <span class="text-[10px] font-bold text-slate-400">5 / 5</span>
+        </button>
+
+        <!-- 4: Calm -->
+        <button type="button" class="mood-btn-option group" data-value="4" title="Calm">
+          <i data-lucide="waves" class="mood-glyph-icon text-teal-500"></i>
+          <span class="mood-label text-slate-800 dark:text-slate-200">Calm</span>
+          <span class="text-[10px] font-bold text-slate-400">4 / 5</span>
+        </button>
+
+        <!-- 3: Anxious -->
+        <button type="button" class="mood-btn-option group" data-value="3" title="Anxious">
+          <i data-lucide="activity" class="mood-glyph-icon text-amber-600"></i>
+          <span class="mood-label text-slate-800 dark:text-slate-200">Anxious</span>
+          <span class="text-[10px] font-bold text-slate-400">3 / 5</span>
+        </button>
+
+        <!-- 2: Sad -->
+        <button type="button" class="mood-btn-option group" data-value="2" title="Sad">
+          <i data-lucide="cloud-rain" class="mood-glyph-icon text-sky-600"></i>
+          <span class="mood-label text-slate-800 dark:text-slate-200">Sad</span>
+          <span class="text-[10px] font-bold text-slate-400">2 / 5</span>
+        </button>
+
+        <!-- 1: Sick -->
+        <button type="button" class="mood-btn-option group" data-value="1" title="Sick">
+          <i data-lucide="heart-pulse" class="mood-glyph-icon text-rose-500"></i>
+          <span class="mood-label text-slate-800 dark:text-slate-200">Sick</span>
+          <span class="text-[10px] font-bold text-slate-400">1 / 5</span>
+        </button>
       </div>
-      <input type="range" class="form-range" id="sleep_slider" min="3" max="12" step="0.5" value="8">
-      {{ form.sleep_hours(class="d-none", required=False) }}
-      {% if form.sleep_hours.errors %}
-        <div class="text-danger small mt-2">
-          {% for error in form.sleep_hours.errors %}
-            <span>{{ error }}</span>
-          {% endfor %}
+
+      <div id="mood-error" class="field-error-msg mt-2" style="display:none;">
+        <i data-lucide="alert-circle" style="width:14px;height:14px;"></i>
+        <span>Please select how you are feeling before continuing.</span>
+      </div>
+      {% for error in form.mood_score.errors %}
+        <p class="text-rose-500 text-xs mt-1 font-semibold">{{ error }}</p>
+      {% endfor %}
+    </div>
+
+    <!-- 3-Column Metrics (Sleep, Stress, Social) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 mb-8">
+      
+      <!-- Sleep Slider -->
+      <div class="rounded-2xl border border-white/40 dark:border-white/10 bg-white/22 dark:bg-slate-800/40 p-3.5 sm:p-4 shadow-sm backdrop-blur-md flex flex-col justify-between" id="sleep-field-container">
+        <div class="flex items-center justify-between mb-2 min-h-[24px]">
+          <div class="flex items-center gap-1.5">
+            <i data-lucide="moon" class="text-indigo-500" style="width:15px;height:15px;"></i>
+            <label class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-0">{{ form.sleep_hours.label.text }}</label>
+          </div>
+          <span id="sleep_value" class="text-xs font-extrabold text-sky-600 dark:text-sky-400 px-2 py-0.5 rounded-full bg-sky-500/10">8.0 hrs</span>
         </div>
-      {% endif %}
-    </div>
-    <div class="col-md-4 animate-fade-in-up delay-2" id="stress-field-container">
-      <label class="form-label mb-2">{{ form.stress_level.label }}</label>
-      <div class="interactive-btn-group stress-btn-group">
-        <button type="button" class="option-btn" data-value="1" title="Very Low">1</button>
-        <button type="button" class="option-btn" data-value="2" title="Low">2</button>
-        <button type="button" class="option-btn" data-value="3" title="Moderate">3</button>
-        <button type="button" class="option-btn" data-value="4" title="High">4</button>
-        <button type="button" class="option-btn" data-value="5" title="Extreme">5</button>
-      </div>
-      {{ form.stress_level(class="d-none", required=False) }}
-      {% if form.stress_level.errors %}
-        <div class="field-error-msg">
-          <span>⚠</span>
-          {% for error in form.stress_level.errors %}
-            <span>Please select your stress level.</span>
-          {% endfor %}
+        <div class="h-[42px] flex items-center mt-2 w-full">
+          <input type="range" class="form-range w-full cursor-pointer" id="sleep_slider" min="3" max="12" step="0.5" value="8">
         </div>
-      {% endif %}
-      <div id="stress-error" class="field-error-msg" style="display:none">⚠ Please select your stress level before saving.</div>
-    </div>
-    <div class="col-md-4 animate-fade-in-up delay-2" id="social-field-container">
-      <label class="form-label mb-2">{{ form.social_interaction.label }}</label>
-      <div class="interactive-btn-group social-btn-group">
-        <button type="button" class="option-btn" data-value="1" title="Alone">👤 Alone</button>
-        <button type="button" class="option-btn" data-value="2" title="Group">👥 Group</button>
-        <button type="button" class="option-btn" data-value="3" title="Social">🗣️ Social</button>
+        {{ form.sleep_hours(class="hidden", id="sleep_hours", required=False) }}
+        {% for error in form.sleep_hours.errors %}
+          <p class="text-rose-500 text-xs mt-1 font-semibold">{{ error }}</p>
+        {% endfor %}
       </div>
-      {{ form.social_interaction(class="d-none", required=False) }}
-      {% if form.social_interaction.errors %}
-        <div class="field-error-msg">
-          <span>⚠</span>
-          {% for error in form.social_interaction.errors %}
-            <span>Please select your social interaction level.</span>
-          {% endfor %}
+
+      <!-- Stress Level (1-5) -->
+      <div class="rounded-2xl border border-white/40 dark:border-white/10 bg-white/22 dark:bg-slate-800/40 p-3.5 sm:p-4 shadow-sm backdrop-blur-md flex flex-col justify-between" id="stress-field-container">
+        <div class="flex items-center justify-between mb-2 min-h-[24px]">
+          <div class="flex items-center gap-1.5">
+            <i data-lucide="zap" class="text-amber-500" style="width:15px;height:15px;"></i>
+            <label class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-0">{{ form.stress_level.label.text }}</label>
+          </div>
         </div>
-      {% endif %}
-      <div id="social-error" class="field-error-msg" style="display:none">⚠ Please select your social interaction before saving.</div>
+        <div class="interactive-btn-group stress-btn-group flex gap-1.5 mt-2 w-full">
+          <button type="button" class="option-btn" data-value="1" title="Very Low">1</button>
+          <button type="button" class="option-btn" data-value="2" title="Low">2</button>
+          <button type="button" class="option-btn" data-value="3" title="Moderate">3</button>
+          <button type="button" class="option-btn" data-value="4" title="High">4</button>
+          <button type="button" class="option-btn" data-value="5" title="Extreme">5</button>
+        </div>
+        {{ form.stress_level(class="hidden", id="stress_level", required=False) }}
+        <div id="stress-error" class="field-error-msg mt-1.5" style="display:none;">
+          <i data-lucide="alert-circle" style="width:13px;height:13px;"></i>
+          <span>Select stress level.</span>
+        </div>
+        {% for error in form.stress_level.errors %}
+          <p class="text-rose-500 text-xs mt-1 font-semibold">{{ error }}</p>
+        {% endfor %}
+      </div>
+
+      <!-- Social Interaction Level -->
+      <div class="rounded-2xl border border-white/40 dark:border-white/10 bg-white/22 dark:bg-slate-800/40 p-3.5 sm:p-4 shadow-sm backdrop-blur-md flex flex-col justify-between" id="social-field-container">
+        <div class="flex items-center justify-between mb-2 min-h-[24px]">
+          <div class="flex items-center gap-1.5">
+            <i data-lucide="users" class="text-sky-500" style="width:15px;height:15px;"></i>
+            <label class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-0">{{ form.social_interaction.label.text }}</label>
+          </div>
+        </div>
+        <div class="interactive-btn-group social-btn-group flex gap-1.5 mt-2 w-full">
+          <button type="button" class="option-btn" data-value="1" title="Alone">Alone</button>
+          <button type="button" class="option-btn" data-value="2" title="Group">Group</button>
+          <button type="button" class="option-btn" data-value="3" title="Social">Social</button>
+        </div>
+        {{ form.social_interaction(class="hidden", id="social_interaction", required=False) }}
+        <div id="social-error" class="field-error-msg mt-1.5" style="display:none;">
+          <i data-lucide="alert-circle" style="width:13px;height:13px;"></i>
+          <span>Select social setting.</span>
+        </div>
+        {% for error in form.social_interaction.errors %}
+          <p class="text-rose-500 text-xs mt-1 font-semibold">{{ error }}</p>
+        {% endfor %}
+      </div>
+
     </div>
-    <div class="col-12 animate-fade-in-up delay-3">
-      <div class="form-check switch-card d-flex align-items-center gap-3" id="activity_card">
-        {{ form.activity_done(class="form-check-input d-none") }}
-        <span class="custom-switch-indicator"></span>
-        <label class="form-check-label mb-0 cursor-pointer">{{ form.activity_done.label.text }}</label>
+
+    <!-- Wellness Activity Switch Card -->
+    <div class="mb-6">
+      <div class="rounded-2xl border border-white/40 dark:border-white/10 bg-white/22 dark:bg-slate-800/40 p-4 flex items-center justify-between cursor-pointer hover:bg-white/30 dark:hover:bg-slate-800/60 transition-all duration-300 backdrop-blur-md select-none group" id="activity_card" role="checkbox" aria-checked="false" tabindex="0">
+        <div class="flex items-center gap-3.5">
+          <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 transition-all duration-300 group-hover:scale-105" id="activity_icon_wrap">
+            <i data-lucide="activity" style="width:19px;height:19px;"></i>
+          </span>
+          <div>
+            <p class="text-xs font-bold text-slate-800 dark:text-slate-200 mb-0 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{{ form.activity_done.label.text }}</p>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-0">Completed your planned daily physical or mental exercise</p>
+          </div>
+        </div>
+        
+        <!-- Premium Glassmorphic Switch Toggle -->
+        <div class="relative flex items-center">
+          {{ form.activity_done(class="sr-only", id="activity_done") }}
+          <div class="activity-switch-track w-12 h-7 rounded-full p-0.5 transition-all duration-300 flex items-center cursor-pointer border shadow-inner" id="activity_switch_track">
+            <div class="activity-switch-thumb w-6 h-6 rounded-full bg-white shadow-md transform transition-transform duration-300 flex items-center justify-center" id="activity_switch_thumb">
+              <i data-lucide="check" class="activity-thumb-icon text-emerald-600 transition-opacity duration-200 opacity-0" style="width:12px;height:12px;stroke-width:3;"></i>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="col-12 animate-fade-in-up delay-4">
-      <label class="form-label mb-0 d-block mb-1">{{ form.notes.label }}</label>
-      {{ form.notes(class="form-control", rows="5", maxlength="1000", id="notes") }}
-      <div class="small text-secondary mt-1"><span id="noteCount">0</span>/1000</div>
+
+    <!-- Journal Reflections Textarea -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between mb-1.5">
+        <label class="block text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-0" for="notes">
+          {{ form.notes.label.text }}
+        </label>
+        <span class="text-[11px] font-bold text-slate-400"><span id="noteCount">0</span>/1000</span>
+      </div>
+      {{ form.notes(class="w-full rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/30 dark:bg-slate-800/90 p-4 text-sm font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-400/40 backdrop-blur-md", rows="4", maxlength="1000", id="notes", placeholder="Reflect on your circadian rhythm, challenges, or thoughts today…") }}
     </div>
-  <div class="d-flex align-items-center gap-2 mt-4 animate-fade-in-up delay-5">
-    <button class="btn btn-primary" type="submit" id="submitLogBtn">
-      <i data-lucide="save"></i>{{ "Update log" if editing else "Save log" }}
-    </button>
-    <a class="btn btn-outline-secondary btn-glass d-inline-flex align-items-center justify-content-center" href="{{ url_for('mood.history') if editing else url_for('mood.dashboard') }}">
-      <i data-lucide="x" style="width: 16px; height: 16px;"></i>Cancel
-    </a>
-  </div>
-</form>
+
+    <!-- Action Buttons -->
+    <div class="flex items-center gap-4 pt-6 border-t border-slate-200/80 dark:border-white/10 mt-2">
+      <button type="submit" id="submitLogBtn" class="daytone-btn-primary flex-1 group">
+        <span class="daytone-btn-shine"></span>
+        <span class="daytone-btn-content flex items-center justify-center gap-2.5">
+          <i data-lucide="check" class="daytone-btn-icon transition-transform duration-200 group-hover:scale-110" style="width:17px;height:17px;stroke-width:2.5;"></i>
+          <span class="daytone-btn-label">{{ "Update Log" if editing else "Save Daily Check-in" }}</span>
+        </span>
+      </button>
+
+      <a href="{{ url_for('mood.history') if editing else url_for('mood.dashboard') }}" class="daytone-btn-secondary">
+        <i data-lucide="x" style="width:16px;height:16px;"></i>
+        <span>Cancel</span>
+      </a>
+    </div>
+
+  </form>
+</div>
 {% endblock %}
+
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  // Shared input references (used by validation AND button click handlers)
-  const moodInput   = document.getElementById('mood_score');
+  const moodInput = document.getElementById('mood_score');
   const stressInput = document.getElementById('stress_level');
   const socialInput = document.getElementById('social_interaction');
 
-  // ── CLIENT-SIDE PRE-SUBMIT VALIDATION ──────────────────────────────────────
+  // Client-side validation
   const form = document.getElementById('checkinForm');
   if (form) {
     form.addEventListener('submit', (e) => {
-      let firstError = null;
       let hasError = false;
+      let firstError = null;
 
-      // Helper: mark a container as invalid
       function markError(containerId, errorId) {
         const container = document.getElementById(containerId) || document.querySelector(containerId);
         const errEl = document.getElementById(errorId);
         if (container) {
           container.classList.add('error-ring');
-          // Remove ring after 3s
           setTimeout(() => container.classList.remove('error-ring'), 3000);
         }
         if (errEl) errEl.style.display = 'flex';
@@ -177,7 +258,6 @@ document.addEventListener('DOMContentLoaded', () => {
         hasError = true;
       }
 
-      // Helper: clear error
       function clearError(containerId, errorId) {
         const container = document.getElementById(containerId) || document.querySelector(containerId);
         const errEl = document.getElementById(errorId);
@@ -186,21 +266,21 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // Check mood
-      if (!moodInput || !moodInput.value || moodInput.value === '') {
+      if (!moodInput || !moodInput.value) {
         markError('.mood-selection-grid', 'mood-error');
       } else {
         clearError('.mood-selection-grid', 'mood-error');
       }
 
       // Check stress
-      if (!stressInput || !stressInput.value || stressInput.value === '') {
+      if (!stressInput || !stressInput.value) {
         markError('.stress-btn-group', 'stress-error');
       } else {
         clearError('.stress-btn-group', 'stress-error');
       }
 
       // Check social
-      if (!socialInput || !socialInput.value || socialInput.value === '') {
+      if (!socialInput || !socialInput.value) {
         markError('.social-btn-group', 'social-error');
       } else {
         clearError('.social-btn-group', 'social-error');
@@ -208,122 +288,127 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (hasError) {
         e.preventDefault();
-        if (firstError) {
-          firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+        if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return false;
       }
+
+      if (window.DaytoneScene) window.DaytoneScene.disperse(1.2);
     });
   }
 
-  // ── REST OF FORM LOGIC ─────────────────────────────────────────────────────
-  // Character counter for notes
+  // Notes counter
   const notes = document.getElementById('notes');
   const count = document.getElementById('noteCount');
   if (notes && count) {
-    const update = () => count.textContent = notes.value.length;
-    notes.addEventListener('input', update);
-    update();
+    notes.addEventListener('input', () => count.textContent = notes.value.length);
+    count.textContent = notes.value.length;
   }
 
-  // Mood selection grid
+  // Mood buttons
   const moodButtons = document.querySelectorAll('.mood-btn-option');
-  // moodInput already declared in validation block above
-  
-  moodButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      moodButtons.forEach(btn => btn.classList.remove('active'));
-      button.classList.add('active');
-      moodInput.value = button.dataset.value;
+  moodButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      moodButtons.forEach(b => b.classList.remove('selected', 'active'));
+      btn.classList.add('selected', 'active');
+      if (moodInput) moodInput.value = btn.dataset.value;
+
+      // Dynamic 3D Scene interaction based on selected mood
+      if (window.DaytoneScene) {
+        window.DaytoneScene.pulse(1.18, 0.5);
+      }
     });
   });
 
   if (moodInput && moodInput.value) {
-    const activeBtn = document.querySelector(`.mood-btn-option[data-value="${moodInput.value}"]`);
-    if (activeBtn) {
-      activeBtn.classList.add('active');
-    }
+    const activeMood = document.querySelector(`.mood-btn-option[data-value="${moodInput.value}"]`);
+    if (activeMood) activeMood.classList.add('selected', 'active');
   }
 
   // Sleep slider sync
   const sleepSlider = document.getElementById('sleep_slider');
   const sleepValue = document.getElementById('sleep_value');
-  const sleepInput = document.getElementById('sleep_hours');
-  
-  if (sleepSlider && sleepInput && sleepValue) {
-    if (sleepInput.value) {
-      sleepSlider.value = sleepInput.value;
-      sleepValue.textContent = parseFloat(sleepInput.value).toFixed(1) + ' hrs';
+  const sleepHours = document.getElementById('sleep_hours');
+  if (sleepSlider && sleepHours && sleepValue) {
+    if (sleepHours.value) {
+      sleepSlider.value = sleepHours.value;
+      sleepValue.textContent = parseFloat(sleepHours.value).toFixed(1) + ' hrs';
     } else {
-      sleepInput.value = sleepSlider.value;
+      sleepHours.value = sleepSlider.value;
     }
-    
     sleepSlider.addEventListener('input', () => {
-      sleepInput.value = sleepSlider.value;
+      sleepHours.value = sleepSlider.value;
       sleepValue.textContent = parseFloat(sleepSlider.value).toFixed(1) + ' hrs';
     });
   }
 
-  // Stress Level button selection
-  // stressInput already declared in validation block above
+  // Stress buttons
   const stressBtns = document.querySelectorAll('.stress-btn-group .option-btn');
-  
-  if (stressInput && stressBtns.length) {
-    stressBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        stressBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        stressInput.value = btn.dataset.value;
-      });
+  stressBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      stressBtns.forEach(b => b.classList.remove('selected', 'active'));
+      btn.classList.add('selected', 'active');
+      if (stressInput) stressInput.value = btn.dataset.value;
+      if (window.DaytoneScene) window.DaytoneScene.pulse(1.1, 0.4);
     });
-    
-    if (stressInput.value) {
-      const activeBtn = document.querySelector(`.stress-btn-group .option-btn[data-value="${stressInput.value}"]`);
-      if (activeBtn) activeBtn.classList.add('active');
-    }
+  });
+  if (stressInput && stressInput.value) {
+    const activeStress = document.querySelector(`.stress-btn-group .option-btn[data-value="${stressInput.value}"]`);
+    if (activeStress) activeStress.classList.add('selected', 'active');
   }
 
-  // Social Interaction button selection
-  // socialInput already declared in validation block above
+  // Social buttons
   const socialBtns = document.querySelectorAll('.social-btn-group .option-btn');
-  
-  if (socialInput && socialBtns.length) {
-    socialBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        socialBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        socialInput.value = btn.dataset.value;
-      });
+  socialBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      socialBtns.forEach(b => b.classList.remove('selected', 'active'));
+      btn.classList.add('selected', 'active');
+      if (socialInput) socialInput.value = btn.dataset.value;
+      if (window.DaytoneScene) window.DaytoneScene.pulse(1.1, 0.4);
     });
-    
-    if (socialInput.value) {
-      const activeBtn = document.querySelector(`.social-btn-group .option-btn[data-value="${socialInput.value}"]`);
-      if (activeBtn) activeBtn.classList.add('active');
-    }
+  });
+  if (socialInput && socialInput.value) {
+    const activeSocial = document.querySelector(`.social-btn-group .option-btn[data-value="${socialInput.value}"]`);
+    if (activeSocial) activeSocial.classList.add('selected', 'active');
   }
 
-  // Custom switch card toggle
+  // Activity card toggle synchronization
   const activityCard = document.getElementById('activity_card');
-  const activityInput = document.getElementById('activity_done');
-  
-  if (activityCard && activityInput) {
-    // Initial sync
-    activityCard.classList.toggle('checked', activityInput.checked);
+  const activityDone = document.getElementById('activity_done');
+  if (activityCard && activityDone) {
+    const syncActivityUI = () => {
+      const isChecked = activityDone.checked;
+      activityCard.classList.toggle('is-active', isChecked);
+      activityCard.setAttribute('aria-checked', isChecked ? 'true' : 'false');
+    };
     
-    // Sync class on change
-    activityInput.addEventListener('change', () => {
-      activityCard.classList.toggle('checked', activityInput.checked);
+    // Initial sync
+    syncActivityUI();
+
+    activityCard.addEventListener('click', (e) => {
+      if (e.target !== activityDone) {
+        activityDone.checked = !activityDone.checked;
+      }
+      syncActivityUI();
+      if (window.DaytoneScene && activityDone.checked) {
+        window.DaytoneScene.pulse(1.15, 0.45);
+      }
     });
 
-    // Toggle checkbox when clicking the card background (avoiding clicking label/input directly to prevent double-toggling)
-    activityCard.addEventListener('click', (e) => {
-      if (e.target !== activityInput && !e.target.closest('label')) {
-        activityInput.checked = !activityInput.checked;
-        activityInput.dispatchEvent(new Event('change', { bubbles: true }));
+    activityDone.addEventListener('change', syncActivityUI);
+
+    activityCard.addEventListener('keydown', (e) => {
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        activityDone.checked = !activityDone.checked;
+        syncActivityUI();
+        if (window.DaytoneScene && activityDone.checked) {
+          window.DaytoneScene.pulse(1.15, 0.45);
+        }
       }
     });
   }
 
+  if (window.lucide) window.lucide.createIcons();
 });
 </script>
 {% endblock %}

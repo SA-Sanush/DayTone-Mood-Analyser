@@ -1,131 +1,200 @@
 {% extends "base.html" %}
 {% block title %}Privacy Policy — DayTone{% endblock %}
 {% block content %}
-<div class="container py-5" style="max-width:780px;">
+<div class="privacy-shell w-full max-w-5xl mx-auto py-4 space-y-6">
 
-  <div class="d-flex align-items-center gap-2 mb-2">
-    <i data-lucide="shield" style="width:22px;height:22px;color:var(--dt-primary)"></i>
-    <h1 style="font-size:1.6rem;font-weight:800;margin:0;">Privacy Policy</h1>
-  </div>
-  <p class="text-secondary mb-5" style="font-size:0.88rem;">
-    Effective date: <strong>June 2026</strong> &mdash;
-    Last updated: <strong>June 2026</strong>
-  </p>
-
-  <div class="panel elevated-panel p-4 mb-4">
-    <p style="font-size:0.95rem;line-height:1.75;margin:0;">
-      DayTone is a personal wellness tracking tool built for academic demonstration and individual use.
-      We take your privacy seriously. This policy explains what data we collect, how we use it, and
-      what rights you have.
-    </p>
-  </div>
-
-  <section class="mb-4">
-    <h2 style="font-size:1.1rem;font-weight:700;">1. What data we collect</h2>
-    <div class="panel p-3">
-      <ul style="line-height:1.9;margin:0;padding-left:1.25rem;">
-        <li><strong>Account information:</strong> your name and email address (required to create an account).</li>
-        <li><strong>Profile information:</strong> optional age, gender, and occupation you provide during registration.</li>
-        <li><strong>Daily mood logs:</strong> mood score, sleep hours, stress level, social interaction, physical activity, and an optional journal note (all self-reported).</li>
-        <li><strong>Sentiment score:</strong> a numeric sentiment value derived locally from your journal note using VADER — no text is transmitted externally.</li>
-        <li><strong>Burnout predictions:</strong> the AI-generated Low / Medium / High risk classification and associated confidence score.</li>
-      </ul>
+  <!-- ── Privacy Header Capsule ─────────────────────────────────────────── -->
+  <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-6 md:p-8 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5 flex flex-col md:flex-row md:items-center md:justify-between gap-5 animate-fade-in-up">
+    <div class="flex items-center gap-4">
+      <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-sky-500/25 flex-shrink-0">
+        <i data-lucide="shield" style="width: 26px; height: 26px;"></i>
+      </div>
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-sky-500/15 text-sky-700 dark:text-sky-300 border border-sky-500/25 mb-1.5 backdrop-blur-md">
+          <span class="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
+          <span>Security &amp; Data Governance</span>
+        </div>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white m-0 tracking-tight">Privacy Policy</h1>
+        <p class="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 m-0 mt-1">Effective Date: June 2026 &bull; Last Updated: June 2026</p>
+      </div>
     </div>
-  </section>
-
-  <section class="mb-4">
-    <h2 style="font-size:1.1rem;font-weight:700;">2. How your data is stored</h2>
-    <div class="panel p-3">
-      <ul style="line-height:1.9;margin:0;padding-left:1.25rem;">
-        <li>All data is stored in a local database (SQLite for development, PostgreSQL for production deployments).</li>
-        <li>Passwords are hashed using <strong>scrypt</strong> — we never store plaintext passwords.</li>
-        <li>Journal notes are <strong>encrypted at rest</strong> using Fernet symmetric encryption when the <code>ENCRYPTION_KEY</code> environment variable is configured.</li>
-        <li>Sessions are secured with HTTP-only cookies and CSRF protection on all state-changing forms.</li>
-      </ul>
-    </div>
-  </section>
-
-  <section class="mb-4">
-    <h2 style="font-size:1.1rem;font-weight:700;">3. How we use your data</h2>
-    <div class="panel p-3">
-      <ul style="line-height:1.9;margin:0;padding-left:1.25rem;">
-        <li>To provide your personal dashboard, charts, and burnout risk predictions.</li>
-        <li>To generate personalised wellness suggestions based on your log history.</li>
-        <li>To send optional daily check-in reminder emails — <strong>only if you opt in</strong> during registration or in Settings.</li>
-        <li>To allow administrators to monitor platform health and assist with technical issues.</li>
-      </ul>
-    </div>
-  </section>
-
-  <section class="mb-4">
-    <h2 style="font-size:1.1rem;font-weight:700;">4. What we do not do</h2>
-    <div class="panel p-3">
-      <ul style="line-height:1.9;margin:0;padding-left:1.25rem;">
-        <li>We <strong>never sell</strong> your personal data to third parties.</li>
-        <li>We <strong>do not share</strong> your individual data with advertisers, research firms, or any external organisation.</li>
-        <li>We <strong>do not use</strong> your data to train external AI models.</li>
-        <li>We <strong>do not process</strong> special-category health data — DayTone is a self-tracking tool, not a medical service.</li>
-      </ul>
-    </div>
-  </section>
-
-  <section class="mb-4">
-    <h2 style="font-size:1.1rem;font-weight:700;">5. Your rights</h2>
-    <div class="panel p-3">
-      <ul style="line-height:1.9;margin:0;padding-left:1.25rem;">
-        <li><strong>Access &amp; portability:</strong> Export all your data as a JSON file from <a href="{{ url_for('auth.profile') }}">Settings → Export data</a>.</li>
-        <li><strong>Rectification:</strong> Edit any mood log from the History page, or update your profile in Settings.</li>
-        <li><strong>Erasure (Right to be Forgotten):</strong> Delete your account and all associated data permanently from <a href="{{ url_for('auth.profile') }}">Settings → Delete account</a>. This action is irreversible.</li>
-      </ul>
-    </div>
-  </section>
-
-  <section class="mb-4">
-    <h2 style="font-size:1.1rem;font-weight:700;">6. Data retention</h2>
-    <div class="panel p-3">
-      <p style="margin:0;line-height:1.75;">
-        Your data is retained for as long as your account is active. When you delete your account,
-        all personal data (mood logs, notes, goals, burnout history, and profile) is permanently
-        removed from the database. Backup files, if any exist, are overwritten on the next scheduled cycle.
-      </p>
-    </div>
-  </section>
-
-  <section class="mb-4">
-    <h2 style="font-size:1.1rem;font-weight:700;">7. Not a medical service</h2>
-    <div class="panel p-3" style="border-left:4px solid var(--dt-accent,#f59e0b);">
-      <p style="margin:0;line-height:1.75;">
-        DayTone is an informational wellness tool. AI-generated burnout risk predictions are
-        <strong>not</strong> medical diagnoses. They should not replace professional mental health
-        support. If you are in distress, please reach out to a qualified professional or a crisis
-        helpline.
-      </p>
-    </div>
-  </section>
-
-  <section class="mb-5">
-    <h2 style="font-size:1.1rem;font-weight:700;">8. Contact</h2>
-    <div class="panel p-4 text-center">
-      <p class="text-secondary mb-3">Questions about this policy? Reach out directly via email.</p>
-      <a href="mailto:sasanush86@gmail.com" class="btn btn-outline-primary d-inline-flex align-items-center gap-2">
-        <i data-lucide="mail" style="width:16px;height:16px;"></i> Email sasanush86@gmail.com
+    <div class="flex items-center gap-3 self-start md:self-center flex-shrink-0">
+      <a href="{{ url_for('auth.terms') }}" class="daytone-btn-secondary daytone-btn-sm text-decoration-none whitespace-nowrap flex-shrink-0">
+        <i data-lucide="file-text" style="width: 14px; height: 14px;"></i>
+        <span>Terms</span>
       </a>
+      {% if current_user.is_authenticated %}
+      <a href="{{ url_for('mood.dashboard') }}" class="daytone-btn-secondary daytone-btn-sm text-decoration-none whitespace-nowrap flex-shrink-0">
+        <i data-lucide="arrow-left" style="width: 14px; height: 14px;"></i>
+        <span>Dashboard</span>
+      </a>
+      {% else %}
+      <a href="{{ url_for('auth.login') }}" class="daytone-btn-primary daytone-btn-sm text-decoration-none whitespace-nowrap flex-shrink-0">
+        <i data-lucide="log-in" style="width: 14px; height: 14px;"></i>
+        <span>Sign In</span>
+      </a>
+      {% endif %}
     </div>
-  </section>
+  </div>
 
-  <div class="d-flex gap-3 flex-wrap">
-    <a href="{{ url_for('auth.terms') }}" class="btn btn-outline-primary">
-      <i data-lucide="file-text"></i> Terms of Service
-    </a>
-    {% if current_user.is_authenticated %}
-    <a href="{{ url_for('mood.dashboard') }}" class="btn btn-glass">
-      <i data-lucide="layout-dashboard"></i> Dashboard
-    </a>
-    {% else %}
-    <a href="{{ url_for('auth.login') }}" class="btn btn-glass">
-      <i data-lucide="log-in"></i> Sign in
-    </a>
-    {% endif %}
+  <!-- ── Privacy Commitments Highlights Ribbon (4-Column Grid) ────────── -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in-up">
+    
+    <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-5 shadow-lg backdrop-blur-xl ring-1 ring-slate-900/5 space-y-2">
+      <div class="flex items-center gap-2.5 text-emerald-600 dark:text-emerald-400">
+        <div class="w-8 h-8 rounded-xl bg-emerald-500/15 flex items-center justify-center flex-shrink-0">
+          <i data-lucide="shield-check" style="width: 18px; height: 18px;"></i>
+        </div>
+        <span class="text-xs font-extrabold uppercase tracking-wider">Zero Sales</span>
+      </div>
+      <p class="text-xs font-semibold text-slate-700 dark:text-slate-300 m-0 leading-relaxed">
+        Zero third-party monetization. We never sell, lease, or broker your personal telemetry.
+      </p>
+    </div>
+
+    <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-5 shadow-lg backdrop-blur-xl ring-1 ring-slate-900/5 space-y-2">
+      <div class="flex items-center gap-2.5 text-sky-600 dark:text-sky-400">
+        <div class="w-8 h-8 rounded-xl bg-sky-500/15 flex items-center justify-center flex-shrink-0">
+          <i data-lucide="lock" style="width: 18px; height: 18px;"></i>
+        </div>
+        <span class="text-xs font-extrabold uppercase tracking-wider">Encrypted At Rest</span>
+      </div>
+      <p class="text-xs font-semibold text-slate-700 dark:text-slate-300 m-0 leading-relaxed">
+        Fernet symmetric encryption for notes at rest and salted scrypt password security.
+      </p>
+    </div>
+
+    <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-5 shadow-lg backdrop-blur-xl ring-1 ring-slate-900/5 space-y-2">
+      <div class="flex items-center gap-2.5 text-indigo-600 dark:text-indigo-400">
+        <div class="w-8 h-8 rounded-xl bg-indigo-500/15 flex items-center justify-center flex-shrink-0">
+          <i data-lucide="download" style="width: 18px; height: 18px;"></i>
+        </div>
+        <span class="text-xs font-extrabold uppercase tracking-wider">Export &amp; Erasure</span>
+      </div>
+      <p class="text-xs font-semibold text-slate-700 dark:text-slate-300 m-0 leading-relaxed">
+        Instant JSON download anytime and permanent one-click GDPR account purge.
+      </p>
+    </div>
+
+    <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-5 shadow-lg backdrop-blur-xl ring-1 ring-slate-900/5 space-y-2">
+      <div class="flex items-center gap-2.5 text-violet-600 dark:text-violet-400">
+        <div class="w-8 h-8 rounded-xl bg-violet-500/15 flex items-center justify-center flex-shrink-0">
+          <i data-lucide="cpu" style="width: 18px; height: 18px;"></i>
+        </div>
+        <span class="text-xs font-extrabold uppercase tracking-wider">Local AI Compute</span>
+      </div>
+      <p class="text-xs font-semibold text-slate-700 dark:text-slate-300 m-0 leading-relaxed">
+        Local VADER sentiment execution without sending your reflections to external LLMs.
+      </p>
+    </div>
+
+  </div>
+
+  <!-- ── Master Privacy Document (Full Corridor Width Parchment) ──────── -->
+  <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-6 md:p-10 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5 space-y-8 animate-fade-in-up">
+    
+    <!-- Introduction -->
+    <section class="space-y-2 pb-6 border-b border-slate-200/40 dark:border-white/10">
+      <h2 class="text-lg font-extrabold text-slate-900 dark:text-white m-0">Introduction</h2>
+      <p class="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 leading-relaxed m-0">
+        DayTone is a personal wellness tracking sanctuary built for individual reflection and academic demonstration.
+        We treat your personal telemetry with strict confidentiality. This policy outlines our data collection,
+        cryptographic storage, usage boundaries, and user autonomy mechanisms.
+      </p>
+    </section>
+
+    <!-- 1. What data we collect -->
+    <section class="space-y-3 pb-6 border-b border-slate-200/40 dark:border-white/10">
+      <h2 class="text-base font-extrabold text-slate-900 dark:text-white m-0">1. What Data We Collect</h2>
+      <ul class="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 space-y-2 list-disc pl-5 m-0 leading-relaxed">
+        <li><strong>Account Information:</strong> Your display name and email address, required to register and authenticate.</li>
+        <li><strong>Profile Data:</strong> Optional demographic attributes (age, gender, and occupation) provided voluntarily during onboarding or in Settings.</li>
+        <li><strong>Daily Mood Logs:</strong> Self-reported ratings for mood score, sleep duration, stress levels, social interaction, physical activity, and optional personal journal notes.</li>
+        <li><strong>Sentiment Score:</strong> A local mathematical polarity score calculated locally from journal text using VADER — no text is ever transmitted to external NLP APIs.</li>
+        <li><strong>Burnout Projections:</strong> The AI-computed risk tier (<strong class="text-emerald-600 dark:text-emerald-400">Low</strong>, <strong class="text-amber-600 dark:text-amber-400">Medium</strong>, or <strong class="text-rose-600 dark:text-rose-400">High</strong>) and associated model confidence scores.</li>
+      </ul>
+    </section>
+
+    <!-- 2. How your data is stored -->
+    <section class="space-y-3 pb-6 border-b border-slate-200/40 dark:border-white/10">
+      <h2 class="text-base font-extrabold text-slate-900 dark:text-white m-0">2. Storage &amp; Cryptographic Standards</h2>
+      <ul class="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 space-y-2 list-disc pl-5 m-0 leading-relaxed">
+        <li><strong>Database Storage:</strong> Telemetry is held within isolated database tables with foreign-key referential integrity.</li>
+        <li><strong>Password Hashing:</strong> Credentials are encrypted with salted <strong>scrypt</strong> hashes — plaintext passwords never touch disk.</li>
+        <li><strong>Encrypted Notes:</strong> Journal entries are encrypted at rest using Fernet symmetric encryption when the application key is configured.</li>
+        <li><strong>Secure Sessions:</strong> Authentication sessions use HTTP-only, SameSite cookies with mandatory CSRF token validation on all state-altering endpoints.</li>
+      </ul>
+    </section>
+
+    <!-- 3. How we use your data -->
+    <section class="space-y-3 pb-6 border-b border-slate-200/40 dark:border-white/10">
+      <h2 class="text-base font-extrabold text-slate-900 dark:text-white m-0">3. How We Use Your Data</h2>
+      <ul class="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 space-y-2 list-disc pl-5 m-0 leading-relaxed">
+        <li>To display circadian trends, interactive charts, and real-time 3D mood orb shader dynamics.</li>
+        <li>To calculate rolling average goal completions and historical progress baselines.</li>
+        <li>To generate client-side wellness reflections and burnout prevention suggestions.</li>
+        <li>To send optional daily check-in reminders — strictly if you explicitly toggle reminders on.</li>
+        <li>To support platform health diagnostics and error auditing by verified administrators.</li>
+      </ul>
+    </section>
+
+    <!-- 4. What we do not do -->
+    <section class="space-y-3 pb-6 border-b border-slate-200/40 dark:border-white/10">
+      <h2 class="text-base font-extrabold text-slate-900 dark:text-white m-0">4. Prohibitions &amp; Data Protection Guarantees</h2>
+      <ul class="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 space-y-2 list-disc pl-5 m-0 leading-relaxed">
+        <li>We <strong>never sell, lease, or monetize</strong> your personal telemetry with third parties.</li>
+        <li>We <strong>do not broker data</strong> with advertising networks or commercial brokers.</li>
+        <li>We <strong>never feed your private journals</strong> into public machine learning models.</li>
+        <li>We <strong>do not process clinical medical records</strong> — DayTone remains a personal reflection companion.</li>
+      </ul>
+    </section>
+
+    <!-- 5. Your rights -->
+    <section class="space-y-3 pb-6 border-b border-slate-200/40 dark:border-white/10">
+      <h2 class="text-base font-extrabold text-slate-900 dark:text-white m-0">5. User Autonomy &amp; Data Rights</h2>
+      <ul class="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 space-y-2 list-disc pl-5 m-0 leading-relaxed">
+        <li><strong>Right of Access &amp; Portability:</strong> Export your full personal telemetry as a standardized JSON package anytime under <a href="{{ url_for('auth.profile') }}" class="font-bold underline text-sky-600 dark:text-sky-400">Settings &rarr; Export Data</a>.</li>
+        <li><strong>Right to Rectification:</strong> Edit or recalibrate any previous check-in entry from the History portal, or update your demographic profile in Settings.</li>
+        <li><strong>Right to Erasure (Right to Be Forgotten):</strong> Delete your entire profile, logs, notes, goals, and credentials permanently under <a href="{{ url_for('auth.profile') }}" class="font-bold underline text-rose-600 dark:text-rose-400">Settings &rarr; Delete Account</a>. All records are purged immediately.</li>
+      </ul>
+    </section>
+
+    <!-- 6. Data retention -->
+    <section class="space-y-3 pb-6 border-b border-slate-200/40 dark:border-white/10">
+      <h2 class="text-base font-extrabold text-slate-900 dark:text-white m-0">6. Data Retention Policy</h2>
+      <p class="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 leading-relaxed m-0">
+        Your telemetry is preserved exclusively for the lifespan of your active account. When you initiate account deletion,
+        all associated data rows cascade and are permanently destroyed from our live datastore.
+      </p>
+    </section>
+
+    <!-- 7. Not a medical service -->
+    <section>
+      <div class="rounded-2xl border border-amber-500/30 bg-amber-500/10 dark:bg-amber-950/20 p-5 shadow-sm backdrop-blur-md space-y-2">
+        <div class="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+          <i data-lucide="alert-triangle" style="width: 18px; height: 18px;"></i>
+          <h2 class="text-xs font-extrabold uppercase tracking-wider m-0">7. Non-Clinical Wellness Tool Disclaimer</h2>
+        </div>
+        <p class="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 leading-relaxed m-0">
+          DayTone is an informational wellness self-tracking platform. AI-computed burnout risk classifications
+          are <strong>not clinical or psychiatric diagnoses</strong> and must never replace licensed medical evaluations.
+          If you are experiencing acute distress, please reach out to qualified healthcare providers or 24/7 crisis helplines.
+        </p>
+      </div>
+    </section>
+
+    <!-- 8. Contact & Inquiries -->
+    <section class="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div class="space-y-1">
+        <h2 class="text-sm font-extrabold text-slate-900 dark:text-white m-0">8. Privacy Inquiries &amp; Support</h2>
+        <p class="text-xs font-semibold text-slate-600 dark:text-slate-300 m-0">Questions regarding data protection or rights? Reach out directly.</p>
+      </div>
+      <a href="{{ url_for('auth.contact') }}" class="daytone-btn-secondary daytone-btn-sm text-decoration-none flex-shrink-0">
+        <i data-lucide="mail" style="width: 14px; height: 14px;"></i>
+        <span>Contact Desk</span>
+      </a>
+    </section>
+
   </div>
 
 </div>

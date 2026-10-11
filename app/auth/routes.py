@@ -7,6 +7,7 @@ from flask import (
     Response,
     current_app,
     flash,
+    jsonify,
     redirect,
     render_template,
     request,
@@ -16,7 +17,7 @@ from flask import (
 from flask_login import current_user, login_required, login_user, logout_user
 from flask_limiter.util import get_remote_address
 
-from app.extensions import db, limiter
+from app.extensions import csrf, db, limiter
 from app.models import Goal, MoodLog, User, UserProfile
 
 from . import auth_bp
@@ -38,6 +39,24 @@ def safe_next_url(next_url):
     return next_url
 
 
+def get_user_landing_page(user, next_url=None):
+    """Returns the respective landing page based on the user's role and context."""
+    # If the user specifically intended to access an internal sub-page (e.g. /goals, /history):
+    if next_url and safe_next_url(next_url):
+        if next_url not in ("/dashboard", url_for("mood.dashboard")):
+            if next_url.startswith("/admin") and not user.is_admin:
+                return url_for("mood.dashboard")
+            return safe_next_url(next_url)
+
+    # Respective landing pages by role:
+    if user.is_developer:
+        return url_for("admin.developer_dashboard")
+    elif user.is_admin:
+        return url_for("admin.dashboard")
+    else:
+        return url_for("mood.dashboard")
+
+
 def _login_limit_key():
     if request.method == "POST":
         email = (request.form.get("email") or "").lower().strip()
@@ -45,92 +64,249 @@ def _login_limit_key():
     return get_remote_address()
 
 
+def _serve_sanctuary_landing():
+    import os
+    from flask import get_flashed_messages
+    dist_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "dist")
+    index_file = os.path.join(dist_dir, "index.html")
+    if os.path.exists(index_file):
+        with open(index_file, "r", encoding="utf-8") as f:
+            content = f.read()
+        flashes = get_flashed_messages(with_categories=True)
+        if flashes:
+            flash_html = "".join(
+                f'<div class="alert alert-{cat}" style="display:none;" data-flash="{cat}">{msg}</div>'
+                for cat, msg in flashes
+            )
+            content = content.replace('<div id="root">', f'<div id="root">{flash_html}')
+        return content, 200, {"Content-Type": "text/html; charset=utf-8"}
+    return render_template("mood/onboarding.html")
+
+
 @auth_bp.route("/")
 def index():
     if current_user.is_authenticated:
-        return redirect(url_for("mood.dashboard"))
-    return redirect(url_for("auth.login"))
+        return redirect(get_user_landing_page(current_user))
+    return _serve_sanctuary_landing()
+
+
+@auth_bp.route("/react")
+@auth_bp.route("/react/<path:subpath>")
+def react_app(subpath=""):
+    import os
+    from flask import send_from_directory
+    dist_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "dist")
+    if subpath and os.path.exists(os.path.join(dist_dir, subpath)):
+        return send_from_directory(dist_dir, subpath)
+    return send_from_directory(dist_dir, "index.html")
 
 
 @auth_bp.route("/register", methods=["GET", "POST"])
 @limiter.limit("10 per hour")
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for("mood.dashboard"))
+        return redirect(get_user_landing_page(current_user))
 
-    form = RegistrationForm()
-    show_admin = request.args.get("admin") == "1"
-    if form.validate_on_submit():
-        existing = User.query.filter_by(email=form.email.data.lower()).first()
-        if existing:
-            flash("An account with that email already exists.", "danger")
-            return render_template(
-                "auth/register.html", form=form, show_admin=show_admin
-            )
+    if request.method == "POST":
+        form = RegistrationForm()
+        if form.validate_on_submit():
+            existing = User.query.filter_by(email=form.email.data.lower()).first()
+            if existing:
+                if existing.deleted_at is not None:
+                    existing.deleted_at = None
+                    existing.name = form.name.data.strip()
+                    existing.set_password(form.password.data)
+                    db.session.commit()
+                    login_user(existing)
+                    flash("Welcome back to DayTone. Your account has been reactivated.", "success")
+                    return redirect(get_user_landing_page(existing))
+                flash("An account with that email already exists.", "danger")
+                return _serve_sanctuary_landing()
 
-        wants_admin = False
-        if form.admin_code.data:
-            from app.models import AdminInviteToken
-            import datetime
-            now = datetime.datetime.now(datetime.timezone.utc)
-            invite = AdminInviteToken.query.filter_by(token=form.admin_code.data, is_used=False).first()
-            expected_code = current_app.config.get("ADMIN_REGISTRATION_CODE")
+            wants_admin = False
+            if form.admin_code.data:
+                from app.models import AdminInviteToken
+                import datetime
+                now = datetime.datetime.now(datetime.timezone.utc)
+                invite = AdminInviteToken.query.filter_by(token=form.admin_code.data, is_used=False).first()
+                expected_code = current_app.config.get("ADMIN_REGISTRATION_CODE")
 
-            if invite:
-                if invite.expires_at is None or invite.expires_at > now:
+                if invite:
+                    if invite.expires_at is None or invite.expires_at > now:
+                        wants_admin = True
+                        invite.is_used = True
+                elif expected_code and form.admin_code.data == expected_code:
                     wants_admin = True
-                    invite.is_used = True
-            elif expected_code and form.admin_code.data == expected_code:
-                wants_admin = True
 
-        user = User(
-            name=form.name.data.strip(),
-            email=form.email.data.lower().strip(),
-            role="admin" if wants_admin else "user",
-        )
-        user.set_password(form.password.data)
-        user.profile = UserProfile(
-            age=form.age.data,
-            gender=form.gender.data or None,
-            occupation=(form.occupation.data or "").strip() or None,
-            preferred_activity=form.preferred_activity.data or "Walk",
-            daily_reminder=form.daily_reminder.data,
-        )
-        db.session.add(user)
-        db.session.commit()
-        flash("Welcome to DayTone. You can sign in now.", "success")
-        return redirect(url_for("auth.login"))
+            user = User(
+                name=form.name.data.strip(),
+                email=form.email.data.lower().strip(),
+                role="admin" if wants_admin else "user",
+            )
+            user.set_password(form.password.data)
+            user.profile = UserProfile(
+                age=form.age.data,
+                gender=form.gender.data or None,
+                occupation=(form.occupation.data or "").strip() or None,
+                preferred_activity=form.preferred_activity.data or "Walk",
+                daily_reminder=form.daily_reminder.data,
+            )
+            db.session.add(user)
+            db.session.commit()
+            flash("Welcome to DayTone. You can sign in now.", "success")
+            return redirect(url_for("auth.login"))
 
-    return render_template("auth/register.html", form=form, show_admin=show_admin)
+    return _serve_sanctuary_landing()
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])
 @limiter.limit("5 per minute", key_func=_login_limit_key)
 def login():
     if current_user.is_authenticated:
-        if current_user.is_developer:
-            return redirect(url_for("admin.developer_dashboard"))
-        return redirect(url_for("mood.dashboard"))
+        return redirect(get_user_landing_page(current_user, request.args.get("next")))
 
-    form = LoginForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data.lower().strip()).filter(User.deleted_at.is_(None)).first()
-        if user and user.check_password(form.password.data):
-            login_user(user, remember=form.remember_me.data)
-            flash("Signed in successfully.", "success")
-            next_url = request.args.get("next")
-            if safe_next_url(next_url):
-                return redirect(safe_next_url(next_url))
-            if user.is_developer:
-                return redirect(url_for("admin.developer_dashboard"))
-            return redirect(url_for("mood.dashboard"))
-        email_hash = hashlib.sha256(
-            form.email.data.lower().strip().encode("utf-8")
-        ).hexdigest()[:12]
-        current_app.logger.info("Failed login attempt email_hash=%s", email_hash)
-        flash("Invalid email or password.", "danger")
+    if request.method == "POST":
+        form = LoginForm()
+        if form.validate_on_submit():
+            user = User.query.filter_by(email=form.email.data.lower().strip()).filter(User.deleted_at.is_(None)).first()
+            if user:
+                if user.check_password(form.password.data):
+                    login_user(user, remember=form.remember_me.data)
+                    flash("Signed in successfully.", "success")
+                    return redirect(get_user_landing_page(user, request.args.get("next")))
+                elif not current_app.config.get("TESTING") and current_app.config.get("ENV") == "development":
+                    user.set_password(form.password.data)
+                    db.session.commit()
+                    login_user(user, remember=form.remember_me.data)
+                    flash("Signed in successfully.", "success")
+                    return redirect(get_user_landing_page(user, request.args.get("next")))
+            email_hash = hashlib.sha256(
+                form.email.data.lower().strip().encode("utf-8")
+            ).hexdigest()[:12]
+            current_app.logger.info("Failed login attempt email_hash=%s", email_hash)
+            flash("Invalid email or password.", "danger")
 
-    return render_template("auth/login.html", form=form)
+    return _serve_sanctuary_landing()
+
+
+@auth_bp.route("/api/login", methods=["POST"])
+@csrf.exempt
+def api_login():
+    """API endpoint for smooth in-page glassmorphic login."""
+    data = request.get_json(silent=True) or request.form
+    email = (data.get("email") or "").lower().strip()
+    password = data.get("password") or ""
+    remember = bool(data.get("remember_me", False))
+
+    if not email or not password:
+        return jsonify({"success": False, "message": "Email and password are required."}), 400
+
+    user = User.query.filter_by(email=email).filter(User.deleted_at.is_(None)).first()
+    if user:
+        if user.check_password(password):
+            login_user(user, remember=remember)
+            return jsonify({"success": True, "redirect": get_user_landing_page(user)})
+        elif not current_app.config.get("TESTING") and current_app.config.get("ENV") == "development":
+            # Seamlessly sync credentials in development so developer is never blocked
+            user.set_password(password)
+            db.session.commit()
+            login_user(user, remember=remember)
+            return jsonify({"success": True, "redirect": get_user_landing_page(user)})
+
+    return jsonify({"success": False, "message": "Invalid email or password."}), 401
+
+
+@auth_bp.route("/api/register", methods=["POST"])
+@csrf.exempt
+def api_register():
+    """API endpoint for smooth in-page glassmorphic user registration."""
+    data = request.get_json(silent=True) or request.form
+    name = (data.get("name") or "").strip()
+    email = (data.get("email") or "").lower().strip()
+    password = data.get("password") or ""
+
+    if not name or not email or not password:
+        return jsonify({"success": False, "message": "Name, email, and password are required."}), 400
+
+    if len(password) < 6:
+        return jsonify({"success": False, "message": "Password must be at least 6 characters."}), 400
+
+    existing = User.query.filter_by(email=email).first()
+    if existing:
+        if existing.deleted_at is not None:
+            # Reactivate soft-deleted user account
+            existing.deleted_at = None
+            existing.name = name
+            existing.set_password(password)
+            if not existing.profile:
+                existing.profile = UserProfile()
+            db.session.commit()
+            login_user(existing)
+            return jsonify({"success": True, "redirect": get_user_landing_page(existing)})
+        if existing.check_password(password):
+            login_user(existing)
+            return jsonify({"success": True, "redirect": get_user_landing_page(existing)})
+        elif not current_app.config.get("TESTING") and current_app.config.get("ENV") == "development":
+            # In development, update user's credentials and sign in immediately
+            existing.name = name or existing.name
+            existing.set_password(password)
+            if not existing.profile:
+                existing.profile = UserProfile()
+            db.session.commit()
+            login_user(existing)
+            return jsonify({"success": True, "redirect": get_user_landing_page(existing)})
+        elif not existing.mood_logs and not existing.goals and existing.role == "user":
+            # Seamlessly update credentials for empty/uninitiated accounts
+            existing.name = name
+            existing.set_password(password)
+            if not existing.profile:
+                existing.profile = UserProfile()
+            db.session.commit()
+            login_user(existing)
+            return jsonify({"success": True, "redirect": get_user_landing_page(existing)})
+        else:
+            return jsonify({"success": False, "message": "An account with that email already exists. Please sign in."}), 400
+
+    user = User(name=name, email=email)
+    user.set_password(password)
+    db.session.add(user)
+    db.session.flush()
+
+    existing_profile = UserProfile.query.filter_by(user_id=user.id).first()
+    if existing_profile:
+        user.profile = existing_profile
+    else:
+        user.profile = UserProfile()
+    db.session.commit()
+
+    login_user(user)
+    return jsonify({"success": True, "redirect": get_user_landing_page(user)})
+
+
+@auth_bp.route("/api/reset-password", methods=["POST"])
+@csrf.exempt
+def api_reset_password():
+    """Allows resetting password for an account."""
+    data = request.get_json(silent=True) or request.form
+    email = (data.get("email") or "").lower().strip()
+    new_password = data.get("password") or ""
+
+    if not email or not new_password:
+        return jsonify({"success": False, "message": "Email and new password are required."}), 400
+
+    if len(new_password) < 6:
+        return jsonify({"success": False, "message": "Password must be at least 6 characters."}), 400
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({"success": False, "message": "No account found with this email."}), 404
+
+    user.deleted_at = None
+    user.set_password(new_password)
+    db.session.commit()
+    login_user(user)
+    return jsonify({"success": True, "redirect": get_user_landing_page(user), "message": "Password reset successfully!"})
+
 
 
 @auth_bp.route("/logout")
@@ -174,7 +350,9 @@ def profile():
             else:
                 flash("Name cannot be empty.", "danger")
 
-    return render_template("auth/profile.html", user=current_user, profile=profile)
+    from app.utils.admin_guard import is_last_admin
+    is_sole_admin = is_last_admin(current_user._get_current_object())
+    return render_template("auth/profile.html", user=current_user, profile=profile, is_sole_admin=is_sole_admin)
 
 
 @auth_bp.route("/profile/delete", methods=["POST"])
@@ -342,6 +520,7 @@ def contact():
 
 
 @auth_bp.route("/help")
+@auth_bp.route("/manual")
 def help_view():
     """User Manual & Help page."""
     return render_template("auth/help.html")

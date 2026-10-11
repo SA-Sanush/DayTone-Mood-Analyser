@@ -1,21 +1,32 @@
 {% extends "base.html" %}
 {% block title %}Wellness Goals — DayTone{% endblock %}
 {% block content %}
-<div class="goals-shell">
-  <div class="goals-page-header">
+<div class="goals-shell w-full max-w-5xl mx-auto py-4 space-y-6">
+
+  <!-- 1. Unified Page Header Glass Card -->
+  <div class="page-head rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-6 md:p-8 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
     <div>
-      <h1 class="mb-1"><i data-lucide="target" style="width:28px;height:28px;color:var(--dt-primary);vertical-align:middle"></i> Wellness Goals</h1>
-      <p class="text-secondary mb-0">Set personal targets and watch your progress grow day by day.</p>
+      <div class="inline-flex items-center gap-2 rounded-full border border-sky-400/30 bg-sky-500/10 px-3 py-1 text-xs font-bold text-sky-700 dark:text-sky-300 mb-2.5">
+        <span class="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
+        Target &amp; Habit Orbit
+      </div>
+      <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white" style="font-family: var(--font-display);">Wellness Goals</h1>
+      <p class="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 m-0 leading-normal">
+        Set personal targets and watch your progress grow day by day.
+      </p>
     </div>
-    <a href="{{ url_for('mood.dashboard') }}" class="btn btn-sm btn-outline-secondary">
-      <i data-lucide="arrow-left"></i> Back to Dashboard
-    </a>
+    <div class="flex items-center gap-3">
+      <a href="{{ url_for('mood.dashboard') }}" class="daytone-btn-secondary daytone-btn-sm inline-flex items-center gap-2 text-xs font-bold px-4 rounded-full text-decoration-none shadow-sm">
+        <i data-lucide="arrow-left" style="width: 15px; height: 15px;"></i>
+        <span>Back to Dashboard</span>
+      </a>
+    </div>
   </div>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       {% for category, message in messages %}
-      <div class="alert alert-{{ category }} alert-dismissible fade show mt-3" role="alert">
+      <div class="alert alert-{{ category }} alert-dismissible fade show rounded-2xl border border-white/40 bg-white/30 dark:bg-slate-800/50 backdrop-blur-md shadow-md text-xs font-semibold" role="alert">
         {{ message }}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
       </div>
@@ -23,21 +34,23 @@
     {% endif %}
   {% endwith %}
 
-  <div class="goals-layout">
+  <!-- 2. Goals Main Layout (Two-Column Symmetrical Grid) -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-    <!-- ── Create New Goal ─────────────────────────────────────────────────── -->
-    <div class="panel create-goal-panel">
-      <div class="panel-title mb-3">
-        <i data-lucide="plus-circle"></i>
-        <h2>Create a Goal</h2>
+    <!-- ── Left Column: Create New Goal Card ─────────────────────────────────── -->
+    <div class="lg:col-span-5 rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-6 md:p-7 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5 space-y-4">
+      <div class="flex items-center gap-2 pb-3 border-b border-slate-200/40 dark:border-white/10">
+        <i data-lucide="plus-circle" class="text-sky-500" style="width: 18px; height: 18px;"></i>
+        <h2 class="text-base font-extrabold text-slate-900 dark:text-white m-0">Create a Goal</h2>
       </div>
-      <form method="post" action="{{ url_for('mood.goals') }}" id="createGoalForm">
+
+      <form method="post" action="{{ url_for('mood.goals') }}" id="createGoalForm" class="space-y-4">
         <input type="hidden" name="action" value="create">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        <div class="mb-3">
-          <label for="target_type" class="form-label">Goal Type</label>
-          <select name="target_type" id="target_type" class="form-select dt-select" required>
+        <div>
+          <label for="target_type" class="block text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-1.5">Goal Type</label>
+          <select name="target_type" id="target_type" class="w-full text-xs sm:text-sm font-semibold py-2.5 px-3.5 rounded-2xl border border-white/60 dark:border-white/15 bg-white/60 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/40 backdrop-blur-md cursor-pointer transition shadow-xs" required>
             <option value="" disabled selected>Select a goal type…</option>
             <option value="sleep">Sleep Duration (avg hrs/night)</option>
             <option value="mood">Average Mood Score (/5)</option>
@@ -47,106 +60,135 @@
           </select>
         </div>
 
-        <div class="mb-3">
-          <label for="target_value" class="form-label" id="targetValueLabel">Target Value</label>
-          <input type="number" name="target_value" id="target_value" class="form-control dt-input"
+        <div>
+          <label for="target_value" class="block text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-1.5" id="targetValueLabel">Target Value</label>
+          <input type="number" name="target_value" id="target_value" class="w-full text-xs sm:text-sm font-semibold py-2.5 px-3.5 rounded-2xl border border-white/60 dark:border-white/15 bg-white/60 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/40 backdrop-blur-md transition shadow-xs"
                  step="0.1" min="0" max="24" required placeholder="e.g. 7.5">
-          <small class="text-secondary" id="targetValueHint">Set your desired level.</small>
+          <small class="text-xs font-semibold text-slate-600 dark:text-slate-400 mt-1 block" id="targetValueHint">Set your desired level.</small>
         </div>
 
-        <button type="submit" class="btn btn-primary w-100">
-          <i data-lucide="plus"></i> Set Goal
+        <button type="submit" class="daytone-btn-primary w-full py-2.5 rounded-full text-xs font-bold inline-flex items-center justify-center gap-2 shadow-md">
+          <i data-lucide="plus" style="width: 15px; height: 15px;"></i>
+          <span>Set Goal</span>
         </button>
       </form>
     </div>
 
-    <!-- ── Active Goals ─────────────────────────────────────────────────────── -->
-    <div class="active-goals-section">
-      <h2 class="goals-section-title">Active Goals</h2>
-      {% if goals_with_progress %}
-      <div class="goals-cards-grid">
-        {% for goal, progress in goals_with_progress %}
-        <div class="goal-page-card panel {% if progress.status == 'achieved' %}goal-achieved{% endif %}">
-          <div class="goal-page-card-top">
-            <span class="goal-type-label">{{ goal.display_name }}</span>
-            <span class="goal-status-badge status-{{ progress.status }}">
-              {{ progress.status|replace('_',' ')|title }}
-            </span>
+    <!-- ── Right Column: Active Goals Card (Symmetrical Alignment) ──────────── -->
+    <div class="lg:col-span-7 space-y-6">
+      <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-6 md:p-7 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5 space-y-5">
+        <!-- Card Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-slate-200/40 dark:border-white/10">
+          <div class="flex items-center gap-2">
+            <i data-lucide="compass" class="text-sky-500" style="width: 18px; height: 18px;"></i>
+            <h2 class="text-base font-extrabold text-slate-900 dark:text-white m-0">Active Goals</h2>
           </div>
+          <span class="text-xs font-bold text-slate-700 dark:text-slate-300 px-2.5 py-0.5 rounded-full bg-white/40 dark:bg-white/10 border border-white/50 dark:border-white/10 shadow-xs">
+            {{ goals_with_progress|length }} Active
+          </span>
+        </div>
 
-          <!-- Progress bar -->
-          <div class="goal-progress-track">
-            <div class="goal-progress-fill" style="--goal-pct: {{ progress.pct }}%"></div>
-          </div>
-          <div class="goal-progress-labels">
-            <span>{{ progress.current_value }} {{ goal.unit }}</span>
-            <span class="text-secondary">{{ progress.pct }}%</span>
-            <span>{{ goal.target_value }} {{ goal.unit }}</span>
-          </div>
+        {% if goals_with_progress %}
+          <div class="space-y-4">
+            {% for goal, progress in goals_with_progress %}
+              <div class="rounded-2xl border border-white/60 dark:border-white/10 bg-white/30 dark:bg-slate-800/40 p-4 shadow-sm backdrop-blur-md space-y-2.5 transition hover:shadow-md">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-sm font-extrabold text-slate-900 dark:text-white">{{ goal.display_name }}</span>
+                  <span class="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full border {% if progress.status == 'achieved' %}border-emerald-500/30 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300{% elif progress.status == 'on_track' %}border-sky-500/30 bg-sky-500/15 text-sky-700 dark:text-sky-300{% else %}border-rose-500/30 bg-rose-500/15 text-rose-700 dark:text-rose-300{% endif %}">
+                    {{ progress.status|replace('_',' ')|title }}
+                  </span>
+                </div>
 
-          <div class="goal-card-actions">
-            <small class="text-secondary">Started {{ goal.start_date.strftime('%b %d') }}</small>
-            <div class="d-flex gap-2">
-              <form method="post" action="{{ url_for('mood.goals') }}" style="display:inline">
-                <input type="hidden" name="action" value="complete">
-                <input type="hidden" name="goal_id" value="{{ goal.id }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-xs btn-outline-success" title="Mark as completed">
-                  <i data-lucide="check"></i>
-                </button>
-              </form>
-              <form method="post" action="{{ url_for('mood.goals') }}" style="display:inline">
-                <input type="hidden" name="action" value="delete">
-                <input type="hidden" name="goal_id" value="{{ goal.id }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-xs btn-outline-danger" title="Remove goal"
-                        onclick="return confirm('Remove this goal?')">
-                  <i data-lucide="trash-2"></i>
-                </button>
-              </form>
+                <!-- Progress Bar Track -->
+                <div class="w-full h-2 rounded-full bg-slate-200/60 dark:bg-white/10 overflow-hidden">
+                  <div class="h-full rounded-full bg-gradient-to-r from-sky-500 to-indigo-600 transition-all duration-700" style="width: {{ progress.pct }}%;"></div>
+                </div>
+
+                <div class="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <span>{{ progress.current_value }} {{ goal.unit }}</span>
+                  <span class="text-sky-600 dark:text-sky-400 font-extrabold">{{ progress.pct }}%</span>
+                  <span class="text-slate-600 dark:text-slate-400 font-semibold">Target: {{ goal.target_value }} {{ goal.unit }}</span>
+                </div>
+
+                <div class="flex items-center justify-between pt-2 border-t border-slate-200/30 dark:border-white/10">
+                  <small class="text-xs font-semibold text-slate-600 dark:text-slate-400">Started {{ goal.start_date.strftime('%b %d') }}</small>
+                  <div class="flex items-center gap-1.5">
+                    <form method="post" action="{{ url_for('mood.goals') }}" style="display:inline">
+                      <input type="hidden" name="action" value="complete">
+                      <input type="hidden" name="goal_id" value="{{ goal.id }}">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="p-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition cursor-pointer" title="Mark as completed">
+                        <i data-lucide="check" style="width: 13px; height: 13px;"></i>
+                      </button>
+                    </form>
+                    <form method="post" action="{{ url_for('mood.goals') }}" style="display:inline">
+                      <input type="hidden" name="action" value="delete">
+                      <input type="hidden" name="goal_id" value="{{ goal.id }}">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="p-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 transition cursor-pointer" title="Remove goal" onclick="return confirm('Remove this goal?')">
+                        <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i>
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <!-- Elevated Empty State Inside Card -->
+          <div class="py-8 md:py-12 text-center flex flex-col items-center justify-center">
+            <div class="w-14 h-14 rounded-2xl bg-sky-500/10 dark:bg-sky-400/10 border border-sky-400/25 flex items-center justify-center text-sky-600 dark:text-sky-400 mb-3.5 shadow-inner">
+              <i data-lucide="target" style="width: 28px; height: 28px;"></i>
             </div>
+            <h3 class="text-base font-extrabold text-slate-900 dark:text-white mb-1.5">No active goals yet</h3>
+            <p class="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 max-w-sm mb-0 leading-normal">
+              Establish your target metrics on the left to activate longitudinal wellness tracking.
+            </p>
           </div>
-        </div>
-        {% endfor %}
+        {% endif %}
       </div>
-      {% else %}
-      <div class="goals-empty">
-        <i data-lucide="target" style="width:40px;height:40px;opacity:0.3"></i>
-        <p class="text-secondary">No active goals yet. Create your first goal above.</p>
-      </div>
-      {% endif %}
 
-      <!-- ── Completed Goals ────────────────────────────────────────────────── -->
+      <!-- Completed Goals Card (if present) -->
       {% if completed_goals %}
-      <h2 class="goals-section-title mt-4">Completed Goals</h2>
-      <div class="goals-cards-grid">
-        {% for goal in completed_goals %}
-        <div class="goal-page-card panel goal-completed-card">
-          <div class="goal-page-card-top">
-            <span class="goal-type-label" style="text-decoration:line-through;opacity:0.6">{{ goal.display_name }}</span>
-            <span class="goal-status-badge status-achieved">
-              <i data-lucide="check-circle" style="width:12px;height:12px"></i> Done
+        <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/15 dark:bg-slate-900/40 p-6 shadow-lg backdrop-blur-xl ring-1 ring-slate-900/5 space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-200/40 dark:border-white/10">
+            <div class="flex items-center gap-2">
+              <i data-lucide="check-circle" class="text-emerald-500" style="width: 18px; height: 18px;"></i>
+              <h2 class="text-base font-extrabold text-slate-900 dark:text-white m-0">Completed Goals</h2>
+            </div>
+            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 px-2.5 py-0.5 rounded-full bg-white/40 dark:bg-white/10 border border-white/50 dark:border-white/10 shadow-xs">
+              {{ completed_goals|length }} Done
             </span>
           </div>
-          <small class="text-secondary">Completed · Target was {{ goal.target_value }} {{ goal.unit }}</small>
-          <div class="mt-2">
-            <form method="post" action="{{ url_for('mood.goals') }}" style="display:inline">
-              <input type="hidden" name="action" value="delete">
-              <input type="hidden" name="goal_id" value="{{ goal.id }}">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button type="submit" class="btn btn-xs btn-outline-secondary" title="Remove"
-                      onclick="return confirm('Remove this completed goal?')">
-                <i data-lucide="trash-2"></i> Remove
-              </button>
-            </form>
+
+          <div class="space-y-3">
+            {% for goal in completed_goals %}
+              <div class="rounded-2xl border border-white/50 dark:border-white/10 bg-white/25 dark:bg-slate-800/30 p-3.5 shadow-xs backdrop-blur-md space-y-2 opacity-85">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-sm font-bold text-slate-900 dark:text-white line-through opacity-75">{{ goal.display_name }}</span>
+                  <span class="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
+                    <i data-lucide="check" style="width: 12px; height: 12px;"></i> Done
+                  </span>
+                </div>
+                <div class="flex items-center justify-between pt-1">
+                  <small class="text-xs font-semibold text-slate-600 dark:text-slate-400">Target was {{ goal.target_value }} {{ goal.unit }}</small>
+                  <form method="post" action="{{ url_for('mood.goals') }}" style="display:inline">
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="goal_id" value="{{ goal.id }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="p-1.5 rounded-full border border-slate-300/60 dark:border-white/10 text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-500/10 transition cursor-pointer" title="Remove" onclick="return confirm('Remove this completed goal?')">
+                      <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i>
+                    </button>
+                  </form>
+                </div>
+              </div>
+            {% endfor %}
           </div>
         </div>
-        {% endfor %}
-      </div>
       {% endif %}
     </div>
 
-  </div><!-- /.goals-layout -->
+  </div><!-- /.grid -->
 </div>
 {% endblock %}
 

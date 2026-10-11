@@ -1,150 +1,150 @@
 {% extends "base.html" %}
 {% block title %}Terms of Service — DayTone{% endblock %}
 {% block content %}
-<div class="container py-5" style="max-width:780px;">
+<div class="terms-shell w-full max-w-5xl mx-auto py-4 space-y-6">
 
-  <div class="d-flex align-items-center gap-2 mb-2">
-    <i data-lucide="file-text" style="width:22px;height:22px;color:var(--dt-primary)"></i>
-    <h1 style="font-size:1.6rem;font-weight:800;margin:0;">Terms of Service</h1>
-  </div>
-  <p class="text-secondary mb-5" style="font-size:0.88rem;">
-    Effective date: <strong>June 2026</strong> &mdash;
-    Last updated: <strong>June 2026</strong>
-  </p>
-
-  <div class="panel elevated-panel p-4 mb-4">
-    <p style="font-size:0.95rem;line-height:1.75;margin:0;">
-      Please read these Terms of Service carefully before using DayTone. By creating an account
-      or using this application, you agree to be bound by these terms.
-    </p>
-  </div>
-
-  <section class="mb-4">
-    <h2 style="font-size:1.1rem;font-weight:700;">1. What DayTone is</h2>
-    <div class="panel p-3">
-      <p style="margin:0;line-height:1.75;">
-        DayTone is a personal wellness tracking application that helps you log daily mood,
-        sleep, stress, and activity data. It uses a machine learning model to estimate burnout
-        risk and provides personalised suggestions. DayTone is built for educational and
-        individual self-monitoring purposes.
-      </p>
+  <!-- ── Terms Header Capsule ─────────────────────────────────────────── -->
+  <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-6 md:p-8 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5 flex flex-col md:flex-row md:items-center md:justify-between gap-5 animate-fade-in-up">
+    <div class="flex items-center gap-4">
+      <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-sky-500/25 flex-shrink-0">
+        <i data-lucide="file-text" style="width: 26px; height: 26px;"></i>
+      </div>
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-sky-500/15 text-sky-700 dark:text-sky-300 border border-sky-500/25 mb-1.5 backdrop-blur-md">
+          <span class="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
+          <span>User Agreement &amp; Sanctuary Standards</span>
+        </div>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white m-0 tracking-tight">Terms of Service</h1>
+        <p class="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 m-0 mt-1">Effective Date: June 2026 &bull; Last Updated: June 2026</p>
+      </div>
     </div>
-  </section>
-
-  <section class="mb-4">
-    <h2 style="font-size:1.1rem;font-weight:700;">2. Not a medical service</h2>
-    <div class="panel p-3" style="border-left:4px solid var(--dt-accent,#f59e0b);">
-      <ul style="line-height:1.9;margin:0;padding-left:1.25rem;">
-        <li>DayTone is <strong>not</strong> a medical device, clinical service, or substitute for professional mental health care.</li>
-        <li>AI-generated burnout risk scores are informational estimates only — they are <strong>not diagnoses</strong>.</li>
-        <li>If you are experiencing a mental health crisis, please contact a qualified professional or a crisis helpline immediately.</li>
-        <li>Nothing in DayTone constitutes medical advice.</li>
-      </ul>
-    </div>
-  </section>
-
-  <section class="mb-4">
-    <h2 style="font-size:1.1rem;font-weight:700;">3. Eligibility</h2>
-    <div class="panel p-3">
-      <p style="margin:0;line-height:1.75;">
-        You must be at least <strong>13 years old</strong> to use DayTone. By registering,
-        you confirm that you meet this age requirement.
-      </p>
-    </div>
-  </section>
-
-  <section class="mb-4">
-    <h2 style="font-size:1.1rem;font-weight:700;">4. Your account</h2>
-    <div class="panel p-3">
-      <ul style="line-height:1.9;margin:0;padding-left:1.25rem;">
-        <li>You are responsible for maintaining the confidentiality of your password.</li>
-        <li>You must not share your account credentials with others.</li>
-        <li>You agree to provide accurate information and keep it up to date.</li>
-        <li>You may delete your account at any time from Settings. All data will be permanently erased.</li>
-      </ul>
-    </div>
-  </section>
-
-  <section class="mb-4">
-    <h2 style="font-size:1.1rem;font-weight:700;">5. Acceptable use</h2>
-    <div class="panel p-3">
-      <p style="margin:0 0 0.5rem;line-height:1.75;">You agree <strong>not</strong> to:</p>
-      <ul style="line-height:1.9;margin:0;padding-left:1.25rem;">
-        <li>Use DayTone to harm, harass, or exploit other individuals.</li>
-        <li>Attempt to circumvent authentication or access another user's data.</li>
-        <li>Submit false or misleading data with the intent to manipulate the system.</li>
-        <li>Use automated tools to scrape or abuse the application.</li>
-      </ul>
-    </div>
-  </section>
-
-  <section class="mb-4">
-    <h2 style="font-size:1.1rem;font-weight:700;">6. Data and privacy</h2>
-    <div class="panel p-3">
-      <p style="margin:0;line-height:1.75;">
-        Our use of your personal data is governed by the
-        <a href="{{ url_for('auth.privacy') }}">Privacy Policy</a>, which forms part of these Terms.
-        By using DayTone you consent to the data practices described therein.
-      </p>
-    </div>
-  </section>
-
-  <section class="mb-4">
-    <h2 style="font-size:1.1rem;font-weight:700;">7. Disclaimer of warranties</h2>
-    <div class="panel p-3">
-      <p style="margin:0;line-height:1.75;">
-        DayTone is provided <strong>"as is"</strong>, without warranty of any kind, express or implied,
-        including but not limited to warranties of merchantability, fitness for a particular purpose,
-        or non-infringement. We do not warrant that the service will be uninterrupted, error-free,
-        or that predictions will be accurate.
-      </p>
-    </div>
-  </section>
-
-  <section class="mb-4">
-    <h2 style="font-size:1.1rem;font-weight:700;">8. Limitation of liability</h2>
-    <div class="panel p-3">
-      <p style="margin:0;line-height:1.75;">
-        To the fullest extent permitted by applicable law, DayTone and its developers shall not
-        be liable for any indirect, incidental, special, or consequential damages arising out of
-        or in connection with your use of the service.
-      </p>
-    </div>
-  </section>
-
-  <section class="mb-4">
-    <h2 style="font-size:1.1rem;font-weight:700;">9. Changes to these terms</h2>
-    <div class="panel p-3">
-      <p style="margin:0;line-height:1.75;">
-        We may update these Terms from time to time. Continued use of DayTone after changes
-        are posted constitutes acceptance of the revised Terms.
-      </p>
-    </div>
-  </section>
-
-  <section class="mb-5">
-    <h2 style="font-size:1.1rem;font-weight:700;">10. Contact</h2>
-    <div class="panel p-4 text-center">
-      <p class="text-secondary mb-3">Questions about these Terms? Reach out directly via email.</p>
-      <a href="mailto:sasanush86@gmail.com" class="btn btn-outline-primary d-inline-flex align-items-center gap-2">
-        <i data-lucide="mail" style="width:16px;height:16px;"></i> Email sasanush86@gmail.com
+    <div class="flex items-center gap-3 self-start md:self-center flex-shrink-0">
+      <a href="{{ url_for('auth.privacy') }}" class="daytone-btn-secondary daytone-btn-sm text-decoration-none whitespace-nowrap flex-shrink-0">
+        <i data-lucide="shield" style="width: 14px; height: 14px;"></i>
+        <span>Privacy</span>
       </a>
+      {% if current_user.is_authenticated %}
+      <a href="{{ url_for('mood.dashboard') }}" class="daytone-btn-secondary daytone-btn-sm text-decoration-none whitespace-nowrap flex-shrink-0">
+        <i data-lucide="arrow-left" style="width: 14px; height: 14px;"></i>
+        <span>Dashboard</span>
+      </a>
+      {% else %}
+      <a href="{{ url_for('auth.login') }}" class="daytone-btn-primary daytone-btn-sm text-decoration-none whitespace-nowrap flex-shrink-0">
+        <i data-lucide="log-in" style="width: 14px; height: 14px;"></i>
+        <span>Sign In</span>
+      </a>
+      {% endif %}
     </div>
-  </section>
+  </div>
 
-  <div class="d-flex gap-3 flex-wrap">
-    <a href="{{ url_for('auth.privacy') }}" class="btn btn-outline-primary">
-      <i data-lucide="shield"></i> Privacy Policy
-    </a>
-    {% if current_user.is_authenticated %}
-    <a href="{{ url_for('mood.dashboard') }}" class="btn btn-glass">
-      <i data-lucide="layout-dashboard"></i> Dashboard
-    </a>
-    {% else %}
-    <a href="{{ url_for('auth.login') }}" class="btn btn-glass">
-      <i data-lucide="log-in"></i> Sign in
-    </a>
-    {% endif %}
+  <!-- ── Sanctuary Standards Highlights Ribbon (3-Column Grid) ────────── -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-in-up">
+    
+    <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-5 shadow-lg backdrop-blur-xl ring-1 ring-slate-900/5 space-y-2">
+      <div class="flex items-center gap-2.5 text-indigo-600 dark:text-indigo-400">
+        <div class="w-8 h-8 rounded-xl bg-indigo-500/15 flex items-center justify-center flex-shrink-0">
+          <i data-lucide="compass" style="width: 18px; height: 18px;"></i>
+        </div>
+        <span class="text-xs font-extrabold uppercase tracking-wider">Self-Directed Reflection</span>
+      </div>
+      <p class="text-xs font-semibold text-slate-700 dark:text-slate-300 m-0 leading-relaxed">
+        Non-punitive personal telemetry designed exclusively for individual self-awareness and positive habit tracking.
+      </p>
+    </div>
+
+    <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-5 shadow-lg backdrop-blur-xl ring-1 ring-slate-900/5 space-y-2">
+      <div class="flex items-center gap-2.5 text-amber-600 dark:text-amber-400">
+        <div class="w-8 h-8 rounded-xl bg-amber-500/15 flex items-center justify-center flex-shrink-0">
+          <i data-lucide="shield-alert" style="width: 18px; height: 18px;"></i>
+        </div>
+        <span class="text-xs font-extrabold uppercase tracking-wider">Non-Clinical Platform</span>
+      </div>
+      <p class="text-xs font-semibold text-slate-700 dark:text-slate-300 m-0 leading-relaxed">
+        DayTone is strictly an educational wellness companion and does not offer licensed clinical psychiatric diagnoses.
+      </p>
+    </div>
+
+    <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-5 shadow-lg backdrop-blur-xl ring-1 ring-slate-900/5 space-y-2">
+      <div class="flex items-center gap-2.5 text-emerald-600 dark:text-emerald-400">
+        <div class="w-8 h-8 rounded-xl bg-emerald-500/15 flex items-center justify-center flex-shrink-0">
+          <i data-lucide="key" style="width: 18px; height: 18px;"></i>
+        </div>
+        <span class="text-xs font-extrabold uppercase tracking-wider">User Data Autonomy</span>
+      </div>
+      <p class="text-xs font-semibold text-slate-700 dark:text-slate-300 m-0 leading-relaxed">
+        You retain full ownership of your records, with the permanent right to export telemetry or delete your account at any time.
+      </p>
+    </div>
+
+  </div>
+
+  <!-- ── Master Terms Document (Full Corridor Width Parchment) ───────── -->
+  <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-6 md:p-10 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5 space-y-8 animate-fade-in-up">
+    
+    <!-- Introduction -->
+    <section class="space-y-2 pb-6 border-b border-slate-200/40 dark:border-white/10">
+      <h2 class="text-lg font-extrabold text-slate-900 dark:text-white m-0">Introduction</h2>
+      <p class="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 leading-relaxed m-0">
+        Please review these Terms of Service carefully before utilizing DayTone. By accessing or interacting with our sanctuary platform,
+        you acknowledge and agree to be governed by these conditions.
+      </p>
+    </section>
+
+    <!-- 1. What DayTone is -->
+    <section class="space-y-3 pb-6 border-b border-slate-200/40 dark:border-white/10">
+      <h2 class="text-base font-extrabold text-slate-900 dark:text-white m-0">1. Platform Scope &amp; Functionality</h2>
+      <p class="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 leading-relaxed m-0">
+        DayTone provides intuitive biometric shader visualization, mood telemetry charting, rolling goal completions,
+        and predictive machine learning risk models designed to facilitate personal self-reflection.
+      </p>
+    </section>
+
+    <!-- 2. Account responsibilities -->
+    <section class="space-y-3 pb-6 border-b border-slate-200/40 dark:border-white/10">
+      <h2 class="text-base font-extrabold text-slate-900 dark:text-white m-0">2. Account Security &amp; Responsibilities</h2>
+      <ul class="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 space-y-2 list-disc pl-5 m-0 leading-relaxed">
+        <li>You are responsible for providing valid registration credentials and maintaining account security.</li>
+        <li>You retain full ownership and discretion over your journal reflections and telemetry entries.</li>
+        <li>You maintain the permanent right to export or completely delete your account at any time.</li>
+      </ul>
+    </section>
+
+    <!-- 3. Acceptable use -->
+    <section class="space-y-3 pb-6 border-b border-slate-200/40 dark:border-white/10">
+      <h2 class="text-base font-extrabold text-slate-900 dark:text-white m-0">3. Acceptable Sanctuary Conduct</h2>
+      <p class="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 leading-relaxed m-0">
+        Users agree to interact with DayTone for lawful, personal wellness tracking purposes only.
+        Automated reverse engineering, abusive automated scraping, or denial-of-service attempts are strictly prohibited.
+      </p>
+    </section>
+
+    <!-- 4. Medical disclaimer -->
+    <section>
+      <div class="rounded-2xl border border-amber-500/30 bg-amber-500/10 dark:bg-amber-950/20 p-5 shadow-sm backdrop-blur-md space-y-2">
+        <div class="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+          <i data-lucide="alert-triangle" style="width: 18px; height: 18px;"></i>
+          <h2 class="text-xs font-extrabold uppercase tracking-wider m-0">4. Non-Clinical Wellness Platform Disclaimer</h2>
+        </div>
+        <p class="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 leading-relaxed m-0">
+          DayTone is strictly an educational wellness companion. Predictive burnout classifications are
+          <strong>not certified clinical diagnoses</strong> and must never replace qualified psychiatric or therapeutic care.
+          If you are in acute crisis, please contact emergency medical personnel or 24/7 helplines.
+        </p>
+      </div>
+    </section>
+
+    <!-- 5. Contact & Support -->
+    <section class="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div class="space-y-1">
+        <h2 class="text-sm font-extrabold text-slate-900 dark:text-white m-0">5. Terms Inquiries &amp; Governance</h2>
+        <p class="text-xs font-semibold text-slate-600 dark:text-slate-300 m-0">Have questions regarding these standards? Connect with our team.</p>
+      </div>
+      <a href="{{ url_for('auth.contact') }}" class="daytone-btn-secondary daytone-btn-sm text-decoration-none flex-shrink-0">
+        <i data-lucide="mail" style="width: 14px; height: 14px;"></i>
+        <span>Contact Desk</span>
+      </a>
+    </section>
+
   </div>
 
 </div>

@@ -223,66 +223,70 @@
 {% block content %}
 <!-- Duplicate style block inside content as fail-safe for all Jinja / browser render passes -->
 <style>
-.dev-header{background:linear-gradient(135deg,rgba(99,102,241,0.15) 0%,rgba(168,85,247,0.10) 50%,transparent 100%);border:1px solid rgba(99,102,241,0.25);border-radius:16px;padding:1.8rem 2.2rem;margin-bottom:1.5rem;position:relative;overflow:hidden;}
-.dev-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;background:linear-gradient(90deg,rgba(99,102,241,0.25),rgba(168,85,247,0.20));border:1px solid rgba(99,102,241,0.35);color:#a78bfa;margin-bottom:0.6rem;}
 .dev-action-bar{display:flex;flex-wrap:wrap;gap:0.6rem;margin-bottom:1.5rem;}
-.dev-action-btn{display:inline-flex;align-items:center;gap:0.45rem;padding:0.48rem 0.85rem;border-radius:10px;font-size:0.82rem;font-weight:650;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:inherit;text-decoration:none;transition:all 0.18s ease;}
-.dev-action-btn:hover{transform:translateY(-2px);background:rgba(99,102,241,0.14);border-color:rgba(99,102,241,0.35);color:#a78bfa;}
+.dev-action-btn{display:inline-flex;align-items:center;gap:0.45rem;padding:0.5rem 0.9rem;border-radius:12px;font-size:0.82rem;font-weight:650;border:1px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.22);backdrop-filter:blur(12px);color:inherit;text-decoration:none;transition:all 0.18s ease;}
+.dev-action-btn:hover{transform:translateY(-2px);background:rgba(99,102,241,0.2);border-color:rgba(99,102,241,0.45);color:#818cf8;}
+.dark .dev-action-btn,[data-theme="dark"] .dev-action-btn,[data-theme="nocturne"] .dev-action-btn{border-color:rgba(255,255,255,0.12);background:rgba(15,23,42,0.45);}
 .dev-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0.85rem;margin-bottom:1.5rem;}
-.dev-stat-card{border-radius:14px;padding:1rem 1.2rem;position:relative;overflow:hidden;transition:transform 0.18s ease;cursor:default;}
+.dev-stat-card{border-radius:16px;padding:1rem 1.2rem;position:relative;overflow:hidden;transition:transform 0.18s ease;cursor:default;backdrop-filter:blur(16px);background:rgba(255,255,255,0.25);border:1px solid rgba(255,255,255,0.4);box-shadow:0 8px 24px rgba(0,0,0,0.06);}
+.dark .dev-stat-card,[data-theme="dark"] .dev-stat-card,[data-theme="nocturne"] .dev-stat-card{background:rgba(15,23,42,0.5);border-color:rgba(255,255,255,0.12);box-shadow:0 8px 24px rgba(0,0,0,0.35);}
 .dev-stat-card:hover{transform:translateY(-3px);}
-.dev-stat-card.users{background:linear-gradient(135deg,rgba(59,130,246,0.12),rgba(99,102,241,0.08));border:1px solid rgba(59,130,246,0.22);}
-.dev-stat-card.admins{background:linear-gradient(135deg,rgba(168,85,247,0.12),rgba(99,102,241,0.08));border:1px solid rgba(168,85,247,0.22);}
-.dev-stat-card.pending{background:linear-gradient(135deg,rgba(234,179,8,0.12),rgba(251,146,60,0.08));border:1px solid rgba(234,179,8,0.22);}
-.dev-stat-card.risk{background:linear-gradient(135deg,rgba(239,68,68,0.12),rgba(225,29,72,0.08));border:1px solid rgba(239,68,68,0.22);}
-.dev-stat-card.logs{background:linear-gradient(135deg,rgba(16,185,129,0.12),rgba(5,150,105,0.08));border:1px solid rgba(16,185,129,0.22);}
-.dev-stat-card.goals{background:linear-gradient(135deg,rgba(236,72,153,0.12),rgba(219,39,119,0.08));border:1px solid rgba(236,72,153,0.22);}
+.dev-stat-card.users{background:linear-gradient(135deg,rgba(59,130,246,0.18),rgba(99,102,241,0.12));border:1px solid rgba(59,130,246,0.3);}
+.dev-stat-card.admins{background:linear-gradient(135deg,rgba(168,85,247,0.18),rgba(99,102,241,0.12));border:1px solid rgba(168,85,247,0.3);}
+.dev-stat-card.pending{background:linear-gradient(135deg,rgba(234,179,8,0.18),rgba(251,146,60,0.12));border:1px solid rgba(234,179,8,0.3);}
+.dev-stat-card.risk{background:linear-gradient(135deg,rgba(239,68,68,0.18),rgba(225,29,72,0.12));border:1px solid rgba(239,68,68,0.3);}
+.dev-stat-card.logs{background:linear-gradient(135deg,rgba(16,185,129,0.18),rgba(5,150,105,0.12));border:1px solid rgba(16,185,129,0.3);}
+.dev-stat-card.goals{background:linear-gradient(135deg,rgba(236,72,153,0.18),rgba(219,39,119,0.12));border:1px solid rgba(236,72,153,0.3);}
 .dev-stat-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:0.5rem;}
-.dev-stat-card.users .dev-stat-icon{background:rgba(59,130,246,0.18);color:#60a5fa;}
-.dev-stat-card.admins .dev-stat-icon{background:rgba(168,85,247,0.18);color:#c084fc;}
-.dev-stat-card.pending .dev-stat-icon{background:rgba(234,179,8,0.18);color:#facc15;}
-.dev-stat-card.risk .dev-stat-icon{background:rgba(239,68,68,0.18);color:#f87171;}
-.dev-stat-card.logs .dev-stat-icon{background:rgba(16,185,129,0.18);color:#34d399;}
-.dev-stat-card.goals .dev-stat-icon{background:rgba(236,72,153,0.18);color:#f472b6;}
+.dev-stat-card.users .dev-stat-icon{background:rgba(59,130,246,0.22);color:#60a5fa;}
+.dev-stat-card.admins .dev-stat-icon{background:rgba(168,85,247,0.22);color:#c084fc;}
+.dev-stat-card.pending .dev-stat-icon{background:rgba(234,179,8,0.22);color:#facc15;}
+.dev-stat-card.risk .dev-stat-icon{background:rgba(239,68,68,0.22);color:#f87171;}
+.dev-stat-card.logs .dev-stat-icon{background:rgba(16,185,129,0.22);color:#34d399;}
+.dev-stat-card.goals .dev-stat-icon{background:rgba(236,72,153,0.22);color:#f472b6;}
 .dev-stat-val{font-size:1.65rem;font-weight:800;line-height:1;margin-bottom:0.15rem;}
-.dev-stat-label{font-size:0.75rem;opacity:0.65;font-weight:500;}
-.dev-panel{border-radius:14px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);padding:1.35rem;margin-bottom:1.35rem;}
-.dev-panel-title{font-size:0.83rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;opacity:0.6;margin-bottom:1rem;display:flex;align-items:center;gap:8px;}
+.dev-stat-label{font-size:0.75rem;opacity:0.8;font-weight:600;}
+.dev-panel{border-radius:18px;border:1px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.22);backdrop-filter:blur(16px);padding:1.35rem;margin-bottom:1.35rem;box-shadow:0 10px 30px rgba(0,0,0,0.06);}
+.dark .dev-panel,[data-theme="dark"] .dev-panel,[data-theme="nocturne"] .dev-panel{border-color:rgba(255,255,255,0.12);background:rgba(15,23,42,0.5);box-shadow:0 10px 30px rgba(0,0,0,0.4);}
+.dev-panel-title{font-size:0.83rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;opacity:0.8;margin-bottom:1rem;display:flex;align-items:center;gap:8px;}
 .sysinfo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:0.65rem;}
-.sysinfo-item{padding:0.65rem 0.85rem;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;gap:2px;}
-.sysinfo-key{font-size:0.68rem;font-weight:600;opacity:0.5;text-transform:uppercase;letter-spacing:0.07em;}
+.sysinfo-item{padding:0.65rem 0.85rem;border-radius:10px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);display:flex;flex-direction:column;gap:2px;}
+.dark .sysinfo-item,[data-theme="dark"] .sysinfo-item,[data-theme="nocturne"] .sysinfo-item{background:rgba(15,23,42,0.4);border-color:rgba(255,255,255,0.08);}
+.sysinfo-key{font-size:0.68rem;font-weight:600;opacity:0.7;text-transform:uppercase;letter-spacing:0.07em;}
 .sysinfo-val{font-size:0.85rem;font-weight:600;font-family:monospace;}
-.audit-row{display:flex;align-items:flex-start;gap:0.75rem;padding:0.55rem 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.audit-row{display:flex;align-items:flex-start;gap:0.75rem;padding:0.55rem 0;border-bottom:1px solid rgba(255,255,255,0.1);}
 .audit-row:last-child{border-bottom:none;}
-.audit-icon-wrap{flex-shrink:0;width:28px;height:28px;border-radius:8px;background:rgba(99,102,241,0.14);color:#a78bfa;display:flex;align-items:center;justify-content:center;}
+.audit-icon-wrap{flex-shrink:0;width:28px;height:28px;border-radius:8px;background:rgba(99,102,241,0.2);color:#a78bfa;display:flex;align-items:center;justify-content:center;}
 .audit-body{flex:1;min-width:0;}
 .audit-action{font-size:0.81rem;font-weight:600;}
-.audit-detail{font-size:0.74rem;opacity:0.55;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.audit-time{font-size:0.7rem;opacity:0.4;white-space:nowrap;flex-shrink:0;padding-top:2px;}
-.req-table th{font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;opacity:0.5;border-top:none;}
+.audit-detail{font-size:0.74rem;opacity:0.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.audit-time{font-size:0.7rem;opacity:0.6;white-space:nowrap;flex-shrink:0;padding-top:2px;}
+.req-table th{font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;opacity:0.7;border-top:none;}
 .req-table td{vertical-align:middle;font-size:0.86rem;}
 </style>
 
-<div class="container py-4">
+<div class="admin-shell w-full max-w-5xl mx-auto py-4 space-y-6">
 
-  <!-- ── Header ─────────────────────────────────────────────────────────── -->
-  <div class="dev-header mb-4">
-    <div class="dev-badge">
-      <i data-lucide="terminal" style="width:13px;height:13px;"></i>
-      Developer Master Control
-    </div>
-    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+  <!-- ── Executive Header Capsule ─────────────────────────────────────────── -->
+  <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-6 md:p-8 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5 flex flex-col md:flex-row md:items-center md:justify-between gap-5 animate-fade-in-up">
+    <div class="flex items-center gap-4">
+      <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-violet-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25 flex-shrink-0">
+        <i data-lucide="terminal" style="width: 26px; height: 26px;"></i>
+      </div>
       <div>
-        <h1 class="mb-1 fw-bold" style="font-size:1.75rem;">Developer Command Center</h1>
-        <p class="mb-0 text-secondary" style="font-size:0.92rem;">
-          Full administrative authority &amp; developer controls: users, ML models, security overrides, and system diagnostics.
-        </p>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-violet-500/15 text-violet-800 dark:text-violet-300 border border-violet-500/25 mb-1.5 backdrop-blur-md">
+          <span class="w-2 h-2 rounded-full bg-violet-500 animate-pulse"></span>
+          <span>Developer Command Center</span>
+        </div>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white m-0 tracking-tight">Developer Control Panel</h1>
+        <p class="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 m-0 mt-1">Full administrative authority, ML controls, security overrides, and system diagnostics.</p>
       </div>
-      <div class="d-flex gap-2 flex-wrap">
-        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-glass d-flex align-items-center gap-1" style="font-size:0.85rem;">
-          <i data-lucide="shield-check" style="width:15px;height:15px;"></i> Admin View
-        </a>
-      </div>
+    </div>
+    <div class="flex items-center gap-3 self-start md:self-center flex-shrink-0">
+      <a class="daytone-btn-secondary daytone-btn-sm text-decoration-none" href="{{ url_for('admin.dashboard') }}">
+        <i data-lucide="shield" style="width: 14px; height: 14px;"></i>
+        <span>Admin View</span>
+      </a>
     </div>
   </div>
 
@@ -301,7 +305,7 @@
       <i data-lucide="scroll-text" style="width:16px;height:16px;color:#2dd4bf;"></i> Full Audit Trail
     </a>
     <a href="{{ url_for('admin.invite_tokens') }}" class="dev-action-btn">
-      <i data-lucide="ticket" style="width:16px;height:16px;color:#facc15;"></i> Admin Invite Tokens
+      <i data-lucide="ticket" style="width:16px;height:16px;color:#facc15;"></i> Dev Invite Tokens
     </a>
   </div>
 
@@ -568,21 +572,21 @@
         </div>
         {% set total = (stats.burnout_distribution['Low'] + stats.burnout_distribution['Medium'] + stats.burnout_distribution['High']) or 1 %}
         <div class="risk-bar-row">
-          <span style="width:60px;font-weight:600;color:#34d399;">🟢 Low</span>
+          <span style="width:60px;font-weight:600;color:#34d399;display:inline-flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:#34d399;display:inline-block;"></span> Low</span>
           <div class="risk-bar-track">
             <div class="risk-bar-fill" style="width:{{ (stats.burnout_distribution['Low'] / total * 100)|round }}%;background:#34d399;"></div>
           </div>
           <span style="font-weight:700;">{{ stats.burnout_distribution['Low'] }}</span>
         </div>
         <div class="risk-bar-row">
-          <span style="width:60px;font-weight:600;color:#facc15;">🟡 Med</span>
+          <span style="width:60px;font-weight:600;color:#facc15;display:inline-flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:#facc15;display:inline-block;"></span> Med</span>
           <div class="risk-bar-track">
             <div class="risk-bar-fill" style="width:{{ (stats.burnout_distribution['Medium'] / total * 100)|round }}%;background:#facc15;"></div>
           </div>
           <span style="font-weight:700;">{{ stats.burnout_distribution['Medium'] }}</span>
         </div>
         <div class="risk-bar-row">
-          <span style="width:60px;font-weight:600;color:#f87171;">🔴 High</span>
+          <span style="width:60px;font-weight:600;color:#f87171;display:inline-flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:#f87171;display:inline-block;"></span> High</span>
           <div class="risk-bar-track">
             <div class="risk-bar-fill" style="width:{{ (stats.burnout_distribution['High'] / total * 100)|round }}%;background:#f87171;"></div>
           </div>
@@ -602,11 +606,19 @@
           {% for t in recent_tokens %}
           <div class="d-flex align-items-center justify-content-between py-1 border-bottom border-secondary border-opacity-10" style="font-size:0.8rem;">
             <code style="font-size:0.75rem;">{{ t.token[:16] }}…</code>
-            {% if t.is_used %}
-              <span class="badge bg-secondary">Used</span>
-            {% else %}
-              <span class="badge bg-success">Active</span>
-            {% endif %}
+            <div class="d-flex align-items-center gap-2">
+              {% if t.is_used %}
+                <span class="badge bg-secondary">Used</span>
+              {% else %}
+                <span class="badge bg-success">Active</span>
+              {% endif %}
+              <form method="post" action="{{ url_for('admin.delete_invite_token', token_id=t.id) }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-sm btn-link text-danger p-0 border-0" title="Remove token" onclick="return confirm('Remove this invite token?')">
+                  <i data-lucide="trash-2" style="width:12px;height:12px;"></i>
+                </button>
+              </form>
+            </div>
           </div>
           {% endfor %}
         {% else %}

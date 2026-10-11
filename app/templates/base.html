@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="DayTone - Track your mood, sleep, stress, and burnout risk with scikit-learn ML analytics.">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#1e293b" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f1f5f9" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0c1220" media="(prefers-color-scheme: dark)">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,208 +16,292 @@
   <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='icons/icon-32.png') }}">
   <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='icons/icon-16.png') }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-180.png') }}">
+
+  <!-- Typography: Plus Jakarta Sans & Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
-  <noscript>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-  </noscript>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Inter:wght@300;400;500;600;700&display=swap">
+
   <script>
     (function () {
       const saved = localStorage.getItem('daytone-theme');
       let theme = 'light';
-      if (saved === 'dark' || saved === 'light') {
-        theme = saved;
+      if (saved === 'dark' || saved === 'nocturne' || saved === 'light') {
+        theme = (saved === 'dark') ? 'nocturne' : saved;
       } else {
-        theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'nocturne' : 'light';
       }
       document.documentElement.setAttribute('data-theme', theme);
+      if (theme === 'dark' || theme === 'nocturne') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
     })();
   </script>
+
+  <!-- Base Framework & Theme Stylesheets -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/custom-v7.min.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-v7.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=3.0.0">
+
+  <!-- Tailwind CSS Configuration & Custom Dark Variant (Scoped strictly to class/attribute, NOT media queries) -->
+  <style type="text/tailwindcss">
+    @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *, [data-theme="nocturne"], [data-theme="nocturne"] *, .dark, .dark *));
+  </style>
+  <script>
+    window.tailwind = {
+      config: {
+        darkMode: 'class'
+      }
+    };
+  </script>
+  <script src="{{ url_for('static', filename='js/tailwindcss.min.js') }}"></script>
+
   <style>
     @view-transition {
       navigation: auto;
     }
-    /* Instant layout overrides to bypass service worker CSS caching */
-    .app-main,
-    .app-nav-inner {
-      max-width: 1350px !important;
-    }
-    .app-nav-inner {
-      padding-left: 1.25rem !important;
-      padding-right: 1.25rem !important;
-    }
-    .nav-pills-soft .nav-link {
-      padding: 0.36rem 0.54rem !important;
-      font-size: 0.82rem !important;
-      gap: 0.25rem !important;
-    }
-    .nav-pills-soft {
-      gap: 0.1rem !important;
-      margin-left: 0.8rem !important;
-    }
-    .nav-actions {
-      gap: 0.35rem !important;
-      margin-right: 0 !important;
-    }
-    .user-chip {
-      padding: 0.35rem 0.48rem !important;
-      font-size: 0.82rem !important;
-    }
-    
-    @media (min-width: 992px) and (max-width: 1440px) {
-      .nav-pills-soft .nav-link {
-        padding: 0.3rem 0.48rem !important;
-        font-size: 0.78rem !important;
-        gap: 0.18rem !important;
-      }
-      .nav-pills-soft {
-        margin-left: 0.4rem !important;
-        gap: 0.05rem !important;
-      }
-      .nav-actions {
-        gap: 0.28rem !important;
-        margin-right: 0 !important;
-      }
-      .user-chip {
-        padding: 0.32rem 0.45rem !important;
-        font-size: 0.78rem !important;
-      }
-      .brand-lockup {
-        font-size: 0.9rem !important;
-      }
-    }
   </style>
   {% block head %}{% endblock %}
 </head>
-<body>
+{% set active_page = 'dashboard' if request.endpoint == 'mood.dashboard'
+                else 'log' if request.endpoint in ['mood.log_mood', 'mood.edit_log']
+                else 'history' if request.endpoint == 'mood.history'
+                else 'heatmap' if request.endpoint == 'mood.heatmap'
+                else 'goals' if request.endpoint == 'mood.goals'
+                else 'profile' if request.endpoint == 'auth.profile'
+                else 'manual' if request.endpoint in ['auth.help_view', 'auth.help']
+                else 'apidocs' if request.endpoint == 'auth.api_docs'
+                else 'contact' if request.endpoint == 'auth.contact'
+                else 'privacy' if request.endpoint == 'auth.privacy'
+                else 'terms' if request.endpoint == 'auth.terms'
+                else 'admin_dashboard' if request.endpoint == 'admin.dashboard'
+                else 'admin_users' if request.endpoint in ['admin.users', 'admin.user_detail', 'admin.edit_user_profile']
+                else 'admin_model' if request.endpoint in ['admin.model_diagnostics', 'admin.bias_audit']
+                else 'admin_audit' if request.endpoint in ['admin.audit_log', 'admin.invite_tokens', 'admin.change_lockout']
+                else 'admin_developer' if request.endpoint in ['admin.developer_dashboard', 'admin.developer_requests']
+                else 'default' %}
+<body class="min-h-screen text-slate-900 dark:text-slate-100 relative overflow-x-hidden page-{{ active_page }}" data-page="{{ active_page }}">
   <a href="#main-content" class="skip-to-main">Skip to main content</a>
-  <div class="app-shell-bg" aria-hidden="true"></div>
-  <nav class="navbar navbar-expand-lg sticky-top app-nav" role="navigation" aria-label="Main navigation">
-    <div class="container-fluid app-nav-inner">
-      <a class="navbar-brand brand-lockup" href="{{ url_for('mood.dashboard') if current_user.is_authenticated else url_for('auth.login') }}">
-        <span class="brand-mark">DT</span>
-        <span>DayTone</span>
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-label="Toggle navigation menu">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navMenu">
-        <ul class="navbar-nav nav-pills-soft me-auto">
-          {% if current_user.is_authenticated %}
-          <li class="nav-item"><a class="nav-link{% if request.endpoint == 'mood.log_mood' %} active{% endif %}" href="{{ url_for('mood.log_mood') }}"><i data-lucide="plus-circle"></i>Log</a></li>
-          <li class="nav-item"><a class="nav-link{% if request.endpoint in ('mood.dashboard', 'admin.developer_dashboard') %} active{% endif %}" href="{{ url_for('admin.developer_dashboard') if current_user.is_developer else url_for('mood.dashboard') }}"><i data-lucide="layout-dashboard"></i>Dashboard</a></li>
-          <li class="nav-item"><a class="nav-link{% if request.endpoint == 'mood.history' %} active{% endif %}" href="{{ url_for('mood.history') }}"><i data-lucide="history"></i>History</a></li>
-          <li class="nav-item"><a class="nav-link{% if request.endpoint == 'mood.heatmap' %} active{% endif %}" href="{{ url_for('mood.heatmap') }}"><i data-lucide="calendar-days"></i>Heatmap</a></li>
-          <li class="nav-item"><a class="nav-link{% if request.endpoint == 'mood.goals' %} active{% endif %}" href="{{ url_for('mood.goals') }}"><i data-lucide="target"></i>Goals</a></li>
-          {% if current_user.is_admin %}
-          {% set _admin_active = request.endpoint in ('admin.dashboard','admin.users','admin.model_diagnostics','admin.bias_audit','admin.audit_log','admin.developer_dashboard','admin.invite_tokens') %}
-          <li class="nav-item dropdown admin-dropdown">
-            <button class="nav-link admin-drop-toggle{% if _admin_active %} active{% endif %}" id="adminDropBtn" type="button"
-              data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">
-              {% if current_user.is_developer %}
-                <i data-lucide="terminal"></i>Developer<i data-lucide="chevron-down" class="admin-chevron"></i>
-              {% else %}
-                <i data-lucide="shield-check"></i>Admin<i data-lucide="chevron-down" class="admin-chevron"></i>
-              {% endif %}
-            </button>
-            <ul class="dropdown-menu admin-drop-menu" aria-labelledby="adminDropBtn">
-              {% if current_user.is_developer %}
-                <li><a class="dropdown-item admin-dev-item{% if request.endpoint == 'admin.developer_dashboard' %} active{% endif %}" href="{{ url_for('admin.developer_dashboard') }}">
-                  <i data-lucide="terminal"></i>Developer Panel
-                </a></li>
-                <li><hr class="dropdown-divider admin-divider"></li>
-                <li><a class="dropdown-item{% if request.endpoint == 'admin.users' %} active{% endif %}" href="{{ url_for('admin.users') }}">
-                  <i data-lucide="users"></i>Users &amp; Admins
-                </a></li>
-                <li><a class="dropdown-item{% if request.endpoint == 'admin.model_diagnostics' %} active{% endif %}" href="{{ url_for('admin.model_diagnostics') }}">
-                  <i data-lucide="cpu"></i>ML Diagnostics
-                </a></li>
-                <li><a class="dropdown-item{% if request.endpoint == 'admin.bias_audit' %} active{% endif %}" href="{{ url_for('admin.bias_audit') }}">
-                  <i data-lucide="scale"></i>Bias Audit
-                </a></li>
-                <li><a class="dropdown-item{% if request.endpoint == 'admin.audit_log' %} active{% endif %}" href="{{ url_for('admin.audit_log') }}">
-                  <i data-lucide="scroll-text"></i>Audit Log
-                </a></li>
-                <li><a class="dropdown-item{% if request.endpoint == 'admin.invite_tokens' %} active{% endif %}" href="{{ url_for('admin.invite_tokens') }}">
-                  <i data-lucide="ticket"></i>Invite Tokens
-                </a></li>
-              {% else %}
-                <li><a class="dropdown-item{% if request.endpoint == 'admin.dashboard' %} active{% endif %}" href="{{ url_for('admin.dashboard') }}">
-                  <i data-lucide="layout-dashboard"></i>Dashboard
-                </a></li>
-                <li><a class="dropdown-item{% if request.endpoint == 'admin.users' %} active{% endif %}" href="{{ url_for('admin.users') }}">
-                  <i data-lucide="users"></i>Users
-                </a></li>
-                <li><a class="dropdown-item{% if request.endpoint == 'admin.model_diagnostics' %} active{% endif %}" href="{{ url_for('admin.model_diagnostics') }}">
-                  <i data-lucide="cpu"></i>ML Diagnostics
-                </a></li>
-                <li><a class="dropdown-item{% if request.endpoint == 'admin.bias_audit' %} active{% endif %}" href="{{ url_for('admin.bias_audit') }}">
-                  <i data-lucide="scale"></i>Bias Audit
-                </a></li>
-                <li><a class="dropdown-item{% if request.endpoint == 'admin.audit_log' %} active{% endif %}" href="{{ url_for('admin.audit_log') }}">
-                  <i data-lucide="scroll-text"></i>Audit Log
-                </a></li>
-                <li><a class="dropdown-item{% if request.endpoint == 'admin.invite_tokens' %} active{% endif %}" href="{{ url_for('admin.invite_tokens') }}">
-                  <i data-lucide="ticket"></i>Invite Tokens
-                </a></li>
-              {% endif %}
-            </ul>
-          </li>
-          {% endif %}
-          {% endif %}
-        </ul>
-        <div class="nav-actions">
-          <button class="btn btn-sm btn-glass icon-btn" id="darkToggle" type="button" title="Toggle dark mode"><i data-lucide="moon"></i></button>
-          {% if current_user.is_authenticated %}
-          <a class="user-chip" href="{{ url_for('auth.profile') }}" title="Settings" style="text-decoration:none"><i data-lucide="user-round"></i>{{ current_user.name }}</a>
-          <a class="btn btn-sm btn-glass icon-btn" href="{{ url_for('auth.profile') }}" title="Settings" aria-label="Settings"><i data-lucide="settings"></i></a>
-          <a class="btn btn-sm btn-outline-danger" href="{{ url_for('auth.logout') }}"><i data-lucide="log-out"></i>Logout</a>
-          {% else %}
-          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('auth.login') }}">Login</a>
-          <a class="btn btn-sm btn-primary" href="{{ url_for('auth.register') }}">Register</a>
-          {% endif %}
+
+
+  <!-- 0. Fixed Circadian Scenic Atmospheric Wallpaper Layer (Per-Page Thematic Sanctuary) -->
+  <div class="sanctuary-backdrop page-backdrop-{{ active_page }}" aria-hidden="true">
+    <div class="sanctuary-backdrop-img sanctuary-day-img sanctuary-dawn-img"></div>
+    <div class="sanctuary-backdrop-img sanctuary-night-img"></div>
+    <div class="sanctuary-backdrop-tint"></div>
+    
+    <!-- Unique Mental Wellness Atmospheric FX per Page -->
+    {% if active_page == 'log' %}
+      <div class="sanctuary-fx-zen" aria-hidden="true">
+        <div class="zen-breath-glow"></div>
+        <div class="zen-floating-motes">
+          <span class="zen-mote zm1"></span>
+          <span class="zen-mote zm2"></span>
+          <span class="zen-mote zm3"></span>
+          <span class="zen-mote zm4"></span>
         </div>
       </div>
-    </div>
-  </nav>
-  <main class="container-fluid app-main" id="main-content" role="main">
+    {% elif active_page == 'history' %}
+      <div class="sanctuary-fx-history" aria-hidden="true">
+        <div class="history-time-stream stream-1"></div>
+        <div class="history-time-stream stream-2"></div>
+        <div class="history-fireflies">
+          <span class="firefly f1"></span>
+          <span class="firefly f2"></span>
+          <span class="firefly f3"></span>
+          <span class="firefly f4"></span>
+          <span class="firefly f5"></span>
+          <span class="firefly f6"></span>
+        </div>
+      </div>
+    {% elif active_page == 'heatmap' %}
+      <div class="sanctuary-fx-heatmap" aria-hidden="true">
+        <div class="heatmap-aurora-wave wave-1"></div>
+        <div class="heatmap-aurora-wave wave-2"></div>
+        <div class="heatmap-celestial-dust"></div>
+      </div>
+    {% elif active_page == 'goals' %}
+      <div class="sanctuary-fx-goals" aria-hidden="true">
+        <div class="goals-sunbeam-glimmer"></div>
+        <div class="goals-rising-mote-field">
+          <span class="mote m1"></span>
+          <span class="mote m2"></span>
+          <span class="mote m3"></span>
+          <span class="mote m4"></span>
+          <span class="mote m5"></span>
+          <span class="mote m6"></span>
+          <span class="mote m7"></span>
+        </div>
+      </div>
+    {% else %}
+      <div class="sanctuary-ambient-mesh"></div>
+    {% endif %}
+  </div>
+
+  <!-- 1. FULL VIEWPORT CANVAS (Must be fixed and independent) -->
+  <canvas id="daytone-canvas" class="fixed inset-0 w-screen h-screen pointer-events-none -z-10" aria-hidden="true"></canvas>
+
+  <!-- 2. FLOATING NAVBAR -->
+  <header class="relative z-30 pt-4 px-4 flex justify-center" role="banner">
+    <nav class="flex items-center justify-between w-full max-w-4xl lg:max-w-5xl px-6 py-2.5 rounded-full bg-white/50 backdrop-blur-md border border-white/70 shadow-sm" role="navigation" aria-label="Main navigation">
+      <a class="flex items-center gap-2 text-decoration-none shrink-0" href="{{ url_for('mood.dashboard') if current_user.is_authenticated else url_for('auth.login') }}">
+        <span class="w-7 h-7 rounded-lg bg-sky-500 text-white flex items-center justify-center font-bold text-xs shadow-sm" style="width:28px;height:28px;">DT</span>
+        <span class="font-semibold text-slate-800 tracking-tight" style="color:var(--color-primary); font-family:var(--font-display);">DayTone</span>
+      </a>
+
+      <!-- Center navigation items if authenticated -->
+      {% if current_user.is_authenticated %}
+        {% if data is defined and not data.latest %}
+          <a href="{{ url_for('mood.onboarding') }}" class="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/10 text-sky-600 hover:text-sky-800 text-xs font-medium border border-sky-500/20 text-decoration-none transition">
+            <span class="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" style="width:6px;height:6px;"></span>
+            <span>Step 1 of 4: Interactive Tour</span>
+          </a>
+        {% else %}
+          <div class="hidden md:flex items-center gap-2 lg:gap-3 text-xs sm:text-sm font-medium">
+            <a href="{{ url_for('mood.log_mood') }}" class="px-3 py-1 rounded-full text-decoration-none transition {% if request.endpoint in ['mood.log_mood', 'mood.edit_log'] %}bg-sky-500/15 text-sky-600 dark:text-sky-400 font-bold{% else %}text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white{% endif %}">Log</a>
+            <a href="{{ url_for('mood.dashboard') }}" class="px-3 py-1 rounded-full text-decoration-none transition {% if request.endpoint == 'mood.dashboard' %}bg-sky-500/15 text-sky-600 dark:text-sky-400 font-bold{% else %}text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white{% endif %}">Dashboard</a>
+            <a href="{{ url_for('mood.history') }}" class="px-3 py-1 rounded-full text-decoration-none transition {% if request.endpoint == 'mood.history' %}bg-sky-500/15 text-sky-600 dark:text-sky-400 font-bold{% else %}text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white{% endif %}">History</a>
+            <a href="{{ url_for('mood.heatmap') }}" class="px-3 py-1 rounded-full text-decoration-none transition {% if request.endpoint == 'mood.heatmap' %}bg-sky-500/15 text-sky-600 dark:text-sky-400 font-bold{% else %}text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white{% endif %}">Heatmap</a>
+            <a href="{{ url_for('mood.goals') }}" class="px-3 py-1 rounded-full text-decoration-none transition {% if request.endpoint == 'mood.goals' %}bg-sky-500/15 text-sky-600 dark:text-sky-400 font-bold{% else %}text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white{% endif %}">Goals</a>
+            {% if current_user.is_admin %}
+              <div class="dropdown d-inline">
+                <a class="px-2.5 py-1 rounded-full text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white text-decoration-none dropdown-toggle cursor-pointer" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  {% if current_user.is_developer %}Dev{% else %}Admin{% endif %}
+                </a>
+                <ul class="dropdown-menu glass-panel shadow-lg border-0 py-2 text-xs">
+                  {% if current_user.is_developer %}
+                    <li><a class="dropdown-item py-1" href="{{ url_for('admin.developer_dashboard') }}">Dev Console</a></li>
+                    <li><hr class="dropdown-divider my-1 opacity-25"></li>
+                  {% endif %}
+                  <li><a class="dropdown-item py-1" href="{{ url_for('admin.dashboard') }}">Admin Dashboard</a></li>
+                  <li><a class="dropdown-item py-1" href="{{ url_for('admin.users') }}">Users</a></li>
+                  <li><a class="dropdown-item py-1" href="{{ url_for('admin.model_diagnostics') }}">ML Diagnostics</a></li>
+                  <li><a class="dropdown-item py-1" href="{{ url_for('admin.audit_log') }}">Audit Log</a></li>
+                </ul>
+              </div>
+            {% endif %}
+          </div>
+        {% endif %}
+      {% endif %}
+
+      <div class="flex items-center gap-2.5 shrink-0">
+        <button id="darkToggle" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 text-sm p-1.5 rounded-full border-0 bg-transparent hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer transition flex items-center justify-center" title="Toggle theme" type="button" aria-label="Toggle theme">
+          <i data-lucide="moon" style="width: 16px; height: 16px;"></i>
+        </button>
+        {% if current_user.is_authenticated %}
+          <a href="{{ url_for('auth.profile') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white text-decoration-none px-2.5 py-1 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 border border-black/5 dark:border-white/10 transition" title="Profile">
+            <span class="w-5 h-5 rounded-full bg-sky-500 text-white flex items-center justify-center text-[10px] font-bold shadow-xs">{{ current_user.name[:1]|upper }}</span>
+            {% set name_parts = current_user.name.strip().split() %}
+            {% if name_parts|length > 0 %}
+              {% set first_word = name_parts[0] %}
+              {% if first_word|length > 1 %}
+                <span class="max-w-[100px] truncate hidden sm:inline">{{ first_word }}</span>
+              {% elif name_parts|length > 1 %}
+                <span class="max-w-[100px] truncate hidden sm:inline">{{ name_parts[-1] }}</span>
+              {% endif %}
+            {% endif %}
+          </a>
+          <a href="{{ url_for('auth.logout') }}" class="text-slate-400 hover:text-rose-500 dark:text-slate-400 dark:hover:text-rose-400 text-decoration-none p-1.5 rounded-full hover:bg-rose-500/10 transition flex items-center justify-center" title="Log out" aria-label="Log out">
+            <i data-lucide="log-out" style="width: 15px; height: 15px;"></i>
+          </a>
+        {% else %}
+          {% if request.endpoint != 'auth.login' %}
+            <a class="text-xs font-medium text-slate-700 hover:text-slate-900 text-decoration-none px-3 py-1.5 rounded-full bg-sky-500/10 text-sky-600 hover:bg-sky-500/20 transition" href="{{ url_for('auth.login') }}">Sign in</a>
+          {% endif %}
+        {% endif %}
+      </div>
+    </nav>
+  </header>
+
+  <!-- 3. FLASH / NOTIFICATION CONTAINER (Do NOT wrap the canvas here!) -->
+  <div class="relative z-20 max-w-md mx-auto mt-4 px-4">
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         {% for category, message in messages %}
-          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          <div class="flex items-center justify-between px-4 py-2.5 rounded-xl bg-white/60 backdrop-blur-md border border-white/60 text-xs text-slate-700 shadow-sm mb-2" role="alert">
+            <span>{{ message }}</span>
+            <button type="button" class="text-slate-400 hover:text-slate-600 border-0 bg-transparent cursor-pointer" onclick="this.parentElement.remove()" aria-label="Close">✕</button>
           </div>
         {% endfor %}
       {% endif %}
     {% endwith %}
+  </div>
+
+  <!-- 4. PAGE CONTENT -->
+  <main class="relative z-10 flex flex-col w-full min-h-[calc(100vh-140px)] items-center justify-start p-4 lg:p-6" id="main-content" role="main">
     {% block content %}{% endblock %}
   </main>
-  <footer class="app-footer" role="contentinfo" aria-label="Site footer">
-    <span>&copy; 2026 DayTone &mdash; AI powered Mental Wellness Tracker.</span>
-    <span class="footer-links">
-      <a href="{{ url_for('auth.help_view') }}">Help &amp; Manual</a>
-      <a href="{{ url_for('auth.api_docs') }}">Developer APIs</a>
-      <a href="{{ url_for('auth.contact') }}">Contact</a>
-      <a href="{{ url_for('auth.privacy') }}">Privacy Policy</a>
-      <a href="{{ url_for('auth.terms') }}">Terms of Service</a>
-    </span>
+
+  <!-- Site Footer: Executive Frosted Glass Capsule -->
+  <footer class="relative z-10 py-6 mt-auto flex justify-center px-4" role="contentinfo">
+    <div class="footer-glass-capsule max-w-2xl w-full px-6 py-3 rounded-full flex flex-col sm:flex-row items-center justify-between gap-3 text-center shadow-lg">
+      <div class="flex items-center gap-2">
+        <span class="w-6 h-6 rounded-lg bg-sky-500 text-white flex items-center justify-center font-bold text-[11px] shadow-sm shrink-0" style="width:24px;height:24px;">DT</span>
+        <span class="footer-brand-text text-xs tracking-tight" style="color: var(--color-primary, #0f172a) !important; font-weight: 700;">
+          &copy; 2026 DayTone &bull; Circadian Sanctuary
+        </span>
+      </div>
+      <div class="flex items-center justify-center gap-1.5 text-xs font-medium flex-wrap">
+        <a href="{{ url_for('auth.help_view') }}" class="footer-link">Manual</a>
+        <span class="footer-sep">&bull;</span>
+        <a href="{{ url_for('auth.api_docs') }}" class="footer-link">APIs</a>
+        <span class="footer-sep">&bull;</span>
+        <a href="{{ url_for('auth.contact') }}" class="footer-link">Contact</a>
+        <span class="footer-sep">&bull;</span>
+        <a href="{{ url_for('auth.privacy') }}" class="footer-link">Privacy</a>
+        <span class="footer-sep">&bull;</span>
+        <a href="{{ url_for('auth.terms') }}" class="footer-link">Terms</a>
+      </div>
+    </div>
   </footer>
-  <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}" defer></script>
-  <script src="{{ url_for('static', filename='js/lucide.min.js') }}" defer></script>
-  <script src="{{ url_for('static', filename='js/darkmode.js') }}" defer></script>
+
+  <!-- Core JavaScript Libraries -->
+  <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/lucide.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/darkmode.js') }}"></script>
+
+  <!-- Three.js, Lenis, and GSAP Animation Engine -->
+  <script src="{{ url_for('static', filename='js/three.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/lenis.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/gsap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/ScrollTrigger.min.js') }}"></script>
+
+  <!-- Daytone Singleton 3D WebGL Layer -->
+  <script src="{{ url_for('static', filename='js/daytoneScene.js') }}?v=2.1.0"></script>
+
+  <!-- Lenis & GSAP ScrollTrigger Synchronization -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (window.lucide) window.lucide.createIcons();
+
+      // Synchronize Lenis with GSAP ScrollTrigger
+      if (window.Lenis && window.gsap && window.ScrollTrigger) {
+        gsap.registerPlugin(ScrollTrigger);
+
+        const lenis = new Lenis({
+          duration: 1.15,
+          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+          smoothWheel: true,
+          orientation: 'vertical',
+          gestureOrientation: 'vertical'
+        });
+
+        lenis.on('scroll', ScrollTrigger.update);
+
+        gsap.ticker.add((time) => {
+          lenis.raf(time * 1000);
+        });
+
+        gsap.ticker.lagSmoothing(0);
+        window.lenis = lenis;
+      }
     });
   </script>
 
-  <!-- PWA: Service Worker registration -->
+  <!-- PWA & Sync Logic -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -226,101 +310,22 @@
       });
     }
 
-    // Install prompt (A2HS banner)
-    let deferredPrompt = null;
-    window.addEventListener('beforeinstallprompt', e => {
-      e.preventDefault();
-      deferredPrompt = e;
-      const banner = document.getElementById('pwa-install-banner');
-      if (banner) banner.classList.remove('pwa-banner-hidden');
-    });
-
-    window.addEventListener('appinstalled', () => {
-      deferredPrompt = null;
-      const banner = document.getElementById('pwa-install-banner');
-      if (banner) banner.remove();
-    });
-
-    function pwaInstall() {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
-    }
-
-    function pwaDismiss() {
-      deferredPrompt = null;
-      const banner = document.getElementById('pwa-install-banner');
-      if (banner) banner.remove();
-      localStorage.setItem('pwa-dismissed', '1');
-    }
-
-    // Don't show if already dismissed
-    if (localStorage.getItem('pwa-dismissed')) {
-      document.addEventListener('DOMContentLoaded', () => {
-        const b = document.getElementById('pwa-install-banner');
-        if (b) b.remove();
-      });
-    }
-
-    // Tab Sync via BroadcastChannel
+    // BroadcastChannel sync
     (function() {
       if ('BroadcastChannel' in window) {
         const channel = new BroadcastChannel('daytone_sync');
-        
         channel.onmessage = (event) => {
           if (event.data === 'reload_dashboard' && window.location.pathname.includes('/dashboard')) {
-            showSyncToast();
+            window.location.reload();
           }
         };
-        
         window.triggerTabSync = function() {
           channel.postMessage('reload_dashboard');
         };
-      }
-      
-      function showSyncToast() {
-        let container = document.getElementById('toastContainer');
-        if (!container) {
-          container = document.createElement('div');
-          container.id = 'toastContainer';
-          container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
-          container.style.zIndex = '1080';
-          document.body.appendChild(container);
-        }
-        
-        const id = 'toast-sync-' + Date.now();
-        const toastHtml = `
-          <div id="${id}" class="custom-toast animate-slide-in d-flex align-items-center gap-2 p-3 mb-2 rounded shadow" style="background: var(--dt-glass-modal-bg); border: 1px solid var(--dt-border); border-left: 4px solid var(--dt-primary); min-width: 300px; backdrop-filter: blur(15px); color: var(--dt-text);">
-            <i data-lucide="refresh-cw" class="animate-spin text-primary" style="width: 20px; height: 20px; flex-shrink: 0; color: var(--dt-primary) !important;"></i>
-            <div class="flex-grow-1">
-              <span class="fw-bold d-block" style="font-size: 0.85rem; color: var(--dt-text);">Data Updated</span>
-              <small class="text-secondary" style="font-size: 0.75rem;">Logs were modified in another tab.</small>
-            </div>
-            <button class="btn btn-xs btn-primary" onclick="window.location.reload()">Reload</button>
-          </div>
-        `;
-        container.insertAdjacentHTML('beforeend', toastHtml);
-        
-        const toastEl = document.getElementById(id);
-        if (window.lucide) {
-          window.lucide.createIcons({ node: toastEl });
-        }
       }
     })();
   </script>
 
   {% block scripts %}{% endblock %}
-
-  <!-- PWA Install Banner (Add to Home Screen) -->
-  <div id="pwa-install-banner" class="pwa-banner pwa-banner-hidden" role="dialog" aria-label="Install DayTone app">
-    <img src="{{ url_for('static', filename='icons/icon-48.png') }}" alt="DayTone icon" class="pwa-banner-icon">
-    <div class="pwa-banner-copy">
-      <strong>Install DayTone</strong>
-      <span>Add to your home screen for quick access</span>
-    </div>
-    <button class="btn btn-sm btn-primary pwa-banner-btn" onclick="pwaInstall()" aria-label="Install app">Install</button>
-    <button class="btn btn-sm btn-glass pwa-banner-close" onclick="pwaDismiss()" aria-label="Dismiss install prompt">✕</button>
-  </div>
 </body>
 </html>
-

@@ -1,364 +1,380 @@
 {% extends "base.html" %}
-{% block title %}Register - DayTone{% endblock %}
+{% block title %}Create Account — DayTone{% endblock %}
+
 {% block content %}
+<div class="w-full max-w-7xl mx-auto flex min-h-[calc(100vh-140px)] items-center justify-between px-6 lg:px-16 gap-10">
 
-<section class="reg-shell">
+  <!-- Left Side: Brand Column (Matching Login Theme) -->
+  <div class="hidden max-w-lg lg:block">
+    <a href="{{ url_for('auth.index') }}" class="inline-flex items-center gap-2 rounded-full border border-sky-400/40 bg-white/75 dark:bg-slate-800/80 hover:bg-white/95 px-4 py-1.5 text-xs font-semibold text-sky-700 dark:text-sky-300 backdrop-blur-md mb-6 shadow-sm transition-all text-decoration-none">
+      <span class="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
+      Circadian Resonance Engine · Start Your Baseline →
+    </a>
 
-  <!-- ── Left visual panel ── -->
-  <div class="reg-visual" id="regVisual" aria-hidden="true">
-    <div class="reg-glow-orb rg-1"></div>
-    <div class="reg-glow-orb rg-2"></div>
-    <div class="reg-glow-orb rg-3"></div>
+    <h1 class="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white xl:text-5xl leading-tight" style="font-family: var(--font-display);">
+      Start your baseline.
+    </h1>
 
-    <div class="reg-visual-copy">
-      <span class="eyebrow" style="color:rgba(255,255,255,0.55);">Your wellness journey</span>
-      <h2 style="color:#fff; font-size:clamp(1.8rem,4vw,2.8rem); font-weight:800; margin:0.4rem 0 0.75rem;">
-        Start your baseline<span style="color:var(--dt-primary-2);">.</span>
-      </h2>
-      <p style="color:rgba(255,255,255,0.62); font-size:0.95rem; max-width:300px; line-height:1.6;">
-        One small daily check-in. DayTone tracks your patterns and alerts you to burnout before it hits.
-      </p>
+    <p class="mt-4 text-base text-slate-700 dark:text-slate-200 leading-relaxed font-medium">
+      One small daily check-in. DayTone tracks your circadian rhythms, emotional tones, and detects burnout signals before they emerge.
+    </p>
 
-      <ul class="reg-feature-list" role="list">
-        <li><span class="reg-feat-icon">🧠</span><span>AI burnout risk prediction</span></li>
-        <li><span class="reg-feat-icon">📊</span><span>5 analytics charts</span></li>
-        <li><span class="reg-feat-icon">💤</span><span>Sleep &amp; stress tracking</span></li>
-        <li><span class="reg-feat-icon">📄</span><span>Downloadable PDF report</span></li>
-      </ul>
-
-      <!-- Step progress indicator -->
-      <div class="reg-steps" id="regSteps" aria-label="Form progress">
-        <div class="reg-step active" data-step="1"><span>1</span><small>You</small></div>
-        <div class="reg-step-line" id="line-1-2"></div>
-        <div class="reg-step" data-step="2"><span>2</span><small>Security</small></div>
-        <div class="reg-step-line" id="line-2-3"></div>
-        <div class="reg-step" data-step="3"><span>3</span><small>Profile</small></div>
+    <!-- Feature Badges with Lucide Icons (Zero cartoon emojis) -->
+    <div class="mt-8 grid grid-cols-2 gap-4 text-xs font-bold text-slate-800 dark:text-slate-200">
+      <div class="flex items-center gap-2.5">
+        <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-sky-500/15 text-sky-600 dark:text-sky-400">
+          <i data-lucide="brain" style="width:14px;height:14px;"></i>
+        </span>
+        <span>Burnout Prediction AI</span>
       </div>
+      <div class="flex items-center gap-2.5">
+        <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-sky-500/15 text-sky-600 dark:text-sky-400">
+          <i data-lucide="bar-chart-3" style="width:14px;height:14px;"></i>
+        </span>
+        <span>Predictive Analytics</span>
+      </div>
+      <div class="flex items-center gap-2.5">
+        <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-sky-500/15 text-sky-600 dark:text-sky-400">
+          <i data-lucide="moon" style="width:14px;height:14px;"></i>
+        </span>
+        <span>Sleep &amp; Stress Rhythms</span>
+      </div>
+      <div class="flex items-center gap-2.5">
+        <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-sky-500/15 text-sky-600 dark:text-sky-400">
+          <i data-lucide="shield-check" style="width:14px;height:14px;"></i>
+        </span>
+        <span>Private &amp; On-Device</span>
+      </div>
+    </div>
 
-      <!-- Step hint -->
-      <p class="reg-step-hint" id="regStepHint">Step 1 of 3 — Tell us about you</p>
+    <!-- Step Indicator Pills -->
+    <div class="mt-10 flex items-center gap-3">
+      <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/70 dark:bg-slate-800/70 border border-white/60 dark:border-white/10 text-xs font-bold" id="stepIndicator1">
+        <span class="w-5 h-5 rounded-full bg-sky-500 text-white flex items-center justify-center text-[10px]">1</span>
+        <span>You</span>
+      </div>
+      <div class="h-0.5 w-6 bg-slate-300 dark:bg-slate-700" id="stepLine1"></div>
+      <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/40 dark:bg-slate-800/40 border border-white/40 dark:border-white/5 text-xs font-bold opacity-60" id="stepIndicator2">
+        <span class="w-5 h-5 rounded-full bg-slate-400 text-white flex items-center justify-center text-[10px]">2</span>
+        <span>Security</span>
+      </div>
+      <div class="h-0.5 w-6 bg-slate-300 dark:bg-slate-700" id="stepLine2"></div>
+      <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/40 dark:bg-slate-800/40 border border-white/40 dark:border-white/5 text-xs font-bold opacity-60" id="stepIndicator3">
+        <span class="w-5 h-5 rounded-full bg-slate-400 text-white flex items-center justify-center text-[10px]">3</span>
+        <span>Profile</span>
+      </div>
     </div>
   </div>
 
-  <!-- ── Right form panel ── -->
-  <form method="post" class="panel reg-panel elevated-panel" id="regForm" novalidate>
-    {{ form.hidden_tag() }}
+  <!-- Right Side: Frosted Glass Registration Panel -->
+  <div class="w-full max-w-lg mx-auto lg:mx-0">
+    <div class="rounded-3xl border border-white/80 dark:border-white/20 bg-white/45 dark:bg-slate-900/50 p-8 shadow-2xl backdrop-blur-2xl ring-1 ring-slate-900/5 transition-all">
 
-    <!-- Progress bar strip at top -->
-    <div class="reg-progress-strip" aria-hidden="true">
-      <div class="reg-progress-fill" id="regProgressFill" style="width:33.33%"></div>
-    </div>
-
-    <div class="reg-form-heading animate-fade-in-up">
-      <span class="eyebrow">Start your baseline</span>
-      <h1 id="stepTitle">Create your DayTone account</h1>
-    </div>
-
-    <!-- ─── STEP 1 : You ─── -->
-    <div class="reg-step-pane active" id="pane-1" data-step="1">
-      <div class="row g-3">
-        <div class="col-md-6">
-          <label class="form-label" for="name">{{ form.name.label.text }}</label>
-          <div class="float-label-wrap">
-            {{ form.name(class="float-input reg-input" + (" is-invalid" if form.name.errors else ""), id="name", placeholder=" ", autocomplete="name") }}
-            <label class="float-label" for="name">Full name</label>
-            <div class="float-border"></div>
-            <span class="reg-input-check" id="nameCheck"></span>
-          </div>
-          {% for e in form.name.errors %}<span class="input-err-msg" role="alert">{{ e }}</span>{% endfor %}
+      <div class="flex justify-between items-center mb-4">
+        <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-sky-500 to-indigo-600 font-bold text-white shadow-lg shadow-sky-500/30 text-lg">
+          DT
         </div>
-
-        <div class="col-md-6">
-          <label class="form-label" for="email">{{ form.email.label.text }}</label>
-          <div class="float-label-wrap">
-            {{ form.email(class="float-input reg-input" + (" is-invalid" if form.email.errors else ""), id="email", placeholder=" ", autocomplete="email") }}
-            <label class="float-label" for="email">Email address</label>
-            <div class="float-border"></div>
-            <span class="reg-input-check" id="emailCheck"></span>
-          </div>
-          {% for e in form.email.errors %}<span class="input-err-msg" role="alert">{{ e }}</span>{% endfor %}
-        </div>
-
-        <div class="col-md-6">
-          <label class="form-label" for="age">{{ form.age.label.text }}</label>
-          <div class="float-label-wrap">
-            {{ form.age(class="float-input reg-input" + (" is-invalid" if form.age.errors else ""), id="age", placeholder=" ", min="13", max="120") }}
-            <label class="float-label" for="age">Your age</label>
-            <div class="float-border"></div>
-          </div>
-          {% for e in form.age.errors %}<span class="input-err-msg" role="alert">{{ e }}</span>{% endfor %}
-        </div>
-
-        <div class="col-md-6">
-          <label class="form-label" for="gender">{{ form.gender.label.text }}</label>
-          {{ form.gender(class="form-select reg-select" + (" is-invalid" if form.gender.errors else ""), id="gender") }}
-          {% for e in form.gender.errors %}<span class="input-err-msg" role="alert">{{ e }}</span>{% endfor %}
+        <div class="text-right">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400" id="stepBadge">Step 1 of 3</span>
+          <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-0" id="stepSubtitle">Personal Details</p>
         </div>
       </div>
-    </div>
 
-    <!-- ─── STEP 2 : Security ─── -->
-    <div class="reg-step-pane" id="pane-2" data-step="2">
-      <div class="row g-3">
-        <div class="col-md-6">
-          <label class="form-label" for="password">{{ form.password.label.text }}</label>
-          <div class="password-field-container position-relative float-label-wrap">
-            {{ form.password(class="float-input pe-5 reg-input" + (" is-invalid" if form.password.errors else ""), id="password", placeholder=" ", autocomplete="new-password") }}
-            <label class="float-label" for="password">Create password</label>
-            <div class="float-border"></div>
-            <button type="button" class="float-pwd-toggle" id="togglePassword" aria-label="Toggle password">
-              <i data-lucide="eye"></i>
-            </button>
-          </div>
+      <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight" id="stepHeading" style="font-family: var(--font-display);">Create your account</h2>
 
-          <div class="pwd-strength-bar-wrap mt-1" id="pwdStrengthWrap" style="display:none;">
-            <div class="pwd-strength-bar" id="pwdStrengthBar"></div>
-            <span class="pwd-strength-label" id="pwdStrengthLabel"></span>
-          </div>
-
-          <ul class="pwd-req-list mt-2" id="pwdReqList">
-            <li id="req-len"   class="req-item"><i data-lucide="circle" style="width:10px;height:10px;"></i> 8+ characters</li>
-            <li id="req-upper" class="req-item"><i data-lucide="circle" style="width:10px;height:10px;"></i> Uppercase letter</li>
-            <li id="req-num"   class="req-item"><i data-lucide="circle" style="width:10px;height:10px;"></i> Number</li>
-            <li id="req-sym"   class="req-item"><i data-lucide="circle" style="width:10px;height:10px;"></i> Special character</li>
-          </ul>
-          {% for e in form.password.errors %}<span class="input-err-msg" role="alert">{{ e }}</span>{% endfor %}
-        </div>
-
-        <div class="col-md-6">
-          <label class="form-label" for="confirm_password">{{ form.confirm_password.label.text }}</label>
-          <div class="password-field-container position-relative float-label-wrap">
-            {{ form.confirm_password(class="float-input pe-5 reg-input" + (" is-invalid" if form.confirm_password.errors else ""), id="confirm_password", placeholder=" ", autocomplete="new-password") }}
-            <label class="float-label" for="confirm_password">Confirm password</label>
-            <div class="float-border"></div>
-            <button type="button" class="float-pwd-toggle" id="toggleConfirmPassword" aria-label="Toggle confirm password">
-              <i data-lucide="eye"></i>
-            </button>
-          </div>
-          <div class="pwd-match-row mt-1" id="pwdMatchRow" style="display:none;">
-            <span id="pwdMatchLabel" class="pwd-match-label"></span>
-          </div>
-          {% for e in form.confirm_password.errors %}<span class="input-err-msg" role="alert">{{ e }}</span>{% endfor %}
-        </div>
+      <!-- Progress Track -->
+      <div class="w-full bg-slate-200/70 dark:bg-slate-800/70 h-1.5 rounded-full mt-3 mb-6 overflow-hidden">
+        <div class="bg-gradient-to-r from-sky-500 to-indigo-600 h-full rounded-full transition-all duration-300" id="progressFill" style="width: 33.33%;"></div>
       </div>
-    </div>
 
-    <!-- ─── STEP 3 : Profile ─── -->
-    <div class="reg-step-pane" id="pane-3" data-step="3">
-      <div class="row g-3">
-        <div class="col-12">
-          <label class="form-label" for="occupation">{{ form.occupation.label.text }}</label>
-          <div class="float-label-wrap">
-            {{ form.occupation(class="float-input reg-input" + (" is-invalid" if form.occupation.errors else ""), id="occupation", placeholder=" ") }}
-            <label class="float-label" for="occupation">e.g. Student, Engineer…</label>
-            <div class="float-border"></div>
+      <form method="post" id="regForm" novalidate class="space-y-4">
+        {{ form.hidden_tag() }}
+
+        <!-- ─── STEP 1: YOU ─── -->
+        <div class="space-y-4" id="pane-1">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-1.5" for="name">{{ form.name.label.text }}</label>
+            {{ form.name(class="w-full rounded-xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-800/90 px-4 py-2.5 text-sm font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 shadow-sm focus:border-sky-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-400/40 reg-input" + (" border-rose-500" if form.name.errors else ""), id="name", placeholder="Alex Rivera", autocomplete="name", required=True) }}
+            {% for e in form.name.errors %}<p class="text-rose-500 text-xs mt-1 font-semibold">{{ e }}</p>{% endfor %}
           </div>
-          {% for e in form.occupation.errors %}<span class="input-err-msg" role="alert">{{ e }}</span>{% endfor %}
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-1.5" for="email">{{ form.email.label.text }}</label>
+            {{ form.email(class="w-full rounded-xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-800/90 px-4 py-2.5 text-sm font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 shadow-sm focus:border-sky-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-400/40 reg-input" + (" border-rose-500" if form.email.errors else ""), id="email", placeholder="alex@domain.com", autocomplete="email", required=True) }}
+            {% for e in form.email.errors %}<p class="text-rose-500 text-xs mt-1 font-semibold">{{ e }}</p>{% endfor %}
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-1.5" for="age">{{ form.age.label.text }}</label>
+              {{ form.age(class="w-full rounded-xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-800/90 px-4 py-2.5 text-sm font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 shadow-sm focus:border-sky-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-400/40 reg-input" + (" border-rose-500" if form.age.errors else ""), id="age", placeholder="28", min="13", max="120", required=True) }}
+              {% for e in form.age.errors %}<p class="text-rose-500 text-xs mt-1 font-semibold">{{ e }}</p>{% endfor %}
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-1.5" for="gender">{{ form.gender.label.text }}</label>
+              {{ form.gender(class="w-full rounded-xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-800/90 px-3 py-2.5 text-sm font-medium text-slate-900 dark:text-slate-100 shadow-sm focus:border-sky-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-400/40" + (" border-rose-500" if form.gender.errors else ""), id="gender") }}
+              {% for e in form.gender.errors %}<p class="text-rose-500 text-xs mt-1 font-semibold">{{ e }}</p>{% endfor %}
+            </div>
+          </div>
         </div>
 
-        <div class="col-12">
-          <label class="form-label">{{ form.preferred_activity.label.text }}</label>
-          <div class="activity-picker" id="activityPicker" role="radiogroup" aria-label="Preferred activity">
-            <label class="activity-chip" data-value="Walk">🚶 Walk</label>
-            <label class="activity-chip" data-value="Run">🏃 Run</label>
-            <label class="activity-chip" data-value="Cycle">🚴 Cycle</label>
-            <label class="activity-chip" data-value="Yoga">🧘 Yoga</label>
-            <label class="activity-chip" data-value="Gym">🏋 Gym</label>
-            <label class="activity-chip" data-value="Swim">🏊 Swim</label>
-            <label class="activity-chip" data-value="Music">🎵 Music</label>
-            <label class="activity-chip" data-value="Reading">📚 Reading</label>
+        <!-- ─── STEP 2: SECURITY ─── -->
+        <div class="space-y-4 hidden" id="pane-2">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-1.5" for="password">{{ form.password.label.text }}</label>
+            <div class="relative">
+              {{ form.password(class="w-full rounded-xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-800/90 px-4 py-2.5 text-sm font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 shadow-sm focus:border-sky-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-400/40 pr-10 reg-input" + (" border-rose-500" if form.password.errors else ""), id="password", placeholder="••••••••", autocomplete="new-password") }}
+              <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 border-0 bg-transparent p-0 cursor-pointer" id="togglePassword">
+                <i data-lucide="eye" style="width: 15px; height: 15px;"></i>
+              </button>
+            </div>
+            {% for e in form.password.errors %}<p class="text-rose-500 text-xs mt-1 font-semibold">{{ e }}</p>{% endfor %}
+
+            <!-- Password Strength Bar -->
+            <div class="mt-2" id="pwdStrengthWrap" style="display:none;">
+              <div class="flex items-center justify-between text-[11px] font-bold mb-1">
+                <span class="text-slate-500">Strength:</span>
+                <span id="pwdStrengthLabel" class="font-extrabold"></span>
+              </div>
+              <div class="w-full bg-slate-200 dark:bg-slate-700 h-1 rounded-full overflow-hidden">
+                <div id="pwdStrengthBar" class="h-full transition-all duration-300"></div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-1.5 mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+              <span id="req-len" class="flex items-center gap-1"><i data-lucide="circle" style="width:10px;height:10px;"></i> 8+ characters</span>
+              <span id="req-upper" class="flex items-center gap-1"><i data-lucide="circle" style="width:10px;height:10px;"></i> Uppercase letter</span>
+              <span id="req-num" class="flex items-center gap-1"><i data-lucide="circle" style="width:10px;height:10px;"></i> Number</span>
+              <span id="req-sym" class="flex items-center gap-1"><i data-lucide="circle" style="width:10px;height:10px;"></i> Symbol</span>
+            </div>
           </div>
-          {{ form.preferred_activity(class="form-select d-none", id="preferred_activity") }}
-          {% for e in form.preferred_activity.errors %}<span class="input-err-msg" role="alert">{{ e }}</span>{% endfor %}
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-1.5" for="confirm_password">{{ form.confirm_password.label.text }}</label>
+            <div class="relative">
+              {{ form.confirm_password(class="w-full rounded-xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-800/90 px-4 py-2.5 text-sm font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 shadow-sm focus:border-sky-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-400/40 pr-10 reg-input" + (" border-rose-500" if form.confirm_password.errors else ""), id="confirm_password", placeholder="••••••••", autocomplete="new-password") }}
+              <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 border-0 bg-transparent p-0 cursor-pointer" id="toggleConfirmPassword">
+                <i data-lucide="eye" style="width: 15px; height: 15px;"></i>
+              </button>
+            </div>
+            <div id="pwdMatchRow" class="mt-1 text-xs font-semibold" style="display:none;">
+              <span id="pwdMatchLabel"></span>
+            </div>
+            {% for e in form.confirm_password.errors %}<p class="text-rose-500 text-xs mt-1 font-semibold">{{ e }}</p>{% endfor %}
+          </div>
         </div>
 
-        <div class="col-12">
-          <div class="reminder-switch-card">
-            {{ form.daily_reminder(class="form-check-input", id="daily_reminder") }}
-            <label class="form-check-label" for="daily_reminder">
-              <span class="reminder-icon">🔔</span>
-              <span>
-                <strong>Send daily check-in reminder</strong>
-                <small>We'll nudge you once a day — no spam, ever.</small>
+        <!-- ─── STEP 3: PROFILE ─── -->
+        <div class="space-y-4 hidden" id="pane-3">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-1.5" for="occupation">{{ form.occupation.label.text }}</label>
+            {{ form.occupation(class="w-full rounded-xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-800/90 px-4 py-2.5 text-sm font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 shadow-sm focus:border-sky-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-400/40 reg-input", id="occupation", placeholder="e.g. Designer, Engineer, Student…") }}
+            {% for e in form.occupation.errors %}<p class="text-rose-500 text-xs mt-1 font-semibold">{{ e }}</p>{% endfor %}
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-1.5">{{ form.preferred_activity.label.text }}</label>
+            <div class="grid grid-cols-4 gap-2" id="activityPicker" role="radiogroup">
+              <button type="button" class="activity-chip" data-value="Walk"><i data-lucide="footprints"></i> Walk</button>
+              <button type="button" class="activity-chip" data-value="Run"><i data-lucide="activity"></i> Run</button>
+              <button type="button" class="activity-chip" data-value="Cycle"><i data-lucide="bike"></i> Cycle</button>
+              <button type="button" class="activity-chip" data-value="Yoga"><i data-lucide="wind"></i> Yoga</button>
+              <button type="button" class="activity-chip" data-value="Gym"><i data-lucide="dumbbell"></i> Gym</button>
+              <button type="button" class="activity-chip" data-value="Swim"><i data-lucide="waves"></i> Swim</button>
+              <button type="button" class="activity-chip" data-value="Music"><i data-lucide="headphones"></i> Music</button>
+              <button type="button" class="activity-chip" data-value="Reading"><i data-lucide="book-open"></i> Reading</button>
+            </div>
+            {{ form.preferred_activity(class="hidden", id="preferred_activity") }}
+            {% for e in form.preferred_activity.errors %}<p class="text-rose-500 text-xs mt-1 font-semibold">{{ e }}</p>{% endfor %}
+          </div>
+
+          <div class="rounded-xl border border-slate-200/70 dark:border-white/10 bg-white/60 dark:bg-slate-800/60 p-3.5 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-500/15 text-sky-600 dark:text-sky-400">
+                <i data-lucide="bell" style="width:16px;height:16px;"></i>
               </span>
-            </label>
+              <div>
+                <p class="text-xs font-bold text-slate-800 dark:text-slate-200 mb-0">Daily check-in reminder</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-0">Gentle mindful nudge once a day</p>
+              </div>
+            </div>
+            {{ form.daily_reminder(class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-400 cursor-pointer", id="daily_reminder") }}
           </div>
+
+          {% if show_admin %}
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-1.5">{{ form.admin_code.label }}</label>
+            {{ form.admin_code(class="w-full rounded-xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-800/90 px-4 py-2.5 text-sm font-medium text-slate-900 dark:text-slate-100 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-400/40", placeholder="Enter admin code") }}
+            {% for e in form.admin_code.errors %}<p class="text-rose-500 text-xs mt-1 font-semibold">{{ e }}</p>{% endfor %}
+          </div>
+          {% endif %}
         </div>
 
-        {% if show_admin %}
-        <div class="col-12">
-          <label class="form-label">{{ form.admin_code.label }}</label>
-          <div class="float-label-wrap">
-            {{ form.admin_code(class="float-input" + (" is-invalid" if form.admin_code.errors else ""), placeholder="Enter admin code") }}
-            <div class="float-border"></div>
-          </div>
-          {% for e in form.admin_code.errors %}<span class="input-err-msg" role="alert">{{ e }}</span>{% endfor %}
+        <!-- ─── NAVIGATION ACTIONS ─── -->
+        <div class="flex items-center gap-3 pt-3">
+          <button type="button" id="regBackBtn" class="hidden rounded-xl border border-slate-200/80 dark:border-white/10 bg-white/70 dark:bg-slate-800/70 px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-100 transition cursor-pointer flex items-center gap-1.5">
+            <i data-lucide="arrow-left" style="width:15px;height:15px;"></i>
+            <span>Back</span>
+          </button>
+
+          <button type="button" id="regNextBtn" class="flex-1 rounded-xl bg-gradient-to-r from-sky-500 via-indigo-500 to-indigo-600 py-3 text-sm font-bold text-white shadow-lg shadow-sky-500/25 transition-all hover:opacity-95 active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2">
+            <span>Continue</span>
+            <i data-lucide="arrow-right" style="width:15px;height:15px;"></i>
+          </button>
+
+          <button type="submit" id="regSubmitBtn" class="hidden flex-1 rounded-xl bg-gradient-to-r from-sky-500 via-indigo-500 to-indigo-600 py-3 text-sm font-bold text-white shadow-lg shadow-sky-500/25 transition-all hover:opacity-95 active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2">
+            <span id="btnDefaultContent" class="flex items-center gap-1.5">
+              <i data-lucide="sparkles" style="width:16px;height:16px;"></i>
+              <span>Create Account</span>
+            </span>
+            <span id="btnLoadingContent" class="hidden flex items-center gap-2">
+              <span class="spinner-border spinner-border-sm" role="status"></span>
+              <span>Creating…</span>
+            </span>
+          </button>
         </div>
-        {% endif %}
-      </div>
-    </div>
 
-    <!-- ─── Navigation ─── -->
-    <div class="reg-nav-actions mt-4" id="regNavActions">
-      <button type="button" class="btn btn-glass reg-back-btn" id="regBackBtn" style="display:none;">
-        <i data-lucide="arrow-left"></i> Back
-      </button>
-      <button type="button" class="neon-btn reg-next-btn" id="regNextBtn">
-        <span class="neon-btn-shine" aria-hidden="true"></span>
-        Next <i data-lucide="arrow-right"></i>
-      </button>
-      <button type="submit" class="neon-btn auth-submit-btn" id="regSubmitBtn" style="display:none;">
-        <span class="neon-btn-shine" aria-hidden="true"></span>
-        <span class="btn-default-content"><i data-lucide="sparkles"></i> Create account</span>
-        <span class="btn-loading-content" style="display:none;">
-          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Creating…
-        </span>
-      </button>
-    </div>
+        <!-- Footer: Link to Sign In -->
+        <div class="mt-4 border-t border-slate-200 dark:border-white/10 pt-4 text-center">
+          <p class="text-xs text-slate-700 dark:text-slate-400 font-medium mb-0">
+            Already have an account? <a href="{{ url_for('auth.login') }}" class="font-bold text-sky-600 hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-300 hover:underline">Sign in</a>
+          </p>
+        </div>
 
-  </form>
-</section>
+      </form>
+    </div>
+  </div>
+
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-
-  /* ── State ── */
+document.addEventListener('DOMContentLoaded', () => {
   let currentStep = 1;
   const totalSteps = 3;
 
-  const panes      = document.querySelectorAll('.reg-step-pane');
-  const stepDots   = document.querySelectorAll('#regSteps .reg-step');
-  const nextBtn    = document.getElementById('regNextBtn');
-  const backBtn    = document.getElementById('regBackBtn');
-  const submitBtn  = document.getElementById('regSubmitBtn');
-  const progressFill = document.getElementById('regProgressFill');
-  const stepHint   = document.getElementById('regStepHint');
-  const stepTitle  = document.getElementById('stepTitle');
+  const pane1 = document.getElementById('pane-1');
+  const pane2 = document.getElementById('pane-2');
+  const pane3 = document.getElementById('pane-3');
+  const panes = [pane1, pane2, pane3];
 
-  const hints  = ['Step 1 of 3 — Tell us about you', 'Step 2 of 3 — Secure your account', 'Step 3 of 3 — Build your profile'];
-  const titles = ['Create your DayTone account', 'Secure your account', 'Build your profile'];
+  const nextBtn = document.getElementById('regNextBtn');
+  const backBtn = document.getElementById('regBackBtn');
+  const submitBtn = document.getElementById('regSubmitBtn');
+  const progressFill = document.getElementById('progressFill');
 
-  /* ── Show step ── */
+  const stepBadge = document.getElementById('stepBadge');
+  const stepSubtitle = document.getElementById('stepSubtitle');
+  const stepHeading = document.getElementById('stepHeading');
+
+  const subtitles = ['Personal Details', 'Account Security', 'Personalized Profile'];
+  const headings = ['Create your account', 'Secure your account', 'Personalize your rhythm'];
+
   function showStep(n) {
-    panes.forEach(p => {
-      p.classList.toggle('active', parseInt(p.dataset.step) === n);
-    });
-    stepDots.forEach(dot => {
-      const s = parseInt(dot.dataset.step);
-      dot.classList.toggle('active', s === n);
-      dot.classList.toggle('done', s < n);
-    });
-
-    // Update progress fill
-    progressFill.style.width = ((n / totalSteps) * 100) + '%';
-
-    // Update text
-    if (stepHint)  stepHint.textContent  = hints[n - 1];
-    if (stepTitle) stepTitle.textContent = titles[n - 1];
-
-    // Update connecting lines
-    const line12 = document.getElementById('line-1-2');
-    const line23 = document.getElementById('line-2-3');
-    if (line12) line12.classList.toggle('done', n > 1);
-    if (line23) line23.classList.toggle('done', n > 2);
-
-    // Buttons
-    backBtn.style.display   = n > 1 ? 'inline-flex' : 'none';
-    nextBtn.style.display   = n < totalSteps ? 'inline-flex' : 'none';
-    submitBtn.style.display = n === totalSteps ? 'inline-flex' : 'none';
-
     currentStep = n;
-
-    // Re-init lucide icons for new pane
-    if (window.lucide) window.lucide.createIcons();
-  }
-
-  /* ── Validate step before advancing ── */
-  function validateStep(n) {
-    let ok = true;
-    const pane = document.getElementById('pane-' + n);
-    pane.querySelectorAll('.reg-input').forEach(inp => {
-      if (!inp.value.trim()) {
-        inp.classList.add('is-invalid');
-        // Shake animation
-        inp.closest('.float-label-wrap')?.classList.add('shake');
-        setTimeout(() => inp.closest('.float-label-wrap')?.classList.remove('shake'), 500);
-        ok = false;
+    panes.forEach((p, idx) => {
+      if (idx === n - 1) {
+        p.classList.remove('hidden');
       } else {
-        inp.classList.remove('is-invalid');
+        p.classList.add('hidden');
       }
     });
-    if (n === 2) {
-      const pwd  = document.getElementById('password');
-      const conf = document.getElementById('confirm_password');
-      if (pwd && conf && pwd.value !== conf.value) {
-        conf.classList.add('is-invalid');
-        ok = false;
+
+    // Update progress bar
+    progressFill.style.width = ((n / totalSteps) * 100) + '%';
+    stepBadge.textContent = `Step ${n} of ${totalSteps}`;
+    stepSubtitle.textContent = subtitles[n - 1];
+    stepHeading.textContent = headings[n - 1];
+
+    // Left indicator pills
+    for (let i = 1; i <= 3; i++) {
+      const ind = document.getElementById(`stepIndicator${i}`);
+      if (ind) {
+        ind.style.opacity = i <= n ? '1' : '0.6';
       }
     }
-    return ok;
+
+    // Buttons
+    backBtn.classList.toggle('hidden', n === 1);
+    nextBtn.classList.toggle('hidden', n === totalSteps);
+    submitBtn.classList.toggle('hidden', n !== totalSteps);
+
+    if (window.lucide) window.lucide.createIcons();
+    if (window.DaytoneScene) window.DaytoneScene.pulse(1.1, 0.4);
   }
 
-  /* ── Nav buttons ── */
+  function validateStep(n) {
+    let valid = true;
+    const currentPane = panes[n - 1];
+    const inputs = currentPane.querySelectorAll('input[required]');
+    inputs.forEach(inp => {
+      if (!inp.value.trim()) {
+        inp.classList.add('border-rose-500');
+        valid = false;
+      } else {
+        inp.classList.remove('border-rose-500');
+      }
+    });
+
+    if (n === 2) {
+      const pwd = document.getElementById('password');
+      const conf = document.getElementById('confirm_password');
+      if (pwd && conf && pwd.value !== conf.value) {
+        conf.classList.add('border-rose-500');
+        valid = false;
+      }
+    }
+    return valid;
+  }
+
   nextBtn.addEventListener('click', () => {
     if (!validateStep(currentStep)) return;
     if (currentStep < totalSteps) showStep(currentStep + 1);
   });
+
   backBtn.addEventListener('click', () => {
     if (currentStep > 1) showStep(currentStep - 1);
   });
 
-  /* ── Submit loading ── */
-  document.getElementById('regForm').addEventListener('submit', () => {
-    submitBtn.querySelector('.btn-default-content').style.display = 'none';
-    submitBtn.querySelector('.btn-loading-content').style.display = 'inline-flex';
-    submitBtn.disabled = true;
-  });
-
-  /* ── Float labels ── */
-  document.querySelectorAll('.float-input').forEach(inp => {
-    const wrap = inp.closest('.float-label-wrap');
-    const checkFilled = () => wrap?.classList.toggle('filled', inp.value.length > 0);
-    inp.addEventListener('focus', () => { wrap?.classList.add('focused'); checkFilled(); });
-    inp.addEventListener('blur',  () => { wrap?.classList.remove('focused'); checkFilled(); });
-    inp.addEventListener('input', checkFilled);
-    checkFilled();
-  });
-
-  /* ── Password toggles ── */
+  // Password visibility toggles
   function setupToggle(btnId, inputId) {
     const btn = document.getElementById(btnId);
     const inp = document.getElementById(inputId);
     if (!btn || !inp) return;
     btn.addEventListener('click', () => {
-      inp.type = inp.type === 'password' ? 'text' : 'password';
+      const isPwd = inp.type === 'password';
+      inp.type = isPwd ? 'text' : 'password';
       const icon = btn.querySelector('i');
-      icon.setAttribute('data-lucide', inp.type === 'password' ? 'eye' : 'eye-off');
-      if (window.lucide) window.lucide.createIcons();
+      if (icon) {
+        icon.setAttribute('data-lucide', isPwd ? 'eye-off' : 'eye');
+        if (window.lucide) window.lucide.createIcons();
+      }
     });
   }
   setupToggle('togglePassword', 'password');
   setupToggle('toggleConfirmPassword', 'confirm_password');
 
-  /* ── Password strength ── */
-  const pwdInput      = document.getElementById('password');
-  const strengthWrap  = document.getElementById('pwdStrengthWrap');
-  const strengthBar   = document.getElementById('pwdStrengthBar');
+  // Password strength checker
+  const pwdInput = document.getElementById('password');
+  const strengthWrap = document.getElementById('pwdStrengthWrap');
+  const strengthBar = document.getElementById('pwdStrengthBar');
   const strengthLabel = document.getElementById('pwdStrengthLabel');
+
   const reqItems = {
     len:   { el: document.getElementById('req-len'),   fn: v => v.length >= 8 },
     upper: { el: document.getElementById('req-upper'), fn: v => /[A-Z]/.test(v) },
     num:   { el: document.getElementById('req-num'),   fn: v => /[0-9]/.test(v) },
     sym:   { el: document.getElementById('req-sym'),   fn: v => /[^A-Za-z0-9]/.test(v) },
   };
+
   const levels = [
-    { label:'Weak',   color:'#ef4444', width:'25%' },
-    { label:'Fair',   color:'#f59e0b', width:'50%' },
-    { label:'Good',   color:'#3b82f6', width:'75%' },
-    { label:'Strong', color:'#10b981', width:'100%' },
+    { label: 'Weak', color: '#ef4444', width: '25%' },
+    { label: 'Fair', color: '#f59e0b', width: '50%' },
+    { label: 'Good', color: '#38bdf8', width: '75%' },
+    { label: 'Strong', color: '#10b981', width: '100%' },
   ];
+
   if (pwdInput) {
     pwdInput.addEventListener('input', () => {
       const v = pwdInput.value;
@@ -366,50 +382,49 @@ document.addEventListener('DOMContentLoaded', function () {
       Object.values(reqItems).forEach(({ el, fn }) => {
         const pass = fn(v);
         if (pass) score++;
-        el?.classList.toggle('req-met', pass);
         const icon = el?.querySelector('i');
         if (icon) icon.setAttribute('data-lucide', pass ? 'check-circle' : 'circle');
+        if (el) el.classList.toggle('text-emerald-500', pass);
       });
       if (window.lucide) window.lucide.createIcons();
-      if (!v.length) { strengthWrap.style.display = 'none'; return; }
-      strengthWrap.style.display = 'flex';
+
+      if (!v.length) {
+        if (strengthWrap) strengthWrap.style.display = 'none';
+        return;
+      }
+      if (strengthWrap) strengthWrap.style.display = 'block';
       const lvl = levels[Math.max(0, score - 1)];
-      strengthBar.style.width = lvl.width;
-      strengthBar.style.background = lvl.color;
-      strengthLabel.textContent = lvl.label;
-      strengthLabel.style.color = lvl.color;
+      if (strengthBar) {
+        strengthBar.style.width = lvl.width;
+        strengthBar.style.background = lvl.color;
+      }
+      if (strengthLabel) {
+        strengthLabel.textContent = lvl.label;
+        strengthLabel.style.color = lvl.color;
+      }
       checkMatch();
     });
   }
 
-  /* ── Password match ── */
-  const confInput  = document.getElementById('confirm_password');
-  const matchRow   = document.getElementById('pwdMatchRow');
+  // Confirm password match check
+  const confInput = document.getElementById('confirm_password');
+  const matchRow = document.getElementById('pwdMatchRow');
   const matchLabel = document.getElementById('pwdMatchLabel');
   function checkMatch() {
-    if (!confInput?.value.length) { matchRow.style.display = 'none'; return; }
+    if (!confInput?.value.length) {
+      if (matchRow) matchRow.style.display = 'none';
+      return;
+    }
     const match = pwdInput?.value === confInput.value;
-    matchRow.style.display = 'flex';
-    matchLabel.textContent = match ? '✓ Passwords match' : '✗ Passwords do not match';
-    matchLabel.style.color = match ? '#10b981' : '#ef4444';
+    if (matchRow) matchRow.style.display = 'block';
+    if (matchLabel) {
+      matchLabel.textContent = match ? 'Passwords match' : 'Passwords do not match';
+      matchLabel.className = match ? 'text-emerald-500 font-semibold' : 'text-rose-500 font-semibold';
+    }
   }
-  confInput?.addEventListener('input', checkMatch);
+  if (confInput) confInput.addEventListener('input', checkMatch);
 
-  /* ── Live check icons ── */
-  function liveCheck(inputId, checkId, validator) {
-    const inp = document.getElementById(inputId);
-    const chk = document.getElementById(checkId);
-    if (!inp || !chk) return;
-    inp.addEventListener('input', () => {
-      const ok = validator(inp.value);
-      chk.textContent = inp.value.length ? (ok ? '✓' : '✗') : '';
-      chk.className   = 'reg-input-check ' + (inp.value.length ? (ok ? 'check-ok' : 'check-fail') : '');
-    });
-  }
-  liveCheck('name',  'nameCheck',  v => v.trim().length >= 2);
-  liveCheck('email', 'emailCheck', v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v));
-
-  /* ── Activity chip picker ── */
+  // Activity Chip Picker
   const picker = document.getElementById('activityPicker');
   const hiddenSelect = document.getElementById('preferred_activity');
   if (picker && hiddenSelect) {
@@ -423,15 +438,27 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  /* ── Handle server-side errors: jump to the correct step ── */
+  // Form submit state
+  const regForm = document.getElementById('regForm');
+  if (regForm) {
+    regForm.addEventListener('submit', () => {
+      const defContent = document.getElementById('btnDefaultContent');
+      const loadContent = document.getElementById('btnLoadingContent');
+      if (defContent) defContent.classList.add('hidden');
+      if (loadContent) loadContent.classList.remove('hidden');
+      if (submitBtn) submitBtn.disabled = true;
+      if (window.DaytoneScene) window.DaytoneScene.disperse(1.2);
+    });
+  }
+
+  // Handle server-side errors
   const nameErr = {{ 'true' if form.name.errors or form.email.errors or form.age.errors or form.gender.errors else 'false' }};
-  const pwdErr  = {{ 'true' if form.password.errors or form.confirm_password.errors else 'false' }};
+  const pwdErr = {{ 'true' if form.password.errors or form.confirm_password.errors else 'false' }};
   const profErr = {{ 'true' if form.occupation.errors or form.preferred_activity.errors else 'false' }};
 
   if (profErr && !pwdErr && !nameErr) showStep(3);
-  else if (pwdErr && !nameErr)        showStep(2);
-  else                                 showStep(1);
-
+  else if (pwdErr && !nameErr) showStep(2);
+  else showStep(1);
 });
 </script>
 {% endblock %}

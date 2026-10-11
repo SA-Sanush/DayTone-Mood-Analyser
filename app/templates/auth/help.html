@@ -1,78 +1,204 @@
 {% extends "base.html" %}
-{% block title %}Help & Manual — DayTone{% endblock %}
+{% block title %}Help Center & Manual — DayTone{% endblock %}
 {% block content %}
-<div class="container py-4" style="max-width: 800px;">
-  <div class="mb-4">
-    <span class="eyebrow">User Guide</span>
-    <h1>DayTone Help Center & Manual</h1>
-    <p class="text-secondary">Learn how DayTone tracks mood, computes goals, and classifies burnout risk.</p>
+<div class="manual-shell w-full max-w-5xl mx-auto py-4 space-y-6">
+
+  <!-- ── Help & Manual Header Capsule ────────────────────────────────────── -->
+  <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-6 md:p-8 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5 flex flex-col md:flex-row md:items-center md:justify-between gap-5 animate-fade-in-up">
+    <div class="flex items-center gap-4">
+      <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-sky-500/25 flex-shrink-0">
+        <i data-lucide="book-open" style="width: 26px; height: 26px;"></i>
+      </div>
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-sky-500/15 text-sky-700 dark:text-sky-300 border border-sky-500/25 mb-1.5 backdrop-blur-md">
+          <span class="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
+          <span>Documentation &amp; Sanctuary Guide</span>
+        </div>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white m-0 tracking-tight">DayTone Help Center &amp; Manual</h1>
+        <p class="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 m-0 mt-1">Learn how DayTone tracks mood telemetry, computes goals, and classifies burnout risk.</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3 self-start md:self-center flex-shrink-0">
+      {% if current_user.is_authenticated %}
+      <a href="{{ url_for('mood.dashboard') }}" class="daytone-btn-secondary daytone-btn-sm text-decoration-none whitespace-nowrap flex-shrink-0">
+        <i data-lucide="arrow-left" style="width: 14px; height: 14px;"></i>
+        <span>Dashboard</span>
+      </a>
+      {% else %}
+      <a href="{{ url_for('auth.index') }}" class="daytone-btn-secondary daytone-btn-sm text-decoration-none whitespace-nowrap flex-shrink-0">
+        <i data-lucide="arrow-left" style="width: 14px; height: 14px;"></i>
+        <span>Home</span>
+      </a>
+      <a href="{{ url_for('auth.login') }}" class="daytone-btn-primary daytone-btn-sm text-decoration-none whitespace-nowrap flex-shrink-0">
+        <i data-lucide="log-in" style="width: 14px; height: 14px;"></i>
+        <span>Sign In</span>
+      </a>
+      {% endif %}
+    </div>
   </div>
 
   <!-- ── Section 1: The 3D Mood Orb ───────────────────────────────────── -->
-  <div class="panel elevated-panel mb-4 animate-fade-in-up">
-    <div class="panel-title">
-      <i data-lucide="sun"></i>
-      <h2>The Interactive 3D Mood Orb</h2>
+  <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-6 md:p-8 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5 space-y-5 animate-fade-in-up">
+    <div class="flex items-center gap-3 pb-3 border-b border-slate-200/40 dark:border-white/10">
+      <div class="w-9 h-9 rounded-xl bg-sky-500/15 text-sky-600 dark:text-sky-400 flex items-center justify-center flex-shrink-0">
+        <i data-lucide="sparkles" style="width: 20px; height: 20px;"></i>
+      </div>
+      <div>
+        <h2 class="text-lg font-extrabold text-slate-900 dark:text-white m-0">The Interactive 3D Mood Orb</h2>
+        <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Biometric feedback &amp; real-time shader dynamics</span>
+      </div>
     </div>
-    <p>
-      The 3D Orb on your dashboard is a dynamic visualization of your current wellness state:
+    <p class="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 leading-relaxed m-0">
+      The 3D Orb on your dashboard acts as an intuitive biofeedback mirror of your emotional telemetry:
     </p>
-    <ul>
-      <li><strong>Colors (Mood Score):</strong> Smoothly transitions between HSL states. A high score (e.g. 5/5) shows cool, calming shades, while lower scores show vibrant warning shades.</li>
-      <li><strong>Shape Deformation (Stress Level):</strong> The orb deforms using simplex noise algorithms. High stress levels trigger stronger, faster wave deformations, providing immediate visual feedback of tension levels.</li>
-      <li><strong>Calm Mode:</strong> If you are sensitive to movement, you can enable <em>Calm Mode</em> in your <a href="{{ url_for('auth.profile') }}">Settings</a> to freeze all 3D canvas rendering and chart transitions.</li>
-    </ul>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+      <div class="p-4 rounded-2xl border border-white/60 dark:border-white/10 bg-white/50 dark:bg-slate-800/50 backdrop-blur-md shadow-xs space-y-2">
+        <div class="flex items-center gap-2 text-sky-600 dark:text-sky-400">
+          <i data-lucide="palette" style="width: 16px; height: 16px;"></i>
+          <span class="text-xs font-extrabold uppercase tracking-wider">Colors (Mood Score)</span>
+        </div>
+        <p class="text-xs font-semibold text-slate-600 dark:text-slate-300 leading-normal m-0">
+          Smoothly transitions across circadian HSL palettes. High scores (4–5/5) radiate tranquil cerulean &amp; jade hues, while lower scores shift to cautionary warmth.
+        </p>
+      </div>
+
+      <div class="p-4 rounded-2xl border border-white/60 dark:border-white/10 bg-white/50 dark:bg-slate-800/50 backdrop-blur-md shadow-xs space-y-2">
+        <div class="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+          <i data-lucide="activity" style="width: 16px; height: 16px;"></i>
+          <span class="text-xs font-extrabold uppercase tracking-wider">Deformation (Stress)</span>
+        </div>
+        <p class="text-xs font-semibold text-slate-600 dark:text-slate-300 leading-normal m-0">
+          Orb vertices mutate via simplex noise algorithms. Elevated tension triggers faster turbulence ripples, providing immediate somatic awareness.
+        </p>
+      </div>
+
+      <div class="p-4 rounded-2xl border border-white/60 dark:border-white/10 bg-white/50 dark:bg-slate-800/50 backdrop-blur-md shadow-xs space-y-2">
+        <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+          <i data-lucide="wind" style="width: 16px; height: 16px;"></i>
+          <span class="text-xs font-extrabold uppercase tracking-wider">Calm Mode</span>
+        </div>
+        <p class="text-xs font-semibold text-slate-600 dark:text-slate-300 leading-normal m-0">
+          For motion sensitivity, enable Calm Mode in <a href="{{ url_for('auth.profile') }}" class="text-sky-600 dark:text-sky-400 font-bold hover:underline">Settings</a> to freeze 3D canvas rendering and reduce transitions.
+        </p>
+      </div>
+    </div>
   </div>
 
   <!-- ── Section 2: Goals Progress ────────────────────────────────────── -->
-  <div class="panel elevated-panel mb-4 animate-fade-in-up delay-1">
-    <div class="panel-title">
-      <i data-lucide="target"></i>
-      <h2>Understanding Wellness Goals</h2>
+  <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-6 md:p-8 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5 space-y-5 animate-fade-in-up">
+    <div class="flex items-center gap-3 pb-3 border-b border-slate-200/40 dark:border-white/10">
+      <div class="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+        <i data-lucide="target" style="width: 20px; height: 20px;"></i>
+      </div>
+      <div>
+        <h2 class="text-lg font-extrabold text-slate-900 dark:text-white m-0">Understanding Wellness Goals</h2>
+        <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Rolling metrics &amp; adaptive progress calculation</span>
+      </div>
     </div>
-    <p>
-      DayTone calculates goals progress using a <strong>rolling average window</strong>:
+    <p class="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 leading-relaxed m-0">
+      DayTone calculates goal progress using an adaptive <strong>rolling average window</strong> rather than rigid calendar weeks:
     </p>
-    <ul>
-      <li>When you create a goal (e.g., target 8 hours of sleep), DayTone evaluates your check-ins over a rolling 7-day window.</li>
-      <li>For new goals, DayTone immediately integrates historical logs from the past week so you don't start at 0% progress on Day One.</li>
-    </ul>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+      <div class="p-4 rounded-2xl border border-white/60 dark:border-white/10 bg-white/50 dark:bg-slate-800/50 backdrop-blur-md shadow-xs space-y-2">
+        <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+          <i data-lucide="calendar" style="width: 16px; height: 16px;"></i>
+          <span class="text-xs font-extrabold uppercase tracking-wider">Rolling 7-Day Window</span>
+        </div>
+        <p class="text-xs font-semibold text-slate-600 dark:text-slate-300 leading-normal m-0">
+          When you target wellness habits (e.g., 8 hours of sleep or mindful walks), DayTone evaluates check-ins over the past 7 days to absorb natural daily fluctuations without breaking your momentum.
+        </p>
+      </div>
+
+      <div class="p-4 rounded-2xl border border-white/60 dark:border-white/10 bg-white/50 dark:bg-slate-800/50 backdrop-blur-md shadow-xs space-y-2">
+        <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+          <i data-lucide="sparkle" style="width: 16px; height: 16px;"></i>
+          <span class="text-xs font-extrabold uppercase tracking-wider">Instant Historical Baseline</span>
+        </div>
+        <p class="text-xs font-semibold text-slate-600 dark:text-slate-300 leading-normal m-0">
+          Newly created goals automatically integrate your existing check-in logs from the preceding 7 days, ensuring you don't start at an artificial 0% deficit on Day One.
+        </p>
+      </div>
+    </div>
   </div>
 
   <!-- ── Section 3: AI Burnout Predictions & Ethics ───────────────────── -->
-  <div class="panel elevated-panel mb-4 animate-fade-in-up delay-2">
-    <div class="panel-title">
-      <i data-lucide="brain-circuit"></i>
-      <h2>AI Burnout Predictions & Transparency</h2>
-    </div>
-    <p>
-      DayTone uses a supervised machine learning classifier (Decision Tree / Random Forest) trained on standard occupational wellness metrics to predict burnout risk (Low, Medium, High).
-    </p>
-    <div class="alert alert-info d-flex align-items-start gap-2 my-3" style="font-size: 0.88rem;">
-      <i data-lucide="info" class="flex-shrink-0 mt-0.5" style="color: var(--dt-primary);"></i>
+  <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-6 md:p-8 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5 space-y-5 animate-fade-in-up">
+    <div class="flex items-center gap-3 pb-3 border-b border-slate-200/40 dark:border-white/10">
+      <div class="w-9 h-9 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0">
+        <i data-lucide="brain-circuit" style="width: 20px; height: 20px;"></i>
+      </div>
       <div>
-        <strong>Privacy & Ethical Opt-Out:</strong> If you do not wish to have predictions run on your data, you can disable AI classifications anytime under your <a href="{{ url_for('auth.profile') }}">Settings</a> profile. Your data will remain encrypted at rest, and risk metrics will default to Low.
+        <h2 class="text-lg font-extrabold text-slate-900 dark:text-white m-0">AI Burnout Predictions &amp; Transparency</h2>
+        <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Audited machine learning models &amp; user data autonomy</span>
       </div>
     </div>
-    <p>
-      For a complete technical analysis of model accuracy, feature weights, bias auditing, and performance indicators, please read the official <a href="/api-docs">Model Card Reference</a>.
+    <p class="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 leading-relaxed m-0">
+      DayTone uses a supervised machine learning classifier (Decision Tree / Random Forest) trained on standard occupational wellness metrics to classify burnout risk (<strong class="text-emerald-600 dark:text-emerald-400">Low</strong>, <strong class="text-amber-600 dark:text-amber-400">Medium</strong>, <strong class="text-rose-600 dark:text-rose-400">High</strong>).
     </p>
+
+    <!-- Privacy & Ethical Opt-Out Callout -->
+    <div class="p-4 rounded-2xl border border-sky-500/30 bg-sky-500/10 dark:bg-sky-500/15 backdrop-blur-md flex items-start gap-3">
+      <div class="w-8 h-8 rounded-xl bg-sky-500/20 text-sky-600 dark:text-sky-300 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <i data-lucide="shield-check" style="width: 18px; height: 18px;"></i>
+      </div>
+      <div class="space-y-1">
+        <strong class="text-xs font-extrabold text-sky-900 dark:text-sky-200 block">Privacy &amp; Ethical Opt-Out</strong>
+        <p class="text-xs font-semibold text-sky-800/90 dark:text-sky-200/90 leading-normal m-0">
+          If you prefer not to have ML models evaluate your entries, you can disable AI classifications anytime under your <a href="{{ url_for('auth.profile') }}" class="font-bold underline hover:opacity-80">Settings Profile</a>. Your data remains fully encrypted at rest, and risk metrics default to Low.
+        </p>
+      </div>
+    </div>
+
+    <div class="pt-1 flex items-center justify-between flex-wrap gap-3">
+      <p class="text-xs font-semibold text-slate-600 dark:text-slate-300 m-0">
+        Review our transparent algorithmic documentation, feature importances, and bias audits:
+      </p>
+      <a href="{{ url_for('auth.api_docs') }}" class="daytone-btn-secondary daytone-btn-sm text-decoration-none">
+        <i data-lucide="file-code" style="width: 14px; height: 14px;"></i>
+        <span>Model Card Reference</span>
+      </a>
+    </div>
   </div>
 
   <!-- ── Section 4: Crisis Support ────────────────────────────────────── -->
-  <div class="panel elevated-panel mb-4 animate-fade-in-up delay-3" style="border-left: 4px solid var(--dt-danger);">
-    <div class="panel-title" style="color: var(--dt-danger);">
-      <i data-lucide="heart" style="color: var(--dt-danger);"></i>
-      <h2 style="color: var(--dt-danger);">Need Support?</h2>
+  <div class="rounded-3xl border border-rose-500/30 dark:border-rose-500/20 bg-rose-500/10 dark:bg-rose-950/20 p-6 md:p-8 shadow-xl backdrop-blur-xl ring-1 ring-rose-500/10 space-y-5 animate-fade-in-up">
+    <div class="flex items-center gap-3 pb-3 border-b border-rose-500/20">
+      <div class="w-9 h-9 rounded-xl bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center flex-shrink-0">
+        <i data-lucide="heart-handshake" style="width: 20px; height: 20px;"></i>
+      </div>
+      <div>
+        <h2 class="text-lg font-extrabold text-rose-600 dark:text-rose-400 m-0">Need Support?</h2>
+        <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Compassionate helplines &amp; 24/7 crisis guidance</span>
+      </div>
     </div>
-    <p class="text-secondary">
-      DayTone is a tracking and reflection tool, not a clinical diagnostic or crisis service. If you are experiencing distress, please consider calling or text messaging:
+    <p class="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 leading-relaxed m-0">
+      DayTone is a tracking and reflection tool, not a clinical diagnostic or crisis service. If you are experiencing acute distress, compassionate confidential support is available 24/7:
     </p>
-    <ul class="crisis-list">
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
       {% for resource in crisis_resources %}
-      <li><strong>{{ resource.region }}:</strong> <a href="{{ resource.url }}" target="_blank" rel="noopener">{{ resource.label }}</a></li>
+      <div class="p-4 rounded-2xl border border-white/60 dark:border-white/10 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md shadow-xs flex items-center justify-between gap-3">
+        <div class="space-y-0.5 min-w-0">
+          <span class="inline-block text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/20">
+            {{ resource.region }}
+          </span>
+          <div class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white truncate">
+            {{ resource.label }}
+          </div>
+        </div>
+        <a href="{{ resource.url }}" target="_blank" rel="noopener" class="daytone-btn-secondary daytone-btn-sm flex-shrink-0 text-decoration-none">
+          {% if resource.url.startswith('tel:') %}
+          <i data-lucide="phone" style="width: 14px; height: 14px;"></i>
+          <span>Call</span>
+          {% else %}
+          <i data-lucide="external-link" style="width: 14px; height: 14px;"></i>
+          <span>Open</span>
+          {% endif %}
+        </a>
+      </div>
       {% endfor %}
-    </ul>
+    </div>
   </div>
+
 </div>
 {% endblock %}

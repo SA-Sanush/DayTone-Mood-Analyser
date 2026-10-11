@@ -1,18 +1,35 @@
 {% extends "base.html" %}
-{% block title %}Admin Invite Tokens — DayTone{% endblock %}
+{% block title %}{{ 'Dev Invite Tokens' if current_user.is_developer else 'Admin Invite Tokens' }} — DayTone{% endblock %}
 {% block content %}
-<div class="container py-4">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h1 class="mb-1">Admin Invite Tokens</h1>
-      <p class="text-secondary mb-0">Generate and manage one-time signup invite tokens for administrator registration.</p>
+<div class="admin-shell w-full max-w-5xl mx-auto py-4 space-y-6">
+
+  <!-- ── Invite Tokens Header Capsule ──────────────────────────────── -->
+  <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-6 md:p-8 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5 flex flex-col md:flex-row md:items-center md:justify-between gap-5 animate-fade-in-up">
+    <div class="flex items-center gap-4">
+      <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-600 flex items-center justify-center text-white shadow-lg shadow-amber-500/25 flex-shrink-0">
+        <i data-lucide="ticket" style="width: 26px; height: 26px;"></i>
+      </div>
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/25 mb-1.5 backdrop-blur-md">
+          <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+          <span>Access Tokens</span>
+        </div>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white m-0 tracking-tight">{{ 'Developer Invite Tokens' if current_user.is_developer else 'Admin Invite Tokens' }}</h1>
+        <p class="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 m-0 mt-1">Generate and manage cryptographic one-time registration access passes.</p>
+      </div>
     </div>
-    <form method="post" action="{{ url_for('admin.invite_tokens') }}">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <button type="submit" class="btn btn-primary d-flex align-items-center gap-1">
-        <i data-lucide="plus-circle" style="width: 16px; height: 16px;"></i> Generate New Token
-      </button>
-    </form>
+    <div class="flex items-center gap-3 self-start md:self-center flex-shrink-0">
+      <a class="daytone-btn-secondary daytone-btn-sm text-decoration-none" href="{{ url_for('admin.developer_dashboard') if current_user.is_developer else url_for('admin.dashboard') }}">
+        <i data-lucide="layout-dashboard" style="width: 14px; height: 14px;"></i>
+        <span>{{ 'Dev Console' if current_user.is_developer else 'Admin' }}</span>
+      </a>
+      <form method="post" action="{{ url_for('admin.invite_tokens') }}" class="m-0">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="daytone-btn-primary daytone-btn-sm">
+          <i data-lucide="plus-circle" style="width: 14px; height: 14px;"></i> Generate Pass
+        </button>
+      </form>
+    </div>
   </div>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
@@ -34,12 +51,13 @@
           <th>Created At</th>
           <th>Expires At</th>
           <th>Status</th>
+          <th class="text-end">Action</th>
         </tr>
       </thead>
       <tbody>
         {% if not tokens %}
         <tr>
-          <td colspan="4" class="text-center py-4 text-secondary">
+          <td colspan="5" class="text-center py-4 text-secondary">
             <i data-lucide="ticket" class="mb-2 text-muted" style="width: 32px; height: 32px;"></i>
             <p class="mb-0">No invite tokens generated yet.</p>
           </td>
@@ -63,11 +81,19 @@
           <td>
             {% if t.is_used %}
             <span class="badge bg-secondary text-dark" style="color: var(--dt-border) !important;">Used</span>
-            {% elif t.expires_at and t.expires_at < now %}
+            {% elif t.expires_at and (t.expires_at.replace(tzinfo=None) if t.expires_at.tzinfo else t.expires_at) < (now.replace(tzinfo=None) if now.tzinfo else now) %}
             <span class="badge bg-danger">Expired</span>
             {% else %}
             <span class="badge bg-success">Active / Unused</span>
             {% endif %}
+          </td>
+          <td class="text-end">
+            <form method="post" action="{{ url_for('admin.delete_invite_token', token_id=t.id) }}" style="display:inline;">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1" title="Remove token" onclick="return confirm('Remove this invite token?')">
+                <i data-lucide="trash-2" style="width:13px;height:13px;"></i> Remove
+              </button>
+            </form>
           </td>
         </tr>
         {% endfor %}

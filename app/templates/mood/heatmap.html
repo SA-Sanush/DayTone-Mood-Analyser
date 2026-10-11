@@ -1,82 +1,121 @@
 {% extends "base.html" %}
-{% block title %}Heatmap - DayTone{% endblock %}
+{% block title %}Mood Heatmap — DayTone{% endblock %}
+
 {% block content %}
-<div class="page-head">
-  <div>
-    <span class="eyebrow">Mood calendar</span>
-    <h1>Mood heatmap</h1>
-    <p class="text-secondary">A year-long view of your daily mood scores.</p>
-  </div>
-  
-  <!-- Year Selector (populated dynamically in JS) -->
-  <div class="time-range-selector" id="heatmapYearSelector" role="group" aria-label="Select year"></div>
-</div>
+<div class="heatmap-shell w-full max-w-5xl mx-auto py-4 space-y-6">
 
-<div class="panel elevated-panel heatmap-panel mb-4" style="position: relative; overflow: visible;">
-  <!-- Loading state overlay -->
-  <div id="heatmapLoader" class="position-absolute start-50 top-50 translate-middle text-primary d-none" style="z-index: 10;">
-    <div class="spinner-border spinner-border-sm" role="status">
-      <span class="visually-hidden">Loading...</span>
+  <!-- Page Header Glass Capsule -->
+  <div class="page-head rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-6 md:p-8 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <div class="inline-flex items-center gap-2 rounded-full border border-sky-400/30 bg-sky-500/10 px-3 py-1 text-xs font-bold text-sky-700 dark:text-sky-300 mb-2.5">
+        <span class="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
+        Circadian Annual Matrix
+      </div>
+      <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white" style="font-family: var(--font-display);">Mood Heatmap</h1>
+      <p class="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 m-0 leading-normal">A year-long circadian view of your daily emotional resonance</p>
     </div>
+    
+    <!-- Year Selector (populated dynamically in JS) -->
+    <div class="time-range-selector" id="heatmapYearSelector" role="group" aria-label="Select year"></div>
   </div>
-  <div id="heatmap" style="min-height: 140px;"></div>
-</div>
 
-<!-- Interactive Legend & Details Section -->
-<div class="row g-3">
-  <!-- Legend panel -->
-  <div class="col-md-5">
-    <div class="panel h-100" style="padding: 1.25rem;">
-      <h3 style="font-size: 0.95rem; font-weight: 800; color: var(--dt-text); margin-bottom: 0.85rem;" class="d-flex align-items-center gap-1">
-        <i data-lucide="info" style="width: 15px; height: 15px; color: var(--dt-primary);"></i>
-        <span>Interactive Legend</span>
-      </h3>
-      <p class="text-secondary small mb-3">Hover over a mood below to highlight matching calendar days:</p>
-      
-      <div class="heatmap-legend d-flex flex-column gap-2">
-        <div class="legend-item cursor-pointer p-1 rounded" data-mood-val="5" style="transition: background-color 0.2s ease;">
-          <span class="legend-color-box" style="background-color: #86efac; border-radius: 4px; display: inline-block; width: 14px; height: 14px; margin-right: 0.5rem; vertical-align: middle;"></span>
-          <span style="font-size: 0.84rem; font-weight: 700; color: #22c55e;">😊 Happy (5/5)</span>
+  <!-- Heatmap Calendar Matrix Card -->
+  <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-6 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5 relative overflow-visible">
+    <!-- Loading state overlay -->
+    <div id="heatmapLoader" class="position-absolute start-50 top-50 translate-middle text-primary d-none" style="z-index: 10;">
+      <div class="spinner-border spinner-border-sm" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+    <div id="heatmap" class="w-full overflow-x-auto" style="min-height: 140px;"></div>
+  </div>
+
+  <!-- Interactive Legend & Details Section -->
+  <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+    <!-- Legend panel -->
+    <div class="md:col-span-5">
+      <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-6 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5 h-full">
+        <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+          <i data-lucide="info" class="text-sky-500" style="width: 16px; height: 16px;"></i>
+          <span>Interactive Legend</span>
+        </h3>
+        <p class="text-xs text-slate-600 dark:text-slate-300 mb-4 font-semibold">Hover over any mood to filter calendar patterns:</p>
+        
+        <div class="space-y-2 heatmap-legend">
+          <div class="legend-item cursor-pointer p-2 rounded-xl flex items-center justify-between hover:bg-white/25 dark:hover:bg-slate-800/50 transition" data-mood-val="5">
+            <div class="flex items-center gap-2.5">
+              <span class="w-3.5 h-3.5 rounded bg-emerald-400 inline-block shadow-sm"></span>
+              <span class="text-xs font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                <i data-lucide="sun" style="width:14px;height:14px;"></i> Happy
+              </span>
+            </div>
+            <span class="text-[11px] font-extrabold text-slate-600 dark:text-slate-300">5 / 5</span>
+          </div>
+
+          <div class="legend-item cursor-pointer p-2 rounded-xl flex items-center justify-between hover:bg-white/25 dark:hover:bg-slate-800/50 transition" data-mood-val="4">
+            <div class="flex items-center gap-2.5">
+              <span class="w-3.5 h-3.5 rounded bg-teal-400 inline-block shadow-sm"></span>
+              <span class="text-xs font-bold text-teal-700 dark:text-teal-400 flex items-center gap-1.5">
+                <i data-lucide="waves" style="width:14px;height:14px;"></i> Calm
+              </span>
+            </div>
+            <span class="text-[11px] font-extrabold text-slate-600 dark:text-slate-300">4 / 5</span>
+          </div>
+
+          <div class="legend-item cursor-pointer p-2 rounded-xl flex items-center justify-between hover:bg-white/25 dark:hover:bg-slate-800/50 transition" data-mood-val="3">
+            <div class="flex items-center gap-2.5">
+              <span class="w-3.5 h-3.5 rounded bg-amber-400 inline-block shadow-sm"></span>
+              <span class="text-xs font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                <i data-lucide="activity" style="width:14px;height:14px;"></i> Anxious
+              </span>
+            </div>
+            <span class="text-[11px] font-extrabold text-slate-600 dark:text-slate-300">3 / 5</span>
+          </div>
+
+          <div class="legend-item cursor-pointer p-2 rounded-xl flex items-center justify-between hover:bg-white/25 dark:hover:bg-slate-800/50 transition" data-mood-val="2">
+            <div class="flex items-center gap-2.5">
+              <span class="w-3.5 h-3.5 rounded bg-orange-400 inline-block shadow-sm"></span>
+              <span class="text-xs font-bold text-orange-700 dark:text-orange-400 flex items-center gap-1.5">
+                <i data-lucide="cloud-rain" style="width:14px;height:14px;"></i> Sad
+              </span>
+            </div>
+            <span class="text-[11px] font-extrabold text-slate-600 dark:text-slate-300">2 / 5</span>
+          </div>
+
+          <div class="legend-item cursor-pointer p-2 rounded-xl flex items-center justify-between hover:bg-white/25 dark:hover:bg-slate-800/50 transition" data-mood-val="1">
+            <div class="flex items-center gap-2.5">
+              <span class="w-3.5 h-3.5 rounded bg-rose-400 inline-block shadow-sm"></span>
+              <span class="text-xs font-bold text-rose-700 dark:text-rose-400 flex items-center gap-1.5">
+                <i data-lucide="heart-pulse" style="width:14px;height:14px;"></i> Sick
+              </span>
+            </div>
+            <span class="text-[11px] font-extrabold text-slate-600 dark:text-slate-300">1 / 5</span>
+          </div>
         </div>
-        <div class="legend-item cursor-pointer p-1 rounded" data-mood-val="4" style="transition: background-color 0.2s ease;">
-          <span class="legend-color-box" style="background-color: #bbf7d0; border-radius: 4px; display: inline-block; width: 14px; height: 14px; margin-right: 0.5rem; vertical-align: middle;"></span>
-          <span style="font-size: 0.84rem; font-weight: 700; color: #10b981;">😌 Calm (4/5)</span>
+      </div>
+    </div>
+    
+    <!-- Detail display card panel -->
+    <div class="md:col-span-7">
+      <div class="rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-6 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5 h-full flex flex-col justify-center" id="heatmapDetailCard">
+        <div class="text-center text-slate-600 dark:text-slate-300 py-6" id="heatmapDetailDefault">
+          <i data-lucide="mouse-pointer-click" class="mb-2 text-sky-500/80 dark:text-sky-400 mx-auto" style="width: 28px; height: 28px;"></i>
+          <p class="mb-0 text-xs font-bold text-slate-700 dark:text-slate-200">Hover over any day or click a cell to view biometric analysis and details.</p>
         </div>
-        <div class="legend-item cursor-pointer p-1 rounded" data-mood-val="3" style="transition: background-color 0.2s ease;">
-          <span class="legend-color-box" style="background-color: #fef3c7; border-radius: 4px; display: inline-block; width: 14px; height: 14px; margin-right: 0.5rem; vertical-align: middle;"></span>
-          <span style="font-size: 0.84rem; font-weight: 700; color: #eab308;">😰 Anxious (3/5)</span>
-        </div>
-        <div class="legend-item cursor-pointer p-1 rounded" data-mood-val="2" style="transition: background-color 0.2s ease;">
-          <span class="legend-color-box" style="background-color: #fed7aa; border-radius: 4px; display: inline-block; width: 14px; height: 14px; margin-right: 0.5rem; vertical-align: middle;"></span>
-          <span style="font-size: 0.84rem; font-weight: 700; color: #f97316;">😢 Sad (2/5)</span>
-        </div>
-        <div class="legend-item cursor-pointer p-1 rounded" data-mood-val="1" style="transition: background-color 0.2s ease;">
-          <span class="legend-color-box" style="background-color: #fee2e2; border-radius: 4px; display: inline-block; width: 14px; height: 14px; margin-right: 0.5rem; vertical-align: middle;"></span>
-          <span style="font-size: 0.84rem; font-weight: 700; color: #ef4444;">🤒 Sick (1/5)</span>
+        <div id="heatmapDetailContent" class="d-none">
+          <!-- Will be dynamically populated via Javascript -->
         </div>
       </div>
     </div>
   </div>
-  
-  <!-- Detail display card panel -->
-  <div class="col-md-7">
-    <div class="panel h-100 d-flex flex-column justify-content-center" id="heatmapDetailCard" style="padding: 1.25rem; transition: all 0.3s ease;">
-      <div class="text-center text-secondary py-4" id="heatmapDetailDefault">
-        <i data-lucide="mouse-pointer-click" class="mb-2 text-muted" style="width: 28px; height: 28px;"></i>
-        <p class="mb-0 small fw-bold">Hover over cells for tooltips, or click any cell to view detailed stats and recommendations.</p>
-      </div>
-      <div id="heatmapDetailContent" class="d-none">
-        <!-- Will be dynamically populated via Javascript -->
-      </div>
-    </div>
-  </div>
+
 </div>
 
 <!-- Custom HTML floating tooltip element -->
-<div id="heatmapTooltip" class="custom-tooltip shadow elevated-panel" style="position: fixed; display: none; pointer-events: none; z-index: 1000; background: var(--dt-glass-tooltip-bg); border: 1px solid var(--dt-border); border-radius: 8px; padding: 0.5rem 0.75rem; backdrop-filter: blur(10px); min-width: 170px;"></div>
+<div id="heatmapTooltip" class="custom-tooltip shadow-2xl" style="position: fixed; display: none; pointer-events: none; z-index: 1000; background: rgba(15, 23, 42, 0.85); color: #fff; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 0.6rem 0.85rem; backdrop-filter: blur(16px); min-width: 170px;"></div>
 {% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
-<script src="{{ url_for('static', filename='js/heatmap.js') }}?v=1.0.5"></script>
+<script src="{{ url_for('static', filename='js/heatmap.js') }}?v=1.0.6"></script>
 {% endblock %}

@@ -3853,10 +3853,10 @@ html[data-theme="dark"] .admin-search-input {
   position: relative;
   margin-bottom: 1.25rem;
   border-radius: var(--dt-radius);
-  border: 1.5px solid rgba(249, 115, 22, 0.45);
-  background: linear-gradient(135deg, rgba(254, 243, 199, 0.92), rgba(255, 237, 213, 0.82));
-  box-shadow: 0 8px 30px rgba(249, 115, 22, 0.14);
-  backdrop-filter: blur(18px);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(254, 243, 199, 0.35));
+  box-shadow: 0 10px 30px rgba(245, 158, 11, 0.08);
+  backdrop-filter: blur(16px);
   overflow: hidden;
   animation: fadeInUp 0.5s ease forwards;
 }
@@ -3864,8 +3864,8 @@ html[data-theme="dark"] .admin-search-input {
   content: '';
   position: absolute;
   inset: 0 0 auto;
-  height: 4px;
-  background: linear-gradient(90deg, #f97316, #ef4444);
+  height: 3px;
+  background: linear-gradient(90deg, #f59e0b, #ef4444);
 }
 .intervention-inner {
   display: flex;
@@ -3873,13 +3873,114 @@ html[data-theme="dark"] .admin-search-input {
   gap: 1rem;
   padding: 1.25rem;
 }
-.intervention-icon { font-size: 2rem; flex-shrink: 0; }
-.intervention-title { font-size: 1.1rem; font-weight: 800; color: #c2410c; margin: 0 0 0.35rem; }
-.intervention-text { font-size: 0.88rem; color: #7c3011; margin: 0 0 0.65rem; line-height: 1.6; }
+.intervention-icon-box {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+  flex-shrink: 0;
+}
+.intervention-icon-box svg { width: 24px; height: 24px; stroke-width: 2.2; }
+.intervention-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.intervention-badge svg { width: 13px; height: 13px; }
+.intervention-title { font-size: 1.1rem; font-weight: 800; color: #92400e; margin: 0 0 0.35rem; }
+.intervention-text { font-size: 0.88rem; color: #475569; margin: 0 0 0.65rem; line-height: 1.6; }
 .intervention-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
-.crisis-list { padding-left: 1.25rem; margin: 0; font-size: 0.84rem; color: #7c3011; }
-.crisis-list li { margin-bottom: 0.25rem; }
-.crisis-list a { color: var(--dt-primary); }
+
+.intervention-crisis {
+  border-top: 1px dashed rgba(100, 116, 139, 0.2);
+  padding-top: 0.85rem;
+}
+.crisis-summary-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.85rem;
+  border-radius: 8px;
+  background: rgba(245, 158, 11, 0.08);
+  color: #92400e;
+  font-size: 0.84rem;
+  font-weight: 750;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s ease;
+  list-style: none;
+}
+.crisis-summary-btn::-webkit-details-marker { display: none; }
+.crisis-summary-btn:hover { background: rgba(245, 158, 11, 0.15); }
+.crisis-icon-pulse { width: 16px; height: 16px; color: #d97706; }
+.crisis-chevron { width: 16px; height: 16px; transition: transform 0.25s ease; color: #b45309; }
+details[open] .crisis-chevron { transform: rotate(180deg); }
+
+.crisis-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.65rem;
+}
+.crisis-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(54, 74, 96, 0.12);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  text-decoration: none !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.crisis-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.1);
+  border-color: rgba(37, 99, 235, 0.3);
+}
+.crisis-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.crisis-region-pill {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+}
+.crisis-card-icon { width: 14px; height: 14px; color: #64748b; }
+.crisis-card:hover .crisis-card-icon { color: #2563eb; }
+.crisis-card-label {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.35;
+}
+.crisis-disclaimer {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: #64748b;
+  font-style: italic;
+}
 
 /* ─── Explainability Driver Cards ──────────────────────────────────────── */
 .driver-section {

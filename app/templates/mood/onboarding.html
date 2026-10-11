@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DayTone — Circadian Wellness &amp; Tone Constellation Experience</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+  <script src="{{ url_for('static', filename='js/tailwindcss.min.js') }}"></script>
+  <style>
+    /* Custom glow and backdrop effects */
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.65);
+    }
+    .glass-dark {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .glass-chassis {
+      background: rgba(10, 15, 30, 0.85);
+      backdrop-filter: blur(32px);
+      -webkit-backdrop-filter: blur(32px);
+      border: 1.5px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 40px rgba(56, 189, 248, 0.08);
+    }
+    .glow-cyan {
+      box-shadow: 0 0 25px rgba(56, 189, 248, 0.45);
+    }
+    .glow-amber {
+      box-shadow: 0 0 25px rgba(245, 158, 11, 0.35);
+    }
+  </style>
+</head>
+<body class="m-0 p-0 overflow-x-hidden font-sans select-none text-slate-100">
+
+<!-- SCROLL TRACK CONTAINER (450vh total height for smooth 4-Act narrative) -->
+<div class="relative w-full overflow-x-hidden transition-all duration-700" id="scroll-track" style="height: 450vh; background: radial-gradient(ellipse at 50% 38%, #fae3d1 0%, #dde7df 100%);">
+
+  <!-- FIXED FULLSCREEN 3D WEBGL CANVAS -->
+  <canvas id="scrolly-canvas" class="fixed inset-0 w-screen h-screen pointer-events-none z-0"></canvas>
+
+  <!-- STICKY VIEWPORT CONTAINER (100vh) -->
+  <div class="sticky top-0 h-screen w-full flex flex-col justify-between p-4 md:p-8 pointer-events-none z-10" id="pinned-stage">
+
+    <!-- 1. FLOATING PILL NAVBAR -->
+    <header class="flex items-center justify-between w-full max-w-4xl mx-auto px-5 py-2.5 rounded-full glass-panel shadow-lg shadow-black/5 pointer-events-auto transition-all duration-500" id="global-navbar">
+      <!-- Logo Mark -->
+      <a href="{{ url_for('mood.dashboard') }}" class="flex items-center gap-2.5 text-decoration-none group">
+        <div class="w-7 h-7 rounded-full bg-gradient-to-tr from-amber-400 via-rose-400 to-indigo-500 p-0.5 shadow-md group-hover:scale-105 transition-transform" style="width:28px;height:28px;">
+          <div class="w-full h-full rounded-full bg-white/95 flex items-center justify-center font-bold text-[10px] text-slate-800">DT</div>
+        </div>
+        <span class="font-extrabold text-slate-800 tracking-tight text-sm group-hover:text-sky-600 transition-colors" id="nav-brand-text">DayTone</span>
+      </a>
+
+      <!-- Act Indicator Badge -->
+      <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-black/5 border border-black/5 transition-all duration-300" id="nav-stage-pill">
+        <span class="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" id="stage-dot"></span>
+        <span class="text-xs font-semibold text-slate-700" id="stage-badge">Act 1: Circadian Awakening</span>
+      </div>
+
+      <!-- Right Navigation Items -->
+      <div class="flex items-center gap-3">
+        <button type="button" onclick="toggleSignInModal(true)" class="hidden sm:flex items-center gap-1 text-xs font-semibold text-slate-700 hover:text-slate-900 transition-colors bg-transparent border-0 cursor-pointer p-0" id="nav-signin-link">
+          <span>Sign In</span>
+          <svg class="w-3.5 h-3.5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
+        <div class="relative">
+          <div class="w-7 h-7 rounded-full bg-slate-800/10 border border-white/60 flex items-center justify-center text-xs font-bold text-slate-700 shadow-sm" style="width:28px;height:28px;">
+            SA
+          </div>
+          <span class="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white"></span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ========================================================================= -->
+    <!-- ACT 1: ORBITING FROSTED GLASS CARDS (Scroll 0% - 25%)                     -->
+    <!-- ========================================================================= -->
+    <div class="relative w-full max-w-5xl mx-auto h-[66vh] flex items-center justify-center pointer-events-none transition-all duration-500" id="act-1-layer">
+      
+      <!-- Top Left Card: Focus Flow Peak -->
+      <div class="act-card absolute top-2 left-2 md:left-6 w-64 p-4 rounded-2xl glass-panel shadow-xl pointer-events-auto border border-white/70">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2">
+            <span class="w-5 h-5 rounded-lg bg-sky-500/15 text-sky-600 flex items-center justify-center text-xs font-bold">
+              <i data-lucide="check" style="width:12px;height:12px;"></i>
+            </span>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Peak Window</span>
+          </div>
+          <span class="text-[10px] font-semibold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-full">Optimal</span>
+        </div>
+        <h4 class="text-sm font-bold text-slate-800">Focus Flow Peak: 10:30 AM</h4>
+        <p class="text-[11px] text-slate-600 mt-1 leading-snug">Circadian synchronization peak detected. High cognitive bandwidth.</p>
+      </div>
+
+      <!-- Top Right Card: Energy Level -->
+      <div class="act-card absolute top-2 right-2 md:right-6 w-64 p-4 rounded-2xl glass-panel shadow-xl pointer-events-auto border border-white/70">
+        <div class="flex items-center justify-between mb-1">
+          <div class="flex items-center gap-2">
+            <span class="w-5 h-5 rounded-lg bg-amber-500/15 text-amber-600 flex items-center justify-center text-xs">
+              <i data-lucide="zap" style="width:12px;height:12px;"></i>
+            </span>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Vitality Index</span>
+          </div>
+          <span class="text-sm font-extrabold text-slate-800">86%</span>
+        </div>
+        <div class="flex items-center justify-between text-[11px] text-slate-600">
+          <span>+12% vs diurnal norm</span>
+          <span class="text-emerald-600 font-bold">Rising ↑</span>
+        </div>
+        <!-- Sparkline -->
+        <div class="w-full h-5 mt-2 flex items-end gap-1">
+          <div class="w-1/6 bg-amber-400/30 rounded-t h-2"></div>
+          <div class="w-1/6 bg-amber-400/40 rounded-t h-3"></div>
+          <div class="w-1/6 bg-amber-400/60 rounded-t h-3.5"></div>
+          <div class="w-1/6 bg-amber-400/75 rounded-t h-4"></div>
+          <div class="w-1/6 bg-amber-500 rounded-t h-5"></div>
+          <div class="w-1/6 bg-amber-500/90 rounded-t h-4.5"></div>
+        </div>
+      </div>
+
+      <!-- Bottom Left Card: Rhythm Sync -->
+      <div class="act-card absolute bottom-4 left-2 md:left-6 w-64 p-4 rounded-2xl glass-panel shadow-xl pointer-events-auto border border-white/70">
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="w-5 h-5 rounded-lg bg-teal-500/15 text-teal-600 flex items-center justify-center text-xs">
+            <i data-lucide="wind" style="width:12px;height:12px;"></i>
+          </span>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Equilibrium</span>
+        </div>
+        <h4 class="text-sm font-bold text-slate-800">Diurnal Heart Rhythm</h4>
+        <p class="text-[11px] text-slate-600 mt-1 leading-snug">Vagal nerve recovery active. Stress signals suppressed within healthy bands.</p>
+      </div>
+
+      <!-- Bottom Right Card: Burnout Risk Score -->
+      <div class="act-card absolute bottom-4 right-2 md:right-6 w-64 p-4 rounded-2xl glass-panel shadow-xl pointer-events-auto border border-white/70">
+        <div class="flex items-center justify-between mb-1.5">
+          <div class="flex items-center gap-2">
+            <span class="w-5 h-5 rounded-lg bg-indigo-500/15 text-indigo-600 flex items-center justify-center text-xs">
+              <i data-lucide="shield-check" style="width:12px;height:12px;"></i>
+            </span>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Burnout Risk</span>
+          </div>
+          <span class="text-xs font-bold text-emerald-600">Low (14%)</span>
+        </div>
+        <div class="w-full bg-slate-200/70 h-2 rounded-full overflow-hidden mt-1">
+          <div class="bg-gradient-to-r from-emerald-400 to-sky-400 h-full rounded-full" style="width: 14%;"></div>
+        </div>
+        <p class="text-[11px] text-slate-600 mt-2">Zero cognitive overload flags across the past 72 hours.</p>
+      </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- ACT 2: TABLET COCKPIT & FLUTED STRESS RING (Scroll 25% - 55%)             -->
+    <!-- ========================================================================= -->
+    <div class="absolute inset-0 w-full max-w-5xl mx-auto flex items-center justify-center px-4 opacity-0 pointer-events-none transition-all duration-500" id="act-2-layer">
+      
+      <!-- Tablet Enclosure Chassis -->
+      <div class="w-full max-w-4xl rounded-[2.5rem] glass-chassis p-5 md:p-7 pointer-events-auto relative overflow-hidden border border-white/20">
+        
+        <!-- Hardware Camera Pinhole -->
+        <div class="w-16 h-3.5 bg-slate-900/90 border border-white/10 rounded-full mx-auto mb-4 flex items-center justify-center gap-1.5 shadow-inner">
+          <div class="w-1.5 h-1.5 rounded-full bg-sky-500/80 animate-ping"></div>
+          <div class="w-1.5 h-1.5 rounded-full bg-slate-700"></div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-stretch">
+          
+          <!-- Left Tablet Vertical Utility Dock (5 Icons) -->
+          <div class="hidden md:flex md:col-span-1 flex-col items-center justify-between py-2 border-r border-white/10 pr-3">
+            <div class="flex flex-col gap-3">
+              <button class="w-9 h-9 rounded-xl bg-white/10 hover:bg-sky-500/20 text-sky-400 flex items-center justify-center transition-colors shadow-sm" title="Home">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+              </button>
+              <button class="w-9 h-9 rounded-xl bg-sky-500/25 border border-sky-400/40 text-sky-300 flex items-center justify-center transition-colors shadow-sm" title="Waveform">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+              </button>
+              <button class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/15 text-slate-400 flex items-center justify-center transition-colors shadow-sm" title="Grid">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+              </button>
+              <button class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/15 text-slate-400 flex items-center justify-center transition-colors shadow-sm" title="Alerts">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+              </button>
+            </div>
+            <button class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/15 text-slate-400 flex items-center justify-center transition-colors" title="Settings">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            </button>
+          </div>
+
+          <!-- Main Tablet Dashboard Screen -->
+          <div class="col-span-1 md:col-span-11 flex flex-col justify-between">
+            
+            <!-- Top Sub-Navigation Tabs -->
+            <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+              <div class="flex items-center gap-2">
+                <span class="px-3 py-1 rounded-lg bg-sky-500/20 text-sky-300 font-bold text-xs border border-sky-400/30">From</span>
+                <span class="px-3 py-1 rounded-lg text-slate-400 hover:text-white font-medium text-xs cursor-pointer">Tally</span>
+                <span class="px-3 py-1 rounded-lg text-slate-400 hover:text-white font-medium text-xs cursor-pointer">Fluids</span>
+                <span class="px-3 py-1 rounded-lg text-slate-400 hover:text-white font-medium text-xs cursor-pointer">More</span>
+              </div>
+              <div class="text-[11px] text-slate-400 font-mono">2026.10 / RES-FREQ</div>
+            </div>
+
+            <!-- Content Split: Dual Area Chart + Stepper -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+              
+              <!-- Left Chart Section -->
+              <div class="lg:col-span-7 flex flex-col">
+                <div class="mb-2">
+                  <span class="text-[10px] font-bold text-sky-400 uppercase tracking-widest">Act 02 / Disruption Engine</span>
+                  <h3 class="text-xl font-extrabold text-white mt-0.5">Stress Time Tracking Helps Foretelling</h3>
+                  <p class="text-xs text-slate-300 mt-1">High-frequency cognitive strain creates fluted corrugation before mental fatigue becomes permanent.</p>
+                </div>
+
+                <!-- Dual-layer Curved Area Chart SVG -->
+                <div class="w-full h-36 relative rounded-2xl bg-slate-900/60 border border-white/10 p-2 overflow-hidden">
+                  <svg class="w-full h-full overflow-visible" viewBox="0 0 400 110" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="areaCyan" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.45" />
+                        <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.0" />
+                      </linearGradient>
+                      <linearGradient id="areaIndigo" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#818cf8" stop-opacity="0.35" />
+                        <stop offset="100%" stop-color="#818cf8" stop-opacity="0.0" />
+                      </linearGradient>
+                    </defs>
+                    <!-- Background Grid Lines -->
+                    <line x1="0" y1="30" x2="400" y2="30" stroke="rgba(255,255,255,0.08)" stroke-dasharray="3 3" />
+                    <line x1="0" y1="70" x2="400" y2="70" stroke="rgba(255,255,255,0.08)" stroke-dasharray="3 3" />
+                    <!-- Area 2 (Indigo) -->
+                    <path d="M 0 95 Q 60 85, 120 60 T 240 75 T 320 35 T 400 50 L 400 110 L 0 110 Z" fill="url(#areaIndigo)" />
+                    <!-- Area 1 (Cyan Spike) -->
+                    <path d="M 0 100 Q 80 90, 150 40 T 260 20 T 340 65 T 400 30 L 400 110 L 0 110 Z" fill="url(#areaCyan)" />
+                    <!-- Smooth Lines -->
+                    <path d="M 0 95 Q 60 85, 120 60 T 240 75 T 320 35 T 400 50" fill="none" stroke="#818cf8" stroke-width="2" />
+                    <path d="M 0 100 Q 80 90, 150 40 T 260 20 T 340 65 T 400 30" fill="none" stroke="#38bdf8" stroke-width="2.5" />
+                    <!-- Spike Peak Marker -->
+                    <circle cx="260" cy="20" r="5" fill="#f43f5e" class="animate-pulse" />
+                    <circle cx="260" cy="20" r="9" fill="none" stroke="#f43f5e" stroke-width="1.5" opacity="0.6" />
+                  </svg>
+                  <div class="absolute bottom-1 inset-x-2 flex justify-between text-[9px] text-slate-400 font-mono">
+                    <span>09:00</span>
+                    <span>12:00</span>
+                    <span class="text-rose-400 font-bold">15:00 SPIKE</span>
+                    <span>18:00</span>
+                    <span>21:00</span>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Right Recovery Notification Stack -->
+              <div class="lg:col-span-5 flex flex-col gap-3">
+                <div class="p-3.5 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-lg hover:border-sky-400/50 transition-all flex items-start gap-3">
+                  <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center font-bold text-sm shrink-0">
+                    ⏰
+                  </div>
+                  <div>
+                    <h5 class="text-xs font-bold text-white">Boundary reminder at 6:00 PM</h5>
+                    <p class="text-[11px] text-slate-300 mt-0.5">Somatic shutdown prompt triggered to prevent cognitive carryover.</p>
+                  </div>
+                </div>
+
+                <div class="p-3.5 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-lg hover:border-indigo-400/50 transition-all flex items-start gap-3">
+                  <div class="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center font-bold text-sm shrink-0">
+                    ☾
+                  </div>
+                  <div>
+                    <h5 class="text-xs font-bold text-white">Sleep deficit detected</h5>
+                    <p class="text-[11px] text-slate-300 mt-0.5">Lower evening tone frequency recommendation: wind down by 10:15 PM.</p>
+                  </div>
+                </div>
+
+                <div class="p-3.5 rounded-2xl bg-sky-500/10 border border-sky-400/25 flex items-center justify-between">
+                  <div class="flex items-center gap-2 text-xs font-semibold text-sky-200">
+                    <span class="w-2 h-2 rounded-full bg-sky-400 animate-ping"></span>
+                    <span>Adaptive Resilience Guard</span>
+                  </div>
+                  <span class="text-[11px] font-bold text-sky-400">Armed</span>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- ACT 3: TONE CONSTELLATION & INTERACTIVE ANALYTICS HUB (Scroll 55% - 80%)  -->
+    <!-- ========================================================================= -->
+    <div class="absolute inset-0 w-full max-w-5xl mx-auto flex flex-col justify-center items-center px-4 opacity-0 pointer-events-none transition-all duration-500" id="act-3-layer">
+      
+      <!-- Top Title Bar -->
+      <div class="w-full flex items-center justify-between mb-4 pointer-events-auto">
+        <div>
+          <span class="text-xs font-bold text-sky-400 uppercase tracking-widest">Act 03 / Tone Constellation</span>
+          <h2 class="text-2xl font-extrabold text-white tracking-tight">Powerful Analytics Hub</h2>
+        </div>
+        <a href="{{ url_for('mood.dashboard') }}" class="px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-xs font-bold text-white backdrop-blur-md transition-all text-decoration-none shadow-sm">
+          Learn More →
+        </a>
+      </div>
+
+      <!-- Main Dual Card Layout -->
+      <div class="w-full grid grid-cols-1 md:grid-cols-12 gap-5 pointer-events-auto">
+        
+        <!-- Left: 2D Mood Variance Diamond Quadrant (Interactive Drag Pebble) -->
+        <div class="md:col-span-5 p-5 rounded-3xl glass-dark shadow-2xl flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-300">Mood Variance Quadrant</span>
+            <span class="text-[10px] text-sky-400 font-mono font-semibold px-2 py-0.5 rounded-md bg-sky-500/10 border border-sky-500/20">● Drag Pebble</span>
+          </div>
+
+          <!-- Quadrant Diamond Canvas Container -->
+          <div class="relative w-full aspect-square max-w-[280px] mx-auto rounded-2xl bg-slate-950/80 border border-white/15 flex items-center justify-center p-2 select-none overflow-hidden" id="quadrant-box">
+            
+            <!-- SVG Diamond & Coordinates Tether -->
+            <svg class="absolute inset-0 w-full h-full pointer-events-none" id="quadrant-svg" viewBox="0 0 280 280">
+              <!-- Coordinate Axes -->
+              <line x1="20" y1="140" x2="260" y2="140" stroke="rgba(255,255,255,0.15)" stroke-width="1.5" />
+              <line x1="140" y1="20" x2="140" y2="260" stroke="rgba(255,255,255,0.15)" stroke-width="1.5" />
+              <!-- Rotated Diamond Boundary -->
+              <polygon points="140,25 255,140 140,255 25,140" fill="none" stroke="rgba(56, 189, 248, 0.25)" stroke-width="1.5" stroke-dasharray="4 4" />
+              
+              <!-- Gold Anchor Nodes at Quadrant Vertices -->
+              <circle cx="140" cy="25" r="4" fill="#fbbf24" opacity="0.8" />
+              <circle cx="255" cy="140" r="4" fill="#fbbf24" opacity="0.8" />
+              <circle cx="140" cy="255" r="4" fill="#fbbf24" opacity="0.8" />
+              <circle cx="25" cy="140" r="4" fill="#fbbf24" opacity="0.8" />
+              <circle cx="140" cy="140" r="3" fill="#38bdf8" />
+
+              <!-- Live Vector Tether Line linking (0,0) to Pebble (x,y) -->
+              <line id="pebble-tether-line" x1="140" y1="140" x2="200" y2="85" stroke="#38bdf8" stroke-width="2" stroke-dasharray="3 3" />
+              <circle id="pebble-origin-pulse" cx="140" cy="140" r="6" fill="none" stroke="#38bdf8" stroke-width="1" class="animate-ping" />
+            </svg>
+
+            <!-- Coordinate Labels -->
+            <span class="absolute top-2 text-[9px] font-bold text-slate-400 uppercase tracking-wider">Energy +</span>
+            <span class="absolute bottom-2 text-[9px] font-bold text-slate-400 uppercase tracking-wider">Energy -</span>
+            <span class="absolute right-2 text-[9px] font-bold text-slate-400 uppercase tracking-wider">Pleasant</span>
+            <span class="absolute left-2 text-[9px] font-bold text-slate-400 uppercase tracking-wider">Tense</span>
+
+            <!-- Draggable Affective Glass Pebble -->
+            <div id="drag-pebble" class="absolute w-8 h-8 rounded-full bg-gradient-to-tr from-sky-400 via-indigo-500 to-indigo-600 shadow-lg shadow-sky-500/60 cursor-grab active:cursor-grabbing border-2 border-white/80 transition-shadow duration-200" style="left: 184px; top: 69px; touch-action: none;">
+              <div class="w-full h-full rounded-full flex items-center justify-center">
+                <div class="w-2 h-2 rounded-full bg-white shadow-sm"></div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Live Coordinates Readout -->
+          <div class="mt-3 flex items-center justify-between px-2 text-[11px] font-mono text-slate-300 bg-white/5 rounded-xl py-1.5 border border-white/10">
+            <span id="pebble-coord-val">Arousal: +0.62 · Valence: +0.74</span>
+            <span class="text-sky-400 font-bold">Optimal Flow</span>
+          </div>
+        </div>
+
+        <!-- Right: Tone Constellation Frequency Chart -->
+        <div class="md:col-span-7 p-5 rounded-3xl glass-dark shadow-2xl flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <div>
+                <h4 class="text-base font-bold text-white">Tone Constellation</h4>
+                <p class="text-[11px] text-slate-400 mb-0">Diurnal affective frequency curve (0 – 190 Hz)</p>
+              </div>
+              <div class="flex gap-2">
+                <span class="px-2.5 py-1 rounded-lg bg-sky-500/20 border border-sky-400/30 text-[10px] font-bold text-sky-300">16.4 Hz Peak</span>
+                <span class="px-2.5 py-1 rounded-lg bg-indigo-500/20 border border-indigo-400/30 text-[10px] font-bold text-indigo-300">Resonant</span>
+              </div>
+            </div>
+
+            <!-- SVG Constellation Chart -->
+            <div class="w-full h-44 relative my-2 bg-slate-950/70 rounded-2xl border border-white/10 p-2 overflow-hidden">
+              <svg class="w-full h-full overflow-visible" viewBox="0 0 460 140" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="goldGlow" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stop-color="#38bdf8" />
+                    <stop offset="50%" stop-color="#fbbf24" />
+                    <stop offset="100%" stop-color="#818cf8" />
+                  </linearGradient>
+                </defs>
+                <!-- Horizontal Scale Grid -->
+                <line x1="20" y1="30" x2="440" y2="30" stroke="rgba(255,255,255,0.06)" />
+                <line x1="20" y1="70" x2="440" y2="70" stroke="rgba(255,255,255,0.06)" />
+                <line x1="20" y1="110" x2="440" y2="110" stroke="rgba(255,255,255,0.06)" />
+
+                <!-- Golden Trend Spline Path -->
+                <path d="M 20 115 Q 80 30, 140 85 T 260 45 T 350 90 T 440 35" fill="none" stroke="rgba(251, 191, 36, 0.4)" stroke-width="4" filter="blur(3px)" />
+                <path d="M 20 115 Q 80 30, 140 85 T 260 45 T 350 90 T 440 35" fill="none" stroke="url(#goldGlow)" stroke-width="2.5" />
+
+                <!-- Scatter Constellation Nodes -->
+                <circle cx="85" cy="50" r="5" fill="#fbbf24" class="animate-ping" />
+                <circle cx="85" cy="50" r="4.5" fill="#fbbf24" />
+                <circle cx="140" cy="85" r="4" fill="#38bdf8" />
+                <circle cx="200" cy="62" r="3.5" fill="#a78bfa" />
+                <circle cx="260" cy="45" r="6" fill="#38bdf8" />
+                <circle cx="310" cy="72" r="4" fill="#fbbf24" />
+                <circle cx="350" cy="90" r="3.5" fill="#818cf8" />
+                <circle cx="410" cy="52" r="5" fill="#f43f5e" />
+
+                <!-- Vertical Beacon Scrubber Needle -->
+                <line x1="260" y1="15" x2="260" y2="125" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="2 2" />
+                <rect x="238" y="10" width="44" height="16" rx="4" fill="#0f172a" stroke="#38bdf8" stroke-width="1" />
+                <text x="260" y="21" fill="#38bdf8" font-size="9" font-family="monospace" text-anchor="middle">16.4 Hz</text>
+              </svg>
+            </div>
+          </div>
+
+          <!-- 3 Frequency Metric Chips -->
+          <div class="grid grid-cols-3 gap-3 pt-2">
+            <div class="p-2.5 rounded-xl bg-white/5 border border-white/10 text-center">
+              <span class="text-[10px] text-slate-400 uppercase font-semibold">Resonance</span>
+              <p class="text-sm font-extrabold text-amber-300 mt-0.5">16.4 Hz</p>
+            </div>
+            <div class="p-2.5 rounded-xl bg-white/5 border border-white/10 text-center">
+              <span class="text-[10px] text-slate-400 uppercase font-semibold">Entropy</span>
+              <p class="text-sm font-extrabold text-sky-300 mt-0.5">0.12 bits</p>
+            </div>
+            <div class="p-2.5 rounded-xl bg-white/5 border border-white/10 text-center">
+              <span class="text-[10px] text-slate-400 uppercase font-semibold">Coherence</span>
+              <p class="text-sm font-extrabold text-emerald-300 mt-0.5">94.8%</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- ACT 4: SPATIAL COMPUTING SANCTUARY FINALE (Scroll 80% - 100%)              -->
+    <!-- ========================================================================= -->
+    <div class="absolute inset-0 w-full max-w-5xl mx-auto flex flex-col justify-between items-center py-6 px-4 opacity-0 pointer-events-none transition-all duration-500" id="act-4-layer">
+      
+      <!-- Top Finale Header -->
+      <div class="text-center pointer-events-auto">
+        <span class="text-xs font-bold text-amber-400 uppercase tracking-widest">Act 04 / Sanctuary Equilibrium</span>
+        <h2 class="text-3xl font-extrabold text-white tracking-tight mt-1">Spatial Resonance Sanctuary</h2>
+        <p class="text-xs text-slate-300 max-w-md mx-auto mt-1">Unified diurnal wellness and predictive mental tone synchronized with your biological clock.</p>
+      </div>
+
+      <!-- Surrounding Spatial Floating Cards (Mac-style Radar Window + Speedometer Gauge + Heatmap) -->
+      <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-5 pointer-events-auto items-end">
+        
+        <!-- Left: macOS Style Floating Radar Window -->
+        <div class="p-4 rounded-3xl glass-dark shadow-2xl border border-white/20">
+          <!-- Window Title Bar with Traffic Light Dots -->
+          <div class="flex items-center gap-1.5 pb-2 border-b border-white/10 mb-3">
+            <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            <span class="text-[10px] font-mono text-slate-400 ml-2">Radar.harmony</span>
+          </div>
+          <!-- Mini 5-Axis Radar Chart SVG -->
+          <div class="w-full h-28 flex items-center justify-center">
+            <svg class="w-28 h-28" viewBox="0 0 100 100">
+              <polygon points="50,10 90,40 75,90 25,90 10,40" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1" />
+              <polygon points="50,25 75,45 65,75 35,75 25,45" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1" />
+              <!-- Radar Area -->
+              <polygon points="50,15 82,42 70,82 30,78 18,38" fill="rgba(56, 189, 248, 0.35)" stroke="#38bdf8" stroke-width="1.5" />
+            </svg>
+          </div>
+          <div class="text-center text-[10px] font-semibold text-slate-300 mt-1">5-Vector Harmonic Balance</div>
+        </div>
+
+        <!-- Center: Primary CTA Stack beneath the 3D Sanctuary Orb -->
+        <div class="flex flex-col items-center gap-3 text-center mb-2">
+          <a href="{{ url_for('mood.log_mood') }}" class="px-7 py-3 rounded-2xl bg-gradient-to-r from-sky-400 via-indigo-500 to-indigo-600 text-white font-bold text-sm shadow-xl shadow-sky-500/30 hover:scale-105 active:scale-95 transition-all text-decoration-none glow-cyan">
+            Begin Check-in →
+          </a>
+          <a href="{{ url_for('mood.dashboard') }}" class="text-xs font-semibold text-slate-400 hover:text-white transition-colors text-decoration-none">
+            Skip to Dashboard
+          </a>
+        </div>
+
+        <!-- Right: Affective Variance Radial Speedometer Arc Gauge -->
+        <div class="p-4 rounded-3xl glass-dark shadow-2xl border border-white/20">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-300">Affective Resonance</span>
+            <span class="text-[10px] text-emerald-400 font-bold">Optimal</span>
+          </div>
+          <!-- Arc Gauge SVG -->
+          <div class="w-full h-28 relative flex items-center justify-center">
+            <svg class="w-36 h-28 overflow-visible" viewBox="0 0 120 70">
+              <!-- Background Arc -->
+              <path d="M 15 65 A 45 45 0 0 1 105 65" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="8" stroke-linecap="round" />
+              <!-- Active Gradient Arc -->
+              <path d="M 15 65 A 45 45 0 0 1 95 35" fill="none" stroke="url(#arcGrad)" stroke-width="8" stroke-linecap="round" />
+              <defs>
+                <linearGradient id="arcGrad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#38bdf8" />
+                  <stop offset="100%" stop-color="#34d399" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <div class="absolute bottom-1 text-center">
+              <span class="text-xl font-extrabold text-white">88%</span>
+              <span class="block text-[9px] text-slate-400">Flow Index</span>
+            </div>
+          </div>
+          <div class="flex justify-between text-[10px] text-slate-400 px-1 mt-1 font-mono">
+            <span>Tension: 12%</span>
+            <span>Clarity: 92%</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Bottom Terracotta Calendar Heatmap & Recaps Bar -->
+      <div class="w-full max-w-2xl mx-auto p-3 rounded-2xl glass-dark border border-white/15 flex items-center justify-between px-5 pointer-events-auto">
+        <div class="flex items-center gap-3">
+          <span class="text-xs font-bold text-amber-300">Weekly Rhythm:</span>
+          <!-- Micro 4-Week Activity Heatmap Matrix -->
+          <div class="grid grid-flow-col grid-rows-2 gap-1">
+            <div class="w-2.5 h-2.5 rounded-sm bg-amber-500/20"></div>
+            <div class="w-2.5 h-2.5 rounded-sm bg-amber-500/40"></div>
+            <div class="w-2.5 h-2.5 rounded-sm bg-amber-500/70"></div>
+            <div class="w-2.5 h-2.5 rounded-sm bg-amber-500"></div>
+            <div class="w-2.5 h-2.5 rounded-sm bg-amber-500/80"></div>
+            <div class="w-2.5 h-2.5 rounded-sm bg-amber-500/90"></div>
+            <div class="w-2.5 h-2.5 rounded-sm bg-amber-500"></div>
+            <div class="w-2.5 h-2.5 rounded-sm bg-amber-500/60"></div>
+          </div>
+        </div>
+        <div class="text-[11px] text-slate-300 font-mono">
+          Consistency: <span class="text-emerald-400 font-bold">96%</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 5. BOTTOM SCROLL INDICATOR PILL -->
+    <div class="mx-auto flex items-center gap-2 px-3 py-1 rounded-full glass-panel border border-white/60 text-[10px] font-bold tracking-widest uppercase text-slate-700 pointer-events-auto shadow-sm" id="scroll-prompt">
+      <span class="w-1.5 h-1.5 rounded-full bg-sky-500 animate-ping"></span>
+      <span id="scroll-prompt-text">Scroll to explore</span>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- 6. INTERACTIVE FROSTED GLASS SIGN IN MODAL -->
+<div id="signin-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300" onclick="if(event.target===this) toggleSignInModal(false)">
+  <div class="relative w-full max-w-md rounded-3xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border border-white/80 dark:border-white/20 p-7 shadow-2xl transition-all scale-95" id="signin-modal-card">
+    
+    <!-- Close Button -->
+    <button type="button" onclick="toggleSignInModal(false)" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/20 flex items-center justify-center text-slate-600 dark:text-slate-300 transition-colors border-0 cursor-pointer">
+      ✕
+    </button>
+
+    <div class="flex justify-center mb-3">
+      <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-sky-500 to-indigo-600 font-bold text-white shadow-lg shadow-sky-500/30 flex items-center justify-center text-base">
+        DT
+      </div>
+    </div>
+
+    <h3 class="text-xl font-bold text-center text-slate-900 dark:text-white tracking-tight">Sign in to DayTone</h3>
+    <p class="text-xs text-center text-slate-500 dark:text-slate-400 mt-1 mb-5">Access your diurnal rhythms &amp; burnout analytics</p>
+
+    <form method="post" action="{{ url_for('auth.login') }}" class="space-y-3.5">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+      <div>
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">Email Address</label>
+        <input type="email" name="email" id="modal-email" required placeholder="you@domain.com"
+               class="w-full px-3.5 py-2 rounded-xl bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400 text-xs">
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">Password</label>
+        <input type="password" name="password" id="modal-password" required placeholder="••••••••"
+               class="w-full px-3.5 py-2 rounded-xl bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400 text-xs">
+      </div>
+
+      <button type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-sky-500 via-indigo-500 to-indigo-600 text-white font-bold text-xs shadow-lg shadow-sky-500/25 hover:opacity-95 transition-all cursor-pointer border-0 mt-2">
+        Sign In →
+      </button>
+
+      <!-- Quick Accounts -->
+      <div class="pt-3 border-t border-slate-200/80 dark:border-white/10 text-center">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-2">Quick Sign-In:</span>
+        <div class="flex justify-center gap-2">
+          <button type="button" onclick="fillModalCreds('admin@gmail.com', 'admin123')" class="px-3 py-1 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 text-xs font-semibold text-slate-800 dark:text-white border border-black/5 transition cursor-pointer">
+            Admin
+          </button>
+          <button type="button" onclick="fillModalCreds('crystal@daytone.dev', 'developer123')" class="px-3 py-1 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 text-xs font-semibold text-slate-800 dark:text-white border border-black/5 transition cursor-pointer">
+            Developer
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function toggleSignInModal(show) {
+  const modal = document.getElementById('signin-modal');
+  const card = document.getElementById('signin-modal-card');
+  if (!modal || !card) return;
+  if (show) {
+    modal.classList.remove('opacity-0', 'pointer-events-none');
+    card.classList.remove('scale-95');
+    card.classList.add('scale-100');
+  } else {
+    modal.classList.add('opacity-0', 'pointer-events-none');
+    card.classList.remove('scale-100');
+    card.classList.add('scale-95');
+  }
+}
+function fillModalCreds(email, pwd) {
+  const eInput = document.getElementById('modal-email');
+  const pInput = document.getElementById('modal-password');
+  if (eInput) eInput.value = email;
+  if (pInput) pInput.value = pwd;
+}
+</script>
+
+<!-- Core Engine Scripts -->
+<script src="{{ url_for('static', filename='js/three.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/lenis.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/gsap.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/ScrollTrigger.min.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/scrollController.js') }}"></script>
+
+</body>
+</html>

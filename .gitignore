@@ -15,5 +15,9 @@ app/ml/model_metrics.json
 app/ml/*_meta.json
 app/ml/model_*.pkl
 app/ml/drift_report.json
+node_modules/
+anime/
+.DS_Store
+*.log
 
 

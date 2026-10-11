@@ -1,79 +1,112 @@
 {% extends "base.html" %}
 {% block title %}History - DayTone{% endblock %}
 {% block content %}
-<div class="page-head">
-  <div>
-    <span class="eyebrow">Timeline</span>
-    <h1>History</h1>
-  </div>
-  <div class="d-flex gap-2 flex-wrap">
-    <a class="btn btn-outline-primary" href="{{ url_for('mood.export_csv') }}"><i data-lucide="download"></i>Export CSV</a>
-    <a class="btn btn-outline-primary" href="{{ url_for('mood.export_csv', include_notes=1) }}"><i data-lucide="file-text"></i>Export with notes</a>
-  </div>
-</div>
+<div class="history-shell w-full max-w-5xl mx-auto py-4 space-y-6">
 
-<!-- Search and Filters Section -->
-<div class="filter-header-row d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 p-3 rounded panel" style="background: var(--dt-glass-filter-bg); border: 1px solid var(--dt-border); backdrop-filter: blur(10px);">
-  <div class="search-wrap position-relative flex-grow-1" style="max-width: 380px;">
-    <input type="text" id="historySearchInput" class="form-control ps-5" placeholder="Search date, notes, or tags..." aria-label="Search logs">
-    <i data-lucide="search" class="position-absolute text-secondary" style="width: 18px; height: 18px; left: 16px; top: 50%; transform: translateY(-50%);"></i>
-  </div>
-  
-  <div class="d-flex gap-3 flex-wrap align-items-center">
-    <div class="filter-select-wrap d-flex align-items-center gap-2">
-      <label for="moodFilter" class="small fw-bold text-secondary mb-0">Mood:</label>
-      <select id="moodFilter" class="form-select form-select-sm" style="min-width: 130px; height: 38px; padding-top: 4px; padding-bottom: 4px;">
-        <option value="all">All Moods</option>
-        <option value="happy">Happy</option>
-        <option value="calm">Calm</option>
-        <option value="anxious">Anxious</option>
-        <option value="sad">Sad</option>
-        <option value="sick">Sick</option>
-      </select>
+  <!-- 1. Unified Page Header Glass Card -->
+  <div class="page-head rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-6 md:p-8 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <div class="inline-flex items-center gap-2 rounded-full border border-sky-400/30 bg-sky-500/10 px-3 py-1 text-xs font-bold text-sky-700 dark:text-sky-300 mb-2.5">
+        <span class="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
+        Timeline Ledger
+      </div>
+      <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white" style="font-family: var(--font-display);">History</h1>
+      <p class="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 m-0 leading-normal">
+        Track, filter, and review your longitudinal wellbeing trajectory
+      </p>
     </div>
-    
-    <div class="filter-select-wrap d-flex align-items-center gap-2">
-      <label for="riskFilter" class="small fw-bold text-secondary mb-0">Risk:</label>
-      <select id="riskFilter" class="form-select form-select-sm" style="min-width: 130px; height: 38px; padding-top: 4px; padding-bottom: 4px;">
-        <option value="all">All Risks</option>
-        <option value="low">Low</option>
-        <option value="medium">Medium</option>
-        <option value="high">High</option>
-      </select>
+    <div class="flex items-center gap-3 flex-wrap">
+      <a class="daytone-btn-secondary daytone-btn-sm inline-flex items-center gap-2 text-xs font-bold px-4 rounded-full text-decoration-none shadow-sm" href="{{ url_for('mood.export_csv') }}">
+        <i data-lucide="download" style="width: 15px; height: 15px;"></i>
+        <span>Export CSV</span>
+      </a>
+      <a class="daytone-btn-secondary daytone-btn-sm inline-flex items-center gap-2 text-xs font-bold px-4 rounded-full text-decoration-none shadow-sm" href="{{ url_for('mood.export_csv', include_notes=1) }}">
+        <i data-lucide="file-text" style="width: 15px; height: 15px;"></i>
+        <span>Export with Notes</span>
+      </a>
     </div>
   </div>
-</div>
 
-<div class="mb-3 d-flex align-items-center gap-2 text-secondary" style="font-size: 0.8rem; margin-top: -0.5rem; padding-left: 0.25rem;">
-  <i data-lucide="info" style="width: 14px; height: 14px; color: var(--dt-primary); flex-shrink: 0;"></i>
-  <span>Note: Filters apply locally to the logs shown on this page. Clear search or filters to browse other pages.</span>
-</div>
+  <!-- 2. Search and Filters Glass Card -->
+  <div class="filter-header-row rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 p-5 md:p-6 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="relative flex-grow max-w-md">
+        <input type="text" id="historySearchInput" class="w-full pl-11 pr-4 py-2 text-xs sm:text-sm rounded-2xl border border-slate-200/70 dark:border-white/10 bg-white/50 dark:bg-slate-800/50 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/40 backdrop-blur-sm transition" placeholder="Search date, notes, or tags..." aria-label="Search logs">
+        <i data-lucide="search" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" style="width: 18px; height: 18px;"></i>
+      </div>
+      
+      <div class="flex items-center gap-4 flex-wrap">
+        <div class="flex items-center gap-2">
+          <label for="moodFilter" class="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-0">Mood:</label>
+          <select id="moodFilter" class="text-xs sm:text-sm font-medium py-1.5 px-3 rounded-xl border border-slate-200/70 dark:border-white/10 bg-white/50 dark:bg-slate-800/50 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/40 backdrop-blur-sm cursor-pointer" style="min-width: 130px; height: 38px;">
+            <option value="all">All Moods</option>
+            <option value="happy">Happy</option>
+            <option value="calm">Calm</option>
+            <option value="anxious">Anxious</option>
+            <option value="sad">Sad</option>
+            <option value="sick">Sick</option>
+          </select>
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <label for="riskFilter" class="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-0">Risk:</label>
+          <select id="riskFilter" class="text-xs sm:text-sm font-medium py-1.5 px-3 rounded-xl border border-slate-200/70 dark:border-white/10 bg-white/50 dark:bg-slate-800/50 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/40 backdrop-blur-sm cursor-pointer" style="min-width: 130px; height: 38px;">
+            <option value="all">All Risks</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+      </div>
+    </div>
 
-<div class="panel table-responsive elevated-panel">
-  <table class="table align-middle" style="border-collapse: separate; border-spacing: 0;">
-    <thead>
-      <tr>
-        <th style="width: 40px;"></th>
-        <th>Date</th>
-        <th>Mood</th>
-        <th>Sleep</th>
-        <th>Stress</th>
-        <th>Social</th>
-        <th>Sentiment</th>
-        <th>Risk</th>
-        <th class="text-end" style="width: 100px;">Actions</th>
-      </tr>
-    </thead>
-    <tbody>
+    <!-- Integrated Helper Tip with High Contrast -->
+    <div class="mt-3 pt-3 border-t border-slate-200/50 dark:border-white/10 flex items-center">
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/5 dark:bg-white/10 text-xs font-semibold text-slate-700 dark:text-slate-200">
+        <i data-lucide="info" class="text-sky-500 shrink-0" style="width: 14px; height: 14px;"></i>
+        <span>Filters apply in real-time to current logs on this page. Clear search or filters to browse all entries.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Table Card with Glassmorphic Rows -->
+  <div class="elevated-panel panel rounded-3xl border border-white/50 dark:border-white/20 bg-white/20 dark:bg-slate-900/50 shadow-xl backdrop-blur-xl ring-1 ring-slate-900/5 overflow-hidden p-0">
+    <div class="table-responsive m-0 p-0">
+      <table class="table align-middle m-0 w-full" style="border-collapse: separate; border-spacing: 0;">
+        <thead>
+          <tr>
+            <th style="width: 44px; padding-left: 1.25rem;"></th>
+            <th>Date</th>
+            <th>Mood</th>
+            <th>Sleep</th>
+            <th>Stress</th>
+            <th>Social</th>
+            <th>Sentiment</th>
+            <th>Risk</th>
+            <th class="text-end" style="width: 110px; padding-right: 1.25rem;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
       {% for log in logs %}
       <tr class="log-row cursor-pointer" data-id="{{ log.id }}" data-mood="{{ log.mood_label|lower }}" data-risk="{{ log.burnout_risk|lower }}" data-notes="{{ log.notes|lower if log.notes else '' }}">
-        <td class="toggle-cell text-center" style="width: 40px; padding-left: 0.75rem;">
-          <i data-lucide="chevron-right" class="expand-chevron" style="width: 16px; height: 16px; transition: transform 0.25s ease;"></i>
+        <td class="toggle-cell text-center" style="width: 44px; padding-left: 1.25rem;">
+          <i data-lucide="chevron-right" class="expand-chevron text-slate-400 dark:text-slate-400" style="width: 16px; height: 16px; transition: transform 0.25s ease;"></i>
         </td>
         <td class="fw-bold">{{ log.log_date }}</td>
         <td>
-          <span class="mood-badge mood-badge-{{ log.mood_score }}">
-            {{ log.mood_emoji }} {{ log.mood_label }}
+          <span class="mood-badge mood-badge-{{ log.mood_score }} d-inline-flex align-items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold">
+            {% if log.mood_score == 5 %}
+              <i data-lucide="sun" class="text-amber-500" style="width:13px;height:13px;"></i>
+            {% elif log.mood_score == 4 %}
+              <i data-lucide="waves" class="text-teal-500" style="width:13px;height:13px;"></i>
+            {% elif log.mood_score == 3 %}
+              <i data-lucide="activity" class="text-amber-600" style="width:13px;height:13px;"></i>
+            {% elif log.mood_score == 2 %}
+              <i data-lucide="cloud-rain" class="text-sky-600" style="width:13px;height:13px;"></i>
+            {% else %}
+              <i data-lucide="heart-pulse" class="text-rose-500" style="width:13px;height:13px;"></i>
+            {% endif %}
+            {{ log.mood_label }}
           </span>
         </td>
         <td class="fw-bold" style="font-size: 0.9rem; color: var(--dt-text);">{{ log.sleep_hours }} hrs</td>
@@ -85,11 +118,11 @@
         </td>
         <td>
           {% if log.social_interaction == 1 %}
-            👤 Alone
+            <span class="d-inline-flex align-items-center gap-1 text-xs"><i data-lucide="user" style="width:13px;height:13px;"></i> Alone</span>
           {% elif log.social_interaction == 2 %}
-            👥 Group
+            <span class="d-inline-flex align-items-center gap-1 text-xs"><i data-lucide="users" style="width:13px;height:13px;"></i> Group</span>
           {% else %}
-            🗣️ Social
+            <span class="d-inline-flex align-items-center gap-1 text-xs"><i data-lucide="message-circle" style="width:13px;height:13px;"></i> Social</span>
           {% endif %}
         </td>
         <td>
@@ -98,19 +131,20 @@
           </span>
         </td>
         <td>
-          <span class="badge risk-bg-{{ log.burnout_risk|lower }}">
+          <span class="badge risk-bg-{{ log.burnout_risk|lower }} px-2 py-1 rounded-full font-bold text-xs d-inline-flex align-items-center gap-1">
             {% if log.burnout_risk == 'Low' %}
-              ✓ Low
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Low
             {% elif log.burnout_risk == 'Medium' %}
-              ⚠ Medium
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Medium
             {% else %}
-              ✕ High
+              <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> High
             {% endif %}
           </span>
         </td>
-        <td class="text-end" style="width: 100px; padding-right: 0.75rem;">
-          <a class="btn btn-sm btn-outline-secondary py-1 edit-btn" href="{{ url_for('mood.edit_log', log_id=log.id) }}">
-            <i data-lucide="pencil" style="width: 13px; height: 13px;"></i>Edit
+        <td class="text-end" style="width: 110px; padding-right: 1.25rem;">
+          <a class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white/60 dark:bg-white/10 hover:bg-white dark:hover:bg-white/20 border border-slate-200/60 dark:border-white/15 text-decoration-none shadow-sm transition edit-btn" href="{{ url_for('mood.edit_log', log_id=log.id) }}">
+            <i data-lucide="pencil" style="width: 12px; height: 12px;"></i>
+            <span>Edit</span>
           </a>
         </td>
       </tr>
@@ -226,6 +260,8 @@
     </ul>
   </nav>
   {% endif %}
+    </div>
+  </div>
 </div>
 {% endblock %}
 

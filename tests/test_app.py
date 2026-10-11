@@ -811,11 +811,11 @@ def test_admin_lockout_guards(client, app):
         
     # Attempt self-demotion via toggle-role
     res = client.post(f"/admin/user/{admin_id}/toggle-role", follow_redirects=True)
-    assert b"Cannot demote the last remaining administrator" in res.data
+    assert b"sole administrator" in res.data
     
     # Attempt self-deletion
     res = client.post("/profile/delete", data={"confirm_delete": "DELETE"}, follow_redirects=True)
-    assert b"You are the last remaining administrator" in res.data
+    assert b"sole" in res.data.lower() or b"last remaining administrator" in res.data
     
     # Register a second admin (logout first, register, then log back in as sole_admin)
     client.get("/logout")
@@ -953,6 +953,3 @@ def test_developer_authority_and_admin_protection(client, app):
 
     with app.app_context():
         assert User.query.get(dev_id).role == "developer"
-
-
-
