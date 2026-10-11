@@ -308,7 +308,6 @@ def api_reset_password():
     return jsonify({"success": True, "redirect": get_user_landing_page(user), "message": "Password reset successfully!"})
 
 
-
 @auth_bp.route("/logout")
 def logout():
     logout_user()

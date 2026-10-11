@@ -24,4 +24,3 @@ def is_last_admin(user):
         return count <= 1
 
     return False
-

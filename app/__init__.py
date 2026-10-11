@@ -3,7 +3,7 @@ import logging.handlers
 import os
 import warnings
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify
 from flask_talisman import Talisman
 
 try:
@@ -265,7 +265,6 @@ def create_app(config_object=Config):
         if os.path.exists(dist_svg):
             return send_from_directory(os.path.join(repo_root, "dist"), "vite.svg")
         return send_from_directory(os.path.join(repo_root, "public"), "vite.svg")
-
 
     @app.cli.command("reload-model")
     def reload_model():
